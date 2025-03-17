@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom"; // Added Link and useNavigate
 import { useState, useEffect } from "react";
 import { useUser } from "../../context/UserContext";
 import "./PostDetail.css";
@@ -44,28 +44,19 @@ const PostDetail: React.FC = () => {
   const currentUserId = user?.userId || "";
   const isAdmin = user?.role === "Admin";
   const isLoggedIn = !!user;
+  const navigate = useNavigate(); // For redirecting to edit page
 
   useEffect(() => {
     const fetchPost = async () => {
       try {
-        const allPostsResponse = await fetch(
-          "https://localhost:7094/api/Post/all"
-        );
-        if (!allPostsResponse.ok) {
-          throw new Error("Failed to fetch posts");
-        }
+        const allPostsResponse = await fetch("https://localhost:7094/api/Post/all");
+        if (!allPostsResponse.ok) throw new Error("Failed to fetch posts");
         const allPosts: Post[] = await allPostsResponse.json();
         const foundPost = allPosts.find((p) => p.slug === slug);
-        if (!foundPost) {
-          throw new Error("Post not found");
-        }
+        if (!foundPost) throw new Error("Post not found");
 
-        const postResponse = await fetch(
-          `https://localhost:7094/api/Post/${foundPost.id}`
-        );
-        if (!postResponse.ok) {
-          throw new Error("Failed to fetch post details");
-        }
+        const postResponse = await fetch(`https://localhost:7094/api/Post/${foundPost.id}`);
+        if (!postResponse.ok) throw new Error("Failed to fetch post details");
         const postData: Post = await postResponse.json();
 
         setPost(postData);
@@ -94,34 +85,22 @@ const PostDetail: React.FC = () => {
     };
 
     try {
-      console.log("Posting comment with data:", commentData);
-      console.log("User ID (header):", currentUserId);
-      console.log("Using token:", user?.token);
-
-      const response = await fetch(
-        "https://localhost:7094/api/Comment/create",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${user?.token}`,
-            userId: currentUserId,
-          },
-          body: JSON.stringify(commentData),
-        }
-      );
-
-      console.log("Response status:", response.status);
-      const responseText = await response.text();
-      console.log("Response body:", responseText);
+      const response = await fetch("https://localhost:7094/api/Comment/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${user?.token}`,
+          userId: currentUserId,
+        },
+        body: JSON.stringify(commentData),
+      });
 
       if (!response.ok) {
-        throw new Error(
-          `Failed to post comment: ${response.status} - ${responseText}`
-        );
+        const responseText = await response.text();
+        throw new Error(`Failed to post comment: ${response.status} - ${responseText}`);
       }
 
-      const newCommentData: Comment = JSON.parse(responseText);
+      const newCommentData: Comment = await response.json();
       setPost({
         ...post,
         comments: [...post.comments, newCommentData],
@@ -129,7 +108,6 @@ const PostDetail: React.FC = () => {
       setNewComment("");
       setError(null);
     } catch (err) {
-      console.error("Error details:", err);
       setError((err as Error).message);
     }
   };
@@ -151,39 +129,24 @@ const PostDetail: React.FC = () => {
     };
 
     try {
-      console.log("Editing comment ID:", commentId);
-      console.log("Edit data:", editData);
-      console.log("User ID (header):", currentUserId);
-      console.log("Using token:", user?.token);
-
-      const response = await fetch(
-        `https://localhost:7094/api/Comment/update/${commentId}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${user?.token}`,
-            userId: currentUserId,
-          },
-          body: JSON.stringify(editData),
-        }
-      );
-
-      console.log("Response status:", response.status);
-      const responseText = await response.text();
-      console.log("Response body:", responseText);
+      const response = await fetch(`https://localhost:7094/api/Comment/update/${commentId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${user?.token}`,
+          userId: currentUserId,
+        },
+        body: JSON.stringify(editData),
+      });
 
       if (!response.ok) {
-        throw new Error(
-          `Failed to edit comment: ${response.status} - ${responseText}`
-        );
+        const responseText = await response.text();
+        throw new Error(`Failed to edit comment: ${response.status} - ${responseText}`);
       }
 
       if (post) {
         const updatedComments = post.comments.map((comment) =>
-          comment.id === commentId
-            ? { ...comment, content: editedContent }
-            : comment
+          comment.id === commentId ? { ...comment, content: editedContent } : comment
         );
         setPost({ ...post, comments: updatedComments });
       }
@@ -191,7 +154,6 @@ const PostDetail: React.FC = () => {
       setEditedContent("");
       setError(null);
     } catch (err) {
-      console.error("Error details:", err);
       setError((err as Error).message);
     }
   };
@@ -203,41 +165,32 @@ const PostDetail: React.FC = () => {
     }
 
     try {
-      console.log("Deleting comment ID:", commentId);
-      console.log("User ID (header):", currentUserId);
-      console.log("Using token:", user?.token);
-
-      const response = await fetch(
-        `https://localhost:7094/api/Comment/delete/${commentId}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${user?.token}`,
-            userId: currentUserId,
-          },
-        }
-      );
-
-      console.log("Response status:", response.status);
-      const responseText = await response.text();
-      console.log("Response body:", responseText);
+      const response = await fetch(`https://localhost:7094/api/Comment/delete/${commentId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${user?.token}`,
+          userId: currentUserId,
+        },
+      });
 
       if (!response.ok) {
-        throw new Error(
-          `Failed to delete comment: ${response.status} - ${responseText}`
-        );
+        const responseText = await response.text();
+        throw new Error(`Failed to delete comment: ${response.status} - ${responseText}`);
       }
 
       if (post) {
-        const updatedComments = post.comments.filter(
-          (comment) => comment.id !== commentId
-        );
+        const updatedComments = post.comments.filter((comment) => comment.id !== commentId);
         setPost({ ...post, comments: updatedComments });
       }
       setError(null);
     } catch (err) {
-      console.error("Error details:", err);
       setError((err as Error).message);
+    }
+  };
+
+  const handleEditPost = () => {
+    if (post) {
+      navigate("/create-post", { state: { postToEdit: post } }); // Pass post data to CreatePost
     }
   };
 
@@ -250,8 +203,16 @@ const PostDetail: React.FC = () => {
       <header className="article-header">
         <h1>{post.title}</h1>
         <p className="article-meta">
-          By {post.authorName} | {new Date(post.createdAt).toLocaleDateString()}{" "}
-          | {post.categoryName}
+          By {post.authorName} | {new Date(post.createdAt).toLocaleDateString()} |{" "}
+          <Link to={`/${post.categoryName}`} className="category-link">
+            {post.categoryName}
+          </Link>
+          {/* Show Edit button only to the post author */}
+          {currentUserId === post.authorId && (
+            <button onClick={handleEditPost} className="edit-post-btn">
+              Edit Post
+            </button>
+          )}
         </p>
       </header>
 
@@ -266,7 +227,7 @@ const PostDetail: React.FC = () => {
       />
 
       <section className="article-content">
-        <p>{post.content}</p>
+        <div dangerouslySetInnerHTML={{ __html: post.content }} />
       </section>
 
       <section className="comments-section">
@@ -289,16 +250,10 @@ const PostDetail: React.FC = () => {
                     className="edit-textarea"
                   />
                   <div className="edit-actions">
-                    <button
-                      onClick={() => handleEditSave(comment.id)}
-                      className="save-btn"
-                    >
+                    <button onClick={() => handleEditSave(comment.id)} className="save-btn">
                       Save
                     </button>
-                    <button
-                      onClick={() => setEditingCommentId(null)}
-                      className="cancel-btn"
-                    >
+                    <button onClick={() => setEditingCommentId(null)} className="cancel-btn">
                       Cancel
                     </button>
                   </div>
@@ -308,16 +263,10 @@ const PostDetail: React.FC = () => {
                   <p className="comment-body">{comment.content}</p>
                   {(comment.userId === currentUserId || isAdmin) && (
                     <div className="comment-actions">
-                      <button
-                        onClick={() => handleEditStart(comment)}
-                        className="edit-btn"
-                      >
+                      <button onClick={() => handleEditStart(comment)} className="edit-btn">
                         Edit
                       </button>
-                      <button
-                        onClick={() => handleDelete(comment.id)}
-                        className="delete-btn"
-                      >
+                      <button onClick={() => handleDelete(comment.id)} className="delete-btn">
                         Delete
                       </button>
                     </div>

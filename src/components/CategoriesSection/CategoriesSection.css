@@ -1,0 +1,139 @@
+.categories-section {
+    padding: 20px;
+    background: #f8f9fa;
+  }
+  
+  .categories-section h2 {
+    font-size: 1.8rem;
+    color: #2c3e50;
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  
+  .categories-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+  }
+  
+  .category-item {
+    background: #ffffff;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .category-item h3 {
+    font-size: 1.2rem;
+    color: #34495e;
+    margin-bottom: 10px;
+  }
+  
+  .category-posts {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 10px;
+  }
+  
+  .category-posts li {
+    margin-bottom: 8px;
+  }
+  
+  .category-posts a {
+    color: #34495e;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: color 0.2s ease;
+  }
+  
+  .category-posts a:hover {
+    color: #007bff;
+  }
+  
+  .see-more {
+    display: inline-block;
+    color: #007bff;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+  
+  .see-more:hover {
+    text-decoration: underline;
+  }
+  
+  .error {
+    color: #c0392b;
+    text-align: center;
+  }
+  
+  /* Dark Mode Styles */
+  body.dark-mode .categories-section {
+    background: #1e1e1e;
+  }
+  
+  body.dark-mode .categories-section h2 {
+    color: #ffffff;
+  }
+  
+  body.dark-mode .category-item {
+    background: #2c2c2c;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+  
+  body.dark-mode .category-item h3 {
+    color: #e0e0e0;
+  }
+  
+  body.dark-mode .category-posts a {
+    color: #b0b0b0;
+  }
+  
+  body.dark-mode .category-posts a:hover {
+    color: #1e90ff;
+  }
+  
+  body.dark-mode .see-more {
+    color: #1e90ff;
+  }
+  
+  body.dark-mode .error {
+    color: #ff5555;
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .categories-section {
+      padding: 15px;
+    }
+  
+    .categories-section h2 {
+      font-size: 1.5rem;
+    }
+  
+    .category-item h3 {
+      font-size: 1.1rem;
+    }
+  
+    .category-posts a {
+      font-size: 0.85rem;
+    }
+  
+    .see-more {
+      font-size: 0.85rem;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .categories-section {
+      padding: 10px;
+    }
+  
+    .categories-section h2 {
+      font-size: 1.3rem;
+    }
+  
+    .categories-list {
+      grid-template-columns: 1fr;
+    }
+  }

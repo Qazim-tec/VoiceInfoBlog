@@ -1,229 +1,303 @@
-.auth-container {
-    min-height: calc(100vh - 60px);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: linear-gradient(135deg, #e0eafc, #cfdef3);
+/* Define CSS variables for light and dark modes */
+:root {
+  --background-light: linear-gradient(135deg, #ffffff 0%, #d1d5db 100%);
+  --background-dark: linear-gradient(135deg, #2b5876 0%, #4e4376 100%);
+  --form-bg-light: rgba(255, 255, 255, 0.2);
+  --form-bg-dark: rgba(0, 0, 0, 0.1);
+  --text-light: #000000;
+  --text-dark: #e0e0e0;
+  --input-bg-light: rgba(255, 255, 255, 0.3);
+  --input-bg-dark: rgba(255, 255, 255, 0.05);
+  --button-gradient: linear-gradient(45deg, #4facfe, #00f2fe);
+  --shadow-light: rgba(0, 0, 0, 0.2);
+  --shadow-dark: rgba(0, 0, 0, 0.37);
+  --border-light: rgba(0, 0, 0, 0.4); /* Default border for light mode */
+  --border-dark: rgba(255, 255, 255, 0.4); /* Default border for dark mode */
+  --border-focus-light: #000000; /* Focused border for light mode */
+  --border-focus-dark: #ffffff; /* Focused border for dark mode */
+}
+
+/* Apply dark mode variables - unchanged */
+body.dark-mode {
+  --background: var(--background-dark);
+  --form-bg: var(--form-bg-dark);
+  --text: var(--text-dark);
+  --input-bg: var(--input-bg-dark);
+  --shadow: var(--shadow-dark);
+  --border: var(--border-dark);
+  --border-focus: var(--border-focus-dark);
+}
+
+/* Default to light mode */
+body:not(.dark-mode) {
+  --background: var(--background-light);
+  --form-bg: var(--form-bg-light);
+  --text: var(--text-light);
+  --input-bg: var(--input-bg-light);
+  --shadow: var(--shadow-light);
+  --border: var(--border-light);
+  --border-focus: var(--border-focus-light);
+}
+
+/* Container styling */
+.auth-container.signin-auth-container,
+.auth-container.signup-auth-container {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 5rem;
+  background: var(--background);
+  position: relative;
+  overflow: hidden;
+}
+
+.auth-container.signin-auth-container::before,
+.auth-container.signup-auth-container::before {
+  content: '';
+  position: absolute;
+  width: 200%;
+  height: 200%;
+  top: -50%;
+  left: -50%;
+  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><circle cx="50" cy="50" r="30" fill="rgba(0,0,0,0.1)"/></svg>') repeat;
+  animation: auth-backgroundMove 20s linear infinite;
+  opacity: 0.2;
+}
+
+/* Form styling */
+.auth-form.signin-auth-form,
+.auth-form.signup-auth-form {
+  background: var(--form-bg);
+  backdrop-filter: blur(10px);
+  border-radius: 15px;
+  padding: 2rem;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 8px 32px var(--shadow);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  position: relative;
+  z-index: 1;
+  margin: 1rem;
+}
+
+/* Heading */
+.auth-form.signin-auth-form h2,
+.auth-form.signup-auth-form h2 {
+  color: var(--text);
+  text-align: center;
+  margin-bottom: 2rem;
+  font-size: 1.8rem;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Form group - horizontal flex layout with visible border */
+.form-group.signin-form-group,
+.form-group.signup-form-group {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  background: var(--input-bg);
+  border-radius: 8px;
+  padding: 0.2rem 0.8rem;
+  border: 1px solid var(--border); /* Default border */
+  transition: border-color 0.3s ease; /* Smooth transition for focus */
+}
+
+/* Enhance border on focus */
+.form-group.signin-form-group:focus-within,
+.form-group.signup-form-group:focus-within {
+  border: 2px solid var(--border-focus); /* Thicker, solid border on focus */
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.2); /* Subtle glow effect */
+}
+
+/* Input icon - positioned to the left */
+.input-icon.signin-input-icon,
+.input-icon.signup-input-icon {
+  color: var(--text);
+  opacity: 0.9;
+  margin-right: 10px;
+  font-size: 1.2rem;
+}
+
+/* Input field */
+.form-group.signin-form-group input,
+.form-group.signup-form-group input {
+  flex-grow: 1;
+  padding: 0.6rem 0.8rem;
+  background: transparent;
+  border: none; /* No inner border, handled by form-group */
+  color: var(--text);
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.form-group.signin-form-group input:focus,
+.form-group.signup-form-group input:focus {
+  outline: none;
+}
+
+.form-group.signin-form-group input::placeholder,
+.form-group.signup-form-group input::placeholder {
+  color: rgba(0, 0, 0, 0.7);
+  transition: opacity 0.3s ease;
+}
+
+.form-group.signin-form-group input:focus::placeholder,
+.form-group.signup-form-group input:focus::placeholder {
+  opacity: 0.5;
+}
+
+/* Messages */
+.error-message.signin-error-message,
+.error-message.signup-error-message {
+  color: #ff6b6b;
+  text-align: center;
+  margin: 0.5rem 0;
+  font-size: 0.9rem;
+}
+
+.success-message.signin-success-message,
+.success-message.signup-success-message {
+  color: #4ecdc4;
+  text-align: center;
+  margin: 0.5rem 0;
+  font-size: 0.9rem;
+}
+
+/* Button */
+.auth-button.signin-auth-button,
+.auth-button.signup-auth-button {
+  width: 100%;
+  padding: 0.8rem;
+  background: var(--button-gradient);
+  border: none;
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.auth-button.signin-auth-button:hover:not(:disabled),
+.auth-button.signup-auth-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 242, 254, 0.4);
+}
+
+.auth-button.signin-auth-button:disabled,
+.auth-button.signup-auth-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Loader */
+.loader.signin-loader,
+.loader.signup-loader {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #ffffff;
+  animation: auth-spin 1s ease-in-out infinite;
+}
+
+/* Switch link */
+.auth-switch.signin-auth-switch,
+.auth-switch.signup-auth-switch {
+  text-align: center;
+  margin-top: 1.5rem;
+  color: var(--text);
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+.auth-switch.signin-auth-switch a,
+.auth-switch.signup-auth-switch a {
+  color: #00f2fe;
+  text-decoration: none;
+  font-weight: bold;
+  transition: color 0.3s ease;
+}
+
+.auth-switch.signin-auth-switch a:hover,
+.auth-switch.signup-auth-switch a:hover {
+  color: #4facfe;
+}
+
+/* Animations */
+@keyframes auth-backgroundMove {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(-50%, -50%); }
+}
+
+@keyframes auth-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Responsive design - mobile */
+@media (max-width: 480px) {
+  .auth-container.signin-auth-container,
+  .auth-container.signup-auth-container {
+    padding-top: 3rem;
+  }
+
+  .auth-form.signin-auth-form,
+  .auth-form.signup-auth-form {
+    padding: 1.5rem;
+    margin: 0.5rem;
+  }
+
+  .auth-form.signin-auth-form h2,
+  .auth-form.signup-auth-form h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .form-group.signin-form-group input,
+  .form-group.signup-form-group input {
+    padding: 0.5rem 0.7rem;
+    font-size: 0.9rem;
+  }
+
+  .auth-button.signin-auth-button,
+  .auth-button.signup-auth-button {
+    padding: 0.7rem;
+    font-size: 0.9rem;
+  }
+}
+
+/* Desktop-specific adjustments (wider form) */
+@media (min-width: 769px) {
+  .auth-container.signin-auth-container,
+  .auth-container.signup-auth-container {
+    padding-top: 4rem;
+  }
+
+  .auth-form.signin-auth-form,
+  .auth-form.signup-auth-form {
+    max-width: 600px;
+    padding: 2.5rem;
+  }
+
+  .auth-form.signin-auth-form h2,
+  .auth-form.signup-auth-form h2 {
+    font-size: 2rem;
+  }
+
+  .form-group.signin-form-group,
+  .form-group.signup-form-group {
+    padding: 0.3rem 1rem;
+  }
+
+  .auth-button.signin-auth-button,
+  .auth-button.signup-auth-button {
     padding: 1rem;
-  }
-  
-  .auth-form {
-    background: white;
-    padding: 2rem;
-    border-radius: 12px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-    width: 100%;
-    max-width: 420px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    background: linear-gradient(to bottom, #ffffff, #f8f9fa);
-  }
-  
-  .auth-form h2 {
-    text-align: center;
-    margin-bottom: 2rem;
-    color: #2c3e50;
-    font-size: 1.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-  }
-  
-  .form-group {
-    position: relative;
-    margin-bottom: 1.25rem;
-  }
-  
-  .form-group input {
-    width: 100%;
-    padding: 0.9rem 0.9rem 0.9rem 2.75rem;
-    border: none;
-    border-radius: 8px;
-    font-size: 1rem;
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
-    background: #fff;
-    transition: box-shadow 0.3s ease;
-    box-sizing: border-box;
-  }
-  
-  .form-group input:focus {
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.3);
-  }
-  
-  .input-icon {
-    position: absolute;
-    left: 0.9rem;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #7f8c8d;
     font-size: 1.1rem;
   }
-  
-  .auth-button {
-    width: 100%;
-    padding: 0.9rem;
-    background: linear-gradient(90deg, #007bff, #00d4ff);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-size: 1.1rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
-    position: relative;
-    overflow: hidden;
-  }
-  
-  .auth-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(0, 123, 255, 0.4);
-  }
-  
-  .auth-button:disabled {
-    background: #b0bec5;
-    cursor: not-allowed;
-    box-shadow: none;
-  }
-  
-  .loader {
-    display: inline-block;
-    width: 20px;
-    height: 20px;
-    border: 3px solid rgba(255, 255, 255, 0.3);
-    border-top: 3px solid #fff;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-  }
-  
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
-  
-  .auth-switch {
-    text-align: center;
-    margin-top: 1.5rem;
-    color: #34495e;
-    font-size: 0.95rem;
-  }
-  
-  .auth-switch a {
-    color: #007bff;
-    text-decoration: none;
-    font-weight: 500;
-  }
-  
-  .auth-switch a:hover {
-    text-decoration: underline;
-  }
-  
-  .error-message {
-    color: #e74c3c;
-    text-align: center;
-    margin: 0.75rem 0;
-    font-size: 0.9rem;
-    background: rgba(231, 76, 60, 0.1);
-    padding: 0.5rem;
-    border-radius: 4px;
-  }
-  
-  .success-message {
-    color: #27ae60;
-    text-align: center;
-    margin: 0.75rem 0;
-    font-size: 0.9rem;
-    background: rgba(39, 174, 96, 0.1);
-    padding: 0.5rem;
-    border-radius: 4px;
-  }
-  
-  @media (max-width: 768px) {
-    .auth-container {
-      padding: 0.5rem;
-    }
-  
-    .auth-form {
-      padding: 1.5rem;
-      max-width: 100%;
-      margin: 0 0.5rem;
-    }
-  
-    .auth-form h2 {
-      font-size: 1.5rem;
-      margin-bottom: 1.25rem;
-    }
-  
-    .form-group {
-      margin-bottom: 1rem;
-    }
-  
-    .form-group input {
-      padding: 0.7rem 0.7rem 0.7rem 2.5rem;
-      font-size: 0.95rem;
-    }
-  
-    .input-icon {
-      left: 0.7rem;
-      font-size: 1rem;
-    }
-  
-    .auth-button {
-      padding: 0.7rem;
-      font-size: 1rem;
-    }
-  
-    .auth-switch {
-      font-size: 0.9rem;
-      margin-top: 1rem;
-    }
-  
-    .error-message,
-    .success-message {
-      font-size: 0.85rem;
-      margin: 0.5rem 0;
-    }
-  }
-  
-  body.dark-mode .auth-container {
-    background: linear-gradient(135deg, #2c3e50, #34495e);
-  }
-  
-  body.dark-mode .auth-form {
-    background: linear-gradient(to bottom, #34495e, #2c3e50);
-    color: #ecf0f1;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-  }
-  
-  body.dark-mode .form-group input {
-    background: #3e5468;
-    color: #ecf0f1;
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
-  }
-  
-  body.dark-mode .form-group input:focus {
-    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.3);
-  }
-  
-  body.dark-mode .auth-button {
-    background: linear-gradient(90deg, #3498db, #5dade2);
-    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
-  }
-  
-  body.dark-mode .auth-button:hover {
-    box-shadow: 0 6px 16px rgba(52, 152, 219, 0.4);
-  }
-  
-  body.dark-mode .auth-switch {
-    color: #bdc3c7;
-  }
-  
-  body.dark-mode .error-message {
-    color: #e74c3c;
-    background: rgba(231, 76, 60, 0.2);
-  }
-  
-  body.dark-mode .success-message {
-    color: #2ecc71;
-    background: rgba(46, 204, 113, 0.2);
-  }
+}

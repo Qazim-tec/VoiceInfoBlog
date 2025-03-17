@@ -1,0 +1,196 @@
+.footer {
+  background: #f8f9fa; /* Light mode background */
+  padding: 20px; /* Slim padding for desktop */
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  border-top: 1px solid #e7e7e7; /* Subtle light mode border */
+  font-size: 0.9rem;
+}
+
+.footer-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px; /* Reduced gap */
+  flex-wrap: wrap;
+}
+
+.footer-brand {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.footer-logo {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #2c3e50; /* Light mode logo */
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.footer-logo:hover {
+  color: #007bff; /* Light mode hover */
+}
+
+.footer-tagline {
+  font-size: 0.85rem;
+  color: #666; /* Light mode tagline */
+  margin: 0;
+}
+
+.footer-links {
+  display: flex;
+  gap: 20px;
+}
+
+.footer-links a {
+  color: #34495e; /* Light mode link */
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: color 0.2s ease;
+}
+
+.footer-links a:hover {
+  color: #007bff; /* Light mode hover */
+}
+
+.footer-social {
+  display: flex;
+  gap: 10px; /* Tighter gap for icons */
+}
+
+.footer-social a {
+  color: #34495e; /* Light mode icon */
+  text-decoration: none;
+  font-size: 1.1rem; /* Slightly larger for icons */
+  transition: color 0.2s ease;
+}
+
+.footer-social a:hover {
+  color: #007bff; /* Light mode hover */
+}
+
+.footer-bottom {
+  text-align: center;
+  padding-top: 8px; /* Slimmer padding */
+  border-top: 1px solid #e7e7e7; /* Subtle light mode divider */
+  margin-top: 10px; /* Reduced margin */
+}
+
+.footer-bottom p {
+  font-size: 0.8rem;
+  color: #666; /* Light mode copyright */
+  margin: 0;
+}
+
+/* Dark Mode Styles */
+body.dark-mode .footer {
+  background: #1e1e1e; /* Dark mode background */
+  border-top: 1px solid #333; /* Subtle dark mode border */
+}
+
+body.dark-mode .footer-logo {
+  color: #ffffff; /* Dark mode logo */
+}
+
+body.dark-mode .footer-logo:hover {
+  color: #1e90ff; /* Dark mode hover */
+}
+
+body.dark-mode .footer-tagline {
+  color: #b0b0b0; /* Dark mode tagline */
+}
+
+body.dark-mode .footer-links a {
+  color: #b0b0b0; /* Dark mode link */
+}
+
+body.dark-mode .footer-links a:hover {
+  color: #1e90ff; /* Dark mode hover */
+}
+
+body.dark-mode .footer-social a {
+  color: #b0b0b0; /* Dark mode icon */
+}
+
+body.dark-mode .footer-social a:hover {
+  color: #1e90ff; /* Dark mode hover */
+}
+
+body.dark-mode .footer-bottom {
+  border-top: 1px solid #333; /* Subtle dark mode divider */
+}
+
+body.dark-mode .footer-bottom p {
+  color: #b0b0b0; /* Dark mode copyright */
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .footer {
+    padding: 15px; /* Slimmer padding for tablet/mobile */
+  }
+
+  .footer-container {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 10px; /* Tighter gap */
+  }
+
+  .footer-links {
+    flex-direction: row; /* Keep horizontal on tablet */
+    gap: 15px;
+  }
+
+  .footer-social {
+    gap: 12px;
+  }
+
+  .footer-bottom {
+    margin-top: 8px;
+    padding-top: 6px;
+  }
+}
+
+@media (max-width: 480px) {
+  .footer {
+    padding: 10px; /* Even slimmer for small mobile */
+  }
+
+  .footer-container {
+    gap: 8px; /* Minimal gap */
+  }
+
+  .footer-logo {
+    font-size: 1.1rem;
+  }
+
+  .footer-tagline {
+    font-size: 0.8rem;
+  }
+
+  .footer-links {
+    flex-direction: column; /* Stack links on small mobile */
+    gap: 8px;
+  }
+
+  .footer-links a {
+    font-size: 0.85rem;
+  }
+
+  .footer-social a {
+    font-size: 1rem; /* Slightly smaller icons */
+  }
+
+  .footer-bottom {
+    margin-top: 6px;
+    padding-top: 5px;
+  }
+
+  .footer-bottom p {
+    font-size: 0.75rem;
+  }
+}

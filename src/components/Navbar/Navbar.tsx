@@ -9,6 +9,7 @@ import {
   FaSearch,
 } from "react-icons/fa";
 import { useUser } from "../../context/UserContext";
+import { useCategories } from "../../hooks/useCategories";
 import "./Navbar.css";
 import Logo from "../../assets/react.svg";
 
@@ -16,19 +17,11 @@ const Navbar: React.FC = () => {
   const [darkMode, setDarkMode] = useState<boolean>(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
   const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
-  const [isUserMenuOpen, setIsUserMenuOpen] = useState<boolean>(false); // Separate user menu state
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const { user, logout } = useUser();
+  const { categories, loading, error } = useCategories();
   const navigate = useNavigate();
-
-  const categories: string[] = [
-    "Home",
-    "Technology",
-    "Lifestyle",
-    "Travel",
-    "Health",
-    "Education",
-  ];
 
   const toggleDarkMode = (): void => {
     setDarkMode((prev) => !prev);
@@ -37,7 +30,7 @@ const Navbar: React.FC = () => {
 
   const handleLogout = () => {
     logout();
-    setIsUserMenuOpen(false); // Close user menu on logout
+    setIsUserMenuOpen(false);
     navigate("/");
   };
 
@@ -63,13 +56,22 @@ const Navbar: React.FC = () => {
       </div>
 
       <ul className="navbar-links desktop">
-        {categories.map((category) => (
-          <li key={category}>
-            <Link to={category === "Home" ? "/" : `/${category.toLowerCase()}`}>
-              {category}
-            </Link>
-          </li>
-        ))}
+        <li key="home">
+          <Link to="/">Home</Link>
+        </li>
+        {loading ? (
+          <li>Loading...</li>
+        ) : error ? (
+          <li>Error loading categories</li>
+        ) : (
+          categories.map((category) => (
+            <li key={category.id}>
+              <Link to={`/${category.name.toLowerCase()}`}>
+                {category.name}
+              </Link>
+            </li>
+          ))
+        )}
       </ul>
 
       <div className={`search-bar desktop ${isSearchOpen ? "open" : ""}`}>
@@ -116,11 +118,17 @@ const Navbar: React.FC = () => {
                     My Posts
                   </Link>
                 </li>
-                <li>
-                  <Link to="/settings" onClick={() => setIsUserMenuOpen(false)}>
-                    Settings
-                  </Link>
-                </li>
+                {/* Only show Settings for Admin */}
+                {user.role === "Admin" && (
+                  <li>
+                    <Link
+                      to="/settings"
+                      onClick={() => setIsUserMenuOpen(false)}
+                    >
+                      Settings
+                    </Link>
+                  </li>
+                )}
                 <li>
                   <button onClick={handleLogout} className="logout-button">
                     Logout
@@ -138,16 +146,27 @@ const Navbar: React.FC = () => {
 
       <div className={`mobile-menu ${isMobileMenuOpen ? "open" : ""}`}>
         <ul className="navbar-links mobile">
-          {categories.map((category) => (
-            <li key={category}>
-              <Link
-                to={category === "Home" ? "/" : `/${category.toLowerCase()}`}
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                {category}
-              </Link>
-            </li>
-          ))}
+          <li key="home">
+            <Link to="/" onClick={() => setIsMobileMenuOpen(false)}>
+              Home
+            </Link>
+          </li>
+          {loading ? (
+            <li>Loading...</li>
+          ) : error ? (
+            <li>Error loading categories</li>
+          ) : (
+            categories.map((category) => (
+              <li key={category.id}>
+                <Link
+                  to={`/${category.name.toLowerCase()}`}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {category.name}
+                </Link>
+              </li>
+            ))
+          )}
         </ul>
       </div>
     </nav>

@@ -54,10 +54,10 @@ const SignIn: React.FC = () => {
       }
 
       const result: LoginResponse = await response.json();
-      setUser(result); // Store full user data in context
+      setUser(result);
       setSuccess("Login successful!");
       setTimeout(() => {
-        navigate("/"); // Redirect to home after 1s
+        navigate("/");
       }, 1000);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
@@ -68,12 +68,12 @@ const SignIn: React.FC = () => {
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-form">
+    <div className="auth-container signin-auth-container">
+      <div className="auth-form signin-auth-form">
         <h2>Sign In to VoiceInfo</h2>
         <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <FaUser className="input-icon" />
+          <div className="form-group signin-form-group">
+            <FaUser className="input-icon signin-input-icon" />
             <input
               type="email"
               name="email"
@@ -83,8 +83,8 @@ const SignIn: React.FC = () => {
               required
             />
           </div>
-          <div className="form-group">
-            <FaLock className="input-icon" />
+          <div className="form-group signin-form-group">
+            <FaLock className="input-icon signin-input-icon" />
             <input
               type="password"
               name="password"
@@ -94,13 +94,13 @@ const SignIn: React.FC = () => {
               required
             />
           </div>
-          {error && <p className="error-message">{error}</p>}
-          {success && <p className="success-message">{success}</p>}
-          <button type="submit" className="auth-button" disabled={loading}>
-            {loading ? <span className="loader"></span> : "Sign In"}
+          {error && <p className="error-message signin-error-message">{error}</p>}
+          {success && <p className="success-message signin-success-message">{success}</p>}
+          <button type="submit" className="auth-button signin-auth-button" disabled={loading}>
+            {loading ? <span className="loader signin-loader"></span> : "Sign In"}
           </button>
         </form>
-        <p className="auth-switch">
+        <p className="auth-switch signin-auth-switch">
           New to VoiceInfo? <Link to="/signup">Sign Up</Link>
         </p>
       </div>

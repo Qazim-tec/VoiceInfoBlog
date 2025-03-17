@@ -1,0 +1,256 @@
+/* Custom Properties for Consistency */
+:root {
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  --radius: 8px;
+  --shadow-light: 0 4px 20px rgba(0, 0, 0, 0.1);
+  --shadow-dark: 0 4px 20px rgba(0, 0, 0, 0.3);
+  --transition: all 0.3s ease;
+  /* Light Mode Colors */
+  --bg-light: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  --card-bg-light: #fff;
+  --text-primary-light: #2c3e50;
+  --text-secondary-light: #34495e;
+  --input-border-light: #dcdcdc;
+  --input-focus-light: #3498db;
+  --btn-secondary-light: #ecf0f1;
+  --btn-secondary-hover-light: #bdc3c7;
+  --btn-primary-light: #3498db;
+  --btn-primary-hover-light: #2980b9;
+  --error-bg-light: #ffebee;
+  --error-text-light: #c62828;
+  /* Dark Mode Colors */
+  --bg-dark: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+  --card-bg-dark: #34495e;
+  --text-primary-dark: #ecf0f1;
+  --text-secondary-dark: #ecf0f1;
+  --input-bg-dark: #2c3e50;
+  --input-border-dark: #7f8c8d;
+  --input-focus-dark: #3498db;
+  --btn-secondary-dark: #7f8c8d;
+  --btn-secondary-hover-dark: #95a5a6;
+  --btn-primary-dark: #3498db;
+  --btn-primary-hover-dark: #2980b9;
+}
+
+/* Base Styles */
+.create-post-page {
+  min-height: 100vh;
+  background: var(--bg-light);
+  padding: var(--spacing-xl) var(--spacing-md);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.create-post-container {
+  max-width: 900px;
+  width: 100%;
+  background: var(--card-bg-light);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-light);
+  padding: var(--spacing-xl);
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.create-post-container h1 {
+  font-size: 2rem;
+  color: var(--text-primary-light);
+  text-align: center;
+  margin-bottom: var(--spacing-xl);
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.error-message {
+  background: var(--error-bg-light);
+  color: var(--error-text-light);
+  padding: var(--spacing-md);
+  border-radius: var(--radius);
+  margin-bottom: var(--spacing-lg);
+  text-align: center;
+  font-weight: 500;
+}
+
+.post-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  font-size: 1.1rem;
+  color: var(--text-secondary-light);
+  margin-bottom: var(--spacing-sm);
+  font-weight: 600;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--input-border-light);
+  border-radius: var(--radius);
+  font-size: 1rem;
+  font-family: 'Segoe UI', sans-serif;
+  transition: var(--transition);
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: var(--input-focus-light);
+  box-shadow: 0 0 5px rgba(52, 152, 219, 0.5);
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+/* Quill Editor Styles */
+.form-group .quill-editor {
+  background: var(--card-bg-light);
+  border-radius: var(--radius);
+}
+
+.form-group .quill-editor .ql-toolbar {
+  border: 1px solid var(--input-border-light);
+  border-top-left-radius: var(--radius);
+  border-top-right-radius: var(--radius);
+  background: #f9f9f9;
+}
+
+.form-group .quill-editor .ql-container {
+  border: 1px solid var(--input-border-light);
+  border-top: none;
+  border-bottom-left-radius: var(--radius);
+  border-bottom-right-radius: var(--radius);
+  min-height: 200px;
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 1rem;
+  color: var(--text-primary-light);
+}
+
+.file-preview {
+  margin-top: var(--spacing-sm);
+  color: #7f8c8d;
+  font-size: 0.9rem;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-md);
+}
+
+.btn {
+  padding: 0.75rem 2rem;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition), transform 0.2s;
+}
+
+.btn-secondary {
+  background: var(--btn-secondary-light);
+  color: #7f8c8d;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--btn-secondary-hover-light);
+  transform: translateY(-2px);
+}
+
+.btn-primary {
+  background: var(--btn-primary-light);
+  color: #fff;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--btn-primary-hover-light);
+  transform: translateY(-2px);
+}
+
+.btn:disabled {
+  background: #bdc3c7;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* Dark Mode */
+body.dark-mode .create-post-page {
+  background: var(--bg-dark);
+}
+
+body.dark-mode .create-post-container {
+  background: var(--card-bg-dark);
+  box-shadow: var(--shadow-dark);
+}
+
+body.dark-mode .create-post-container h1,
+body.dark-mode .form-group label {
+  color: var(--text-primary-dark);
+}
+
+body.dark-mode .form-group input,
+body.dark-mode .form-group textarea,
+body.dark-mode .form-group select {
+  background: var(--input-bg-dark);
+  color: var(--text-primary-dark);
+  border-color: var(--input-border-dark);
+}
+
+body.dark-mode .form-group input:focus,
+body.dark-mode .form-group textarea:focus,
+body.dark-mode .form-group select:focus {
+  border-color: var(--input-focus-dark);
+}
+
+body.dark-mode .form-group .quill-editor .ql-toolbar {
+  border-color: var(--input-border-dark);
+  background: #2c2c2c;
+}
+
+body.dark-mode .form-group .quill-editor .ql-container {
+  border-color: var(--input-border-dark);
+  color: var(--text-primary-dark);
+}
+
+body.dark-mode .form-group .quill-editor .ql-picker-label,
+body.dark-mode .form-group .quill-editor .ql-stroke {
+  color: var(--text-primary-dark);
+  stroke: var(--text-primary-dark);
+}
+
+body.dark-mode .btn-secondary {
+  background: var(--btn-secondary-dark);
+  color: var(--text-primary-dark);
+}
+
+body.dark-mode .btn-secondary:hover:not(:disabled) {
+  background: var(--btn-secondary-hover-dark);
+}
+
+body.dark-mode .btn-primary {
+  background: var(--btn-primary-dark);
+}
+
+body.dark-mode .btn-primary:hover:not(:disabled) {
+  background: var(--btn-primary-hover-dark);
+}

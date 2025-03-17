@@ -1,0 +1,141 @@
+.trending-section {
+    padding: 10px 20px;
+    background: #f8f9fa; /* Light mode background */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+  
+  .trending-section h2 {
+    font-size: 1.8rem;
+    color: #2c3e50; /* Light mode text */
+    margin-bottom: 15px;
+    text-align: center;
+  }
+  
+  .trending-cards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+  }
+  
+  .trending-card-link {
+    text-decoration: none;
+    color: inherit;
+  }
+  
+  .trending-card {
+    background: white; /* Light mode card background */
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    transition: transform 0.2s ease;
+  }
+  
+  .trending-card:hover {
+    transform: translateY(-5px);
+  }
+  
+  .trending-image {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+  }
+  
+  .trending-card-content {
+    padding: 15px;
+  }
+  
+  .trending-title {
+    font-size: 1.1rem;
+    color: #34495e; /* Light mode title */
+    margin: 0 0 10px;
+    line-height: 1.4;
+  }
+  
+  .trending-meta {
+    font-size: 0.9rem;
+    color: #7f8c8d; /* Light mode meta text */
+    margin: 0;
+  }
+  
+  .error {
+    color: #c0392b; /* Light mode error */
+    font-size: 1rem;
+    text-align: center;
+  }
+  
+  /* Dark Mode Styles */
+  body.dark-mode .trending-section {
+    background: #1e1e1e; /* Darker background for section */
+  }
+  
+  body.dark-mode .trending-section h2 {
+    color: #ffffff; /* White text for heading */
+  }
+  
+  body.dark-mode .trending-card {
+    background: #2c2c2c; /* Dark card background */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); /* Darker shadow */
+  }
+  
+  body.dark-mode .trending-title {
+    color: #e0e0e0; /* Light gray for title in dark mode */
+  }
+  
+  body.dark-mode .trending-meta {
+    color: #b0b0b0; /* Lighter gray for meta text */
+  }
+  
+  body.dark-mode .error {
+    color: #ff5555; /* Brighter red for error in dark mode */
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 1024px) {
+    .trending-cards {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .trending-section {
+      padding: 8px 15px;
+    }
+  
+    .trending-section h2 {
+      font-size: 1.5rem;
+    }
+  
+    .trending-cards {
+      grid-template-columns: 1fr;
+    }
+  
+    .trending-title {
+      font-size: 1rem;
+    }
+  
+    .trending-meta {
+      font-size: 0.85rem;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .trending-section {
+      padding: 5px 10px;
+    }
+  
+    .trending-section h2 {
+      font-size: 1.3rem;
+    }
+  
+    .trending-image {
+      height: 120px;
+    }
+  
+    .trending-title {
+      font-size: 0.95rem;
+    }
+  
+    .trending-meta {
+      font-size: 0.8rem;
+    }
+  }

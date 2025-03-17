@@ -21,7 +21,7 @@ const SignUp: React.FC = () => {
   });
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(false); // Add loading state
+  const [loading, setLoading] = useState<boolean>(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const { name, value } = e.target;
@@ -32,7 +32,7 @@ const SignUp: React.FC = () => {
     e.preventDefault();
     setError(null);
     setSuccess(null);
-    setLoading(true); // Show loader
+    setLoading(true);
 
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match");
@@ -60,17 +60,17 @@ const SignUp: React.FC = () => {
       setError(err instanceof Error ? err.message : "An error occurred");
       console.error("Registration error:", err);
     } finally {
-      setLoading(false); // Hide loader
+      setLoading(false);
     }
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-form">
+    <div className="auth-container signup-auth-container">
+      <div className="auth-form signup-auth-form">
         <h2>Join VoiceInfo</h2>
         <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <FaUser className="input-icon" />
+          <div className="form-group signup-form-group">
+            <FaUser className="input-icon signup-input-icon" />
             <input
               type="text"
               name="firstName"
@@ -80,8 +80,8 @@ const SignUp: React.FC = () => {
               required
             />
           </div>
-          <div className="form-group">
-            <FaUser className="input-icon" />
+          <div className="form-group signup-form-group">
+            <FaUser className="input-icon signup-input-icon" />
             <input
               type="text"
               name="lastName"
@@ -91,8 +91,8 @@ const SignUp: React.FC = () => {
               required
             />
           </div>
-          <div className="form-group">
-            <FaEnvelope className="input-icon" />
+          <div className="form-group signup-form-group">
+            <FaEnvelope className="input-icon signup-input-icon" />
             <input
               type="email"
               name="email"
@@ -102,8 +102,8 @@ const SignUp: React.FC = () => {
               required
             />
           </div>
-          <div className="form-group">
-            <FaLock className="input-icon" />
+          <div className="form-group signup-form-group">
+            <FaLock className="input-icon signup-input-icon" />
             <input
               type="password"
               name="password"
@@ -113,8 +113,8 @@ const SignUp: React.FC = () => {
               required
             />
           </div>
-          <div className="form-group">
-            <FaLock className="input-icon" />
+          <div className="form-group signup-form-group">
+            <FaLock className="input-icon signup-input-icon" />
             <input
               type="password"
               name="confirmPassword"
@@ -124,14 +124,14 @@ const SignUp: React.FC = () => {
               required
             />
           </div>
-          {error && <p className="error-message">{error}</p>}
-          {success && <p className="success-message">{success}</p>}
-          <button type="submit" className="auth-button" disabled={loading}>
-            {loading ? <span className="loader"></span> : "Sign Up"}
+          {error && <p className="error-message signup-error-message">{error}</p>}
+          {success && <p className="success-message signup-success-message">{success}</p>}
+          <button type="submit" className="auth-button signup-auth-button" disabled={loading}>
+            {loading ? <span className="loader signup-loader"></span> : "Sign Up"}
           </button>
         </form>
-        <p className="auth-switch">
-          Already a member? <Link to="/login">Sign In</Link>
+        <p className="auth-switch signup-auth-switch">
+          Already a member? <Link to="/signin">Sign In</Link>
         </p>
       </div>
     </div>
