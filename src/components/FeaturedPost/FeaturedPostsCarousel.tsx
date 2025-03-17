@@ -20,7 +20,7 @@ const FeaturedPostsCarousel: React.FC = () => {
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const response = await fetch("https://localhost:7094/api/Post/all");
+        const response = await fetch("https://voiceinfo.onrender.com/api/Post/all");
         if (!response.ok) throw new Error("Failed to fetch posts");
 
         const data: Post[] = await response.json();

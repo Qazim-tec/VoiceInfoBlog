@@ -33,13 +33,13 @@ const CategoriesSection: React.FC = () => {
           headers["Authorization"] = `Bearer ${user.token}`;
         }
 
-        // Fetch all categories from the provided endpoint
-        const categoriesResponse = await fetch("https://localhost:7094/api/Category/all", { headers });
+        // Fetch all categories from the Render endpoint
+        const categoriesResponse = await fetch("https://voiceinfo.onrender.com/api/Category/all", { headers });
         if (!categoriesResponse.ok) throw new Error("Failed to fetch categories");
         const categories: Category[] = await categoriesResponse.json();
 
-        // Fetch all posts
-        const postsResponse = await fetch("https://localhost:7094/api/Post/all", { headers });
+        // Fetch all posts from the Render endpoint
+        const postsResponse = await fetch("https://voiceinfo.onrender.com/api/Post/all", { headers });
         if (!postsResponse.ok) throw new Error("Failed to fetch posts");
         const posts: Post[] = await postsResponse.json();
 

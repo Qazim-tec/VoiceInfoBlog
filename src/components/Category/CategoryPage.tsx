@@ -40,7 +40,7 @@ const CategoryPage: React.FC = () => {
           headers["Authorization"] = `Bearer ${user.token}`;
         }
 
-        const response = await fetch("https://localhost:7094/api/Post/all", {
+        const response = await fetch("https://voiceinfo.onrender.com/api/Post/all", {
           headers,
         });
         

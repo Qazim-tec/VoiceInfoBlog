@@ -1,4 +1,3 @@
-// components/LatestNews/LatestNews.tsx (unchanged)
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import './LatestNews.css';
@@ -32,7 +31,7 @@ const LatestNews: React.FC = () => {
   useEffect(() => {
     const fetchLatestNews = async () => {
       try {
-        const response = await fetch('https://localhost:7094/api/Post/all');
+        const response = await fetch('https://voiceinfo.onrender.com/api/Post/all');
         if (!response.ok) throw new Error('Failed to fetch posts');
 
         const data: Post[] = await response.json();

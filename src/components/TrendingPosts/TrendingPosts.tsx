@@ -36,7 +36,7 @@ const TrendingPosts: React.FC = () => {
       headers["Authorization"] = `Bearer ${user.token}`;
     }
 
-    fetch("https://localhost:7094/api/Post/all", { headers })
+    fetch("https://voiceinfo.onrender.com/api/Post/all", { headers })
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch posts");
         return res.json();

@@ -1,4 +1,3 @@
-// src/components/MyPosts/MyPosts.tsx
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useUser } from "../../context/UserContext";
@@ -38,7 +37,7 @@ const MyPosts: React.FC = () => {
 
       try {
         setLoading(true);
-        const response = await fetch("https://localhost:7094/api/Post/all", {
+        const response = await fetch("https://voiceinfo.onrender.com/api/Post/all", {
           headers: {
             "Authorization": `Bearer ${user.token}`,
           },
@@ -65,7 +64,7 @@ const MyPosts: React.FC = () => {
     if (!window.confirm("Are you sure you want to delete this post?")) return;
 
     try {
-      const response = await fetch(`https://localhost:7094/api/Post/delete/${postId}`, {
+      const response = await fetch(`https://voiceinfo.onrender.com/api/Post/delete/${postId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer ${user?.token}`,

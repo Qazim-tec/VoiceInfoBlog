@@ -1,4 +1,4 @@
-import { useParams, Link, useNavigate } from "react-router-dom"; // Added Link and useNavigate
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useUser } from "../../context/UserContext";
 import "./PostDetail.css";
@@ -44,18 +44,18 @@ const PostDetail: React.FC = () => {
   const currentUserId = user?.userId || "";
   const isAdmin = user?.role === "Admin";
   const isLoggedIn = !!user;
-  const navigate = useNavigate(); // For redirecting to edit page
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchPost = async () => {
       try {
-        const allPostsResponse = await fetch("https://localhost:7094/api/Post/all");
+        const allPostsResponse = await fetch("https://voiceinfo.onrender.com/api/Post/all");
         if (!allPostsResponse.ok) throw new Error("Failed to fetch posts");
         const allPosts: Post[] = await allPostsResponse.json();
         const foundPost = allPosts.find((p) => p.slug === slug);
         if (!foundPost) throw new Error("Post not found");
 
-        const postResponse = await fetch(`https://localhost:7094/api/Post/${foundPost.id}`);
+        const postResponse = await fetch(`https://voiceinfo.onrender.com/api/Post/${foundPost.id}`);
         if (!postResponse.ok) throw new Error("Failed to fetch post details");
         const postData: Post = await postResponse.json();
 
@@ -85,7 +85,7 @@ const PostDetail: React.FC = () => {
     };
 
     try {
-      const response = await fetch("https://localhost:7094/api/Comment/create", {
+      const response = await fetch("https://voiceinfo.onrender.com/api/Comment/create", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -129,7 +129,7 @@ const PostDetail: React.FC = () => {
     };
 
     try {
-      const response = await fetch(`https://localhost:7094/api/Comment/update/${commentId}`, {
+      const response = await fetch(`https://voiceinfo.onrender.com/api/Comment/update/${commentId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -165,7 +165,7 @@ const PostDetail: React.FC = () => {
     }
 
     try {
-      const response = await fetch(`https://localhost:7094/api/Comment/delete/${commentId}`, {
+      const response = await fetch(`https://voiceinfo.onrender.com/api/Comment/delete/${commentId}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${user?.token}`,
@@ -190,7 +190,7 @@ const PostDetail: React.FC = () => {
 
   const handleEditPost = () => {
     if (post) {
-      navigate("/create-post", { state: { postToEdit: post } }); // Pass post data to CreatePost
+      navigate("/create-post", { state: { postToEdit: post } });
     }
   };
 
@@ -207,7 +207,6 @@ const PostDetail: React.FC = () => {
           <Link to={`/${post.categoryName}`} className="category-link">
             {post.categoryName}
           </Link>
-          {/* Show Edit button only to the post author */}
           {currentUserId === post.authorId && (
             <button onClick={handleEditPost} className="edit-post-btn">
               Edit Post

@@ -34,7 +34,7 @@ const FeaturePosts: React.FC = () => {
       headers["Authorization"] = `Bearer ${user.token}`;
     }
 
-    fetch("https://localhost:7094/api/Post/all", { headers })
+    fetch("https://voiceinfo.onrender.com/api/Post/all", { headers })
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch posts");
         return res.json();
@@ -74,8 +74,8 @@ const FeaturePosts: React.FC = () => {
 
     const endpoint =
       type === "isFeatured"
-        ? `https://localhost:7094/api/Post/feature/${postId}?isFeatured=${value}`
-        : `https://localhost:7094/api/Post/latest-news/${postId}?isLatestNews=${value}`;
+        ? `https://voiceinfo.onrender.com/api/Post/feature/${postId}?isFeatured=${value}`
+        : `https://voiceinfo.onrender.com/api/Post/latest-news/${postId}?isLatestNews=${value}`;
 
     fetch(endpoint, {
       method: "PUT",
@@ -122,7 +122,7 @@ const FeaturePosts: React.FC = () => {
       headers["Authorization"] = `Bearer ${user.token}`;
     }
 
-    fetch(`https://localhost:7094/api/Post/delete/${postId}`, {
+    fetch(`https://voiceinfo.onrender.com/api/Post/delete/${postId}`, {
       method: "DELETE",
       headers,
     })

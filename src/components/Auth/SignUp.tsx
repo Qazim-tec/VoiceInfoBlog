@@ -41,7 +41,7 @@ const SignUp: React.FC = () => {
     }
 
     try {
-      const response = await fetch("https://localhost:7094/api/User/register", {
+      const response = await fetch("https://voiceinfo.onrender.com/api/User/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

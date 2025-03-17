@@ -23,7 +23,7 @@ export const useCategories = () => {
           headers["Authorization"] = `Bearer ${user.token}`;
         }
         
-        const response = await fetch("https://localhost:7094/api/Category/all", {
+        const response = await fetch("https://voiceinfo.onrender.com/api/Category/all", {
           headers,
         });
         

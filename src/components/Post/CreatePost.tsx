@@ -79,8 +79,8 @@ const CreatePost: React.FC = () => {
     }
 
     const url = postToEdit
-      ? `https://localhost:7094/api/Post/update/${postToEdit.id}`
-      : "https://localhost:7094/api/Post/create";
+      ? `https://voiceinfo.onrender.com/api/Post/update/${postToEdit.id}`
+      : "https://voiceinfo.onrender.com/api/Post/create";
     const method = postToEdit ? "PUT" : "POST";
 
     try {
