@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { FaUser, FaLock } from "react-icons/fa";
+import { FaUser, FaLock, FaEye, FaEyeSlash } from "react-icons/fa"; // Added FaEye, FaEyeSlash
 import { useUser } from "../../context/UserContext";
 import "./Auth.css";
 
@@ -25,6 +25,7 @@ const SignIn: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
+  const [showPassword, setShowPassword] = useState<boolean>(false); // Added for toggle
   const { setUser } = useUser();
   const navigate = useNavigate();
 
@@ -86,13 +87,16 @@ const SignIn: React.FC = () => {
           <div className="form-group signin-form-group">
             <FaLock className="input-icon signin-input-icon" />
             <input
-              type="password"
+              type={showPassword ? "text" : "password"} // Toggle between text and password
               name="password"
               placeholder="Password"
               value={formData.password}
               onChange={handleChange}
               required
             />
+            <span className="toggle-password" onClick={() => setShowPassword(!showPassword)}>
+              {showPassword ? <FaEyeSlash /> : <FaEye />}
+            </span>
           </div>
           {error && <p className="error-message signin-error-message">{error}</p>}
           {success && <p className="success-message signin-success-message">{success}</p>}

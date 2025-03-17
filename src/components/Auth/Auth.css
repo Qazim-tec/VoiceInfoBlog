@@ -11,10 +11,10 @@
   --button-gradient: linear-gradient(45deg, #4facfe, #00f2fe);
   --shadow-light: rgba(0, 0, 0, 0.2);
   --shadow-dark: rgba(0, 0, 0, 0.37);
-  --border-light: rgba(0, 0, 0, 0.4); /* Default border for light mode */
-  --border-dark: rgba(255, 255, 255, 0.4); /* Default border for dark mode */
-  --border-focus-light: #000000; /* Focused border for light mode */
-  --border-focus-dark: #ffffff; /* Focused border for dark mode */
+  --border-light: rgba(0, 0, 0, 0.4);
+  --border-dark: rgba(255, 255, 255, 0.4);
+  --border-focus-light: #000000;
+  --border-focus-dark: #ffffff;
 }
 
 /* Apply dark mode variables - unchanged */
@@ -101,15 +101,16 @@ body:not(.dark-mode) {
   background: var(--input-bg);
   border-radius: 8px;
   padding: 0.2rem 0.8rem;
-  border: 1px solid var(--border); /* Default border */
-  transition: border-color 0.3s ease; /* Smooth transition for focus */
+  border: 1px solid var(--border);
+  transition: border-color 0.3s ease;
+  position: relative; /* Added for toggle positioning */
 }
 
 /* Enhance border on focus */
 .form-group.signin-form-group:focus-within,
 .form-group.signup-form-group:focus-within {
-  border: 2px solid var(--border-focus); /* Thicker, solid border on focus */
-  box-shadow: 0 0 8px rgba(0, 0, 0, 0.2); /* Subtle glow effect */
+  border: 2px solid var(--border-focus);
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.2);
 }
 
 /* Input icon - positioned to the left */
@@ -127,7 +128,7 @@ body:not(.dark-mode) {
   flex-grow: 1;
   padding: 0.6rem 0.8rem;
   background: transparent;
-  border: none; /* No inner border, handled by form-group */
+  border: none;
   color: var(--text);
   font-size: 1rem;
   transition: all 0.3s ease;
@@ -147,6 +148,44 @@ body:not(.dark-mode) {
 .form-group.signin-form-group input:focus::placeholder,
 .form-group.signup-form-group input:focus::placeholder {
   opacity: 0.5;
+}
+
+/* Toggle password visibility */
+.toggle-password {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: var(--text);
+  opacity: 0.7;
+  font-size: 1.2rem;
+  transition: opacity 0.3s ease;
+}
+
+.toggle-password:hover {
+  opacity: 1;
+}
+
+/* Password validation */
+.password-validation {
+  margin: 0.8rem 0;
+  font-size: 0.9rem;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.password-validation span {
+  display: inline-block;
+}
+
+.password-validation .valid {
+  color: #4ecdc4; /* Matches success-message color */
+}
+
+.password-validation .invalid {
+  color: #ff6b6b; /* Matches error-message color */
 }
 
 /* Messages */
@@ -269,6 +308,11 @@ body:not(.dark-mode) {
   .auth-button.signup-auth-button {
     padding: 0.7rem;
     font-size: 0.9rem;
+  }
+
+  .password-validation {
+    font-size: 0.8rem;
+    gap: 8px;
   }
 }
 

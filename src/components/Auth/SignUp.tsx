@@ -1,6 +1,6 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
-import { FaUser, FaLock, FaEnvelope } from "react-icons/fa";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { FaUser, FaLock, FaEnvelope, FaEye, FaEyeSlash } from "react-icons/fa";
 import "./Auth.css";
 
 interface SignUpData {
@@ -22,10 +22,28 @@ const SignUp: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
+  const [passwordValidation, setPasswordValidation] = useState({
+    hasUpperCase: false,
+    hasSpecialChar: false,
+    hasNumber: false,
+    minLength: false,
+  });
+  const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+
+    if (name === "password") {
+      setPasswordValidation({
+        hasUpperCase: /[A-Z]/.test(value),
+        hasSpecialChar: /[!@#$%^&*(),.?":{}|<>]/.test(value),
+        hasNumber: /\d/.test(value),
+        minLength: value.length >= 8,
+      });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
@@ -33,6 +51,13 @@ const SignUp: React.FC = () => {
     setError(null);
     setSuccess(null);
     setLoading(true);
+
+    const { hasUpperCase, hasSpecialChar, hasNumber, minLength } = passwordValidation;
+    if (!hasUpperCase || !hasSpecialChar || !hasNumber || !minLength) {
+      setError("Password must include a capital letter, a special character, a number, and be at least 8 characters");
+      setLoading(false);
+      return;
+    }
 
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match");
@@ -55,7 +80,7 @@ const SignUp: React.FC = () => {
       }
 
       await response.json();
-      setSuccess("Registration successful! Please sign in.");
+      setSuccess("Registration successful! Redirecting to sign-in...");
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
       console.error("Registration error:", err);
@@ -63,6 +88,15 @@ const SignUp: React.FC = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (success) {
+      const timer = setTimeout(() => {
+        navigate("/signin");
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [success, navigate]);
 
   return (
     <div className="auth-container signup-auth-container">
@@ -105,24 +139,36 @@ const SignUp: React.FC = () => {
           <div className="form-group signup-form-group">
             <FaLock className="input-icon signup-input-icon" />
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               name="password"
               placeholder="Password"
               value={formData.password}
               onChange={handleChange}
               required
             />
+            <span className="toggle-password" onClick={() => setShowPassword(!showPassword)}>
+              {showPassword ? <FaEyeSlash /> : <FaEye />}
+            </span>
+          </div>
+          <div className="password-validation">
+            <span className={passwordValidation.hasUpperCase ? "valid" : "invalid"}>UpperCase</span>
+            <span className={passwordValidation.hasSpecialChar ? "valid" : "invalid"}>SpecialChar</span>
+            <span className={passwordValidation.hasNumber ? "valid" : "invalid"}>Number</span>
+            <span className={passwordValidation.minLength ? "valid" : "invalid"}>Length</span>
           </div>
           <div className="form-group signup-form-group">
             <FaLock className="input-icon signup-input-icon" />
             <input
-              type="password"
+              type={showConfirmPassword ? "text" : "password"}
               name="confirmPassword"
               placeholder="Confirm Password"
               value={formData.confirmPassword}
               onChange={handleChange}
               required
             />
+            <span className="toggle-password" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
+              {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+            </span>
           </div>
           {error && <p className="error-message signup-error-message">{error}</p>}
           {success && <p className="success-message signup-success-message">{success}</p>}
