@@ -1,3 +1,4 @@
+// src/App.tsx
 import { Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar/Navbar";
 import FeaturedPostsCarousel from "./components/FeaturedPost/FeaturedPostsCarousel";
@@ -12,6 +13,7 @@ import LatestNews from "./components/LatestNews/LatestNews";
 import TrendingPosts from "./components/TrendingPosts/TrendingPosts";
 import Footer from "./components/Footer/Footer";
 import CategoriesSection from "./components/CategoriesSection/CategoriesSection";
+import MyPosts from "./components/MyPosts/MyPosts"; // Add this import
 
 import "./App.css";
 
@@ -37,6 +39,7 @@ const App: React.FC = () => {
         <Route path="/SignIn" element={<SignIn />} />
         <Route path="/signup" element={<SignUp />} />
         <Route path="/create-post" element={<CreatePost />} />
+        <Route path="/my-posts" element={<MyPosts />} /> {/* Add this route */}
         <Route path="/:categoryName" element={<CategoryPage />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/admin/feature-posts" element={<FeaturePosts />} />
