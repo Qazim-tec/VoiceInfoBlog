@@ -39,6 +39,8 @@ const PostDetail: React.FC = () => {
   const [newComment, setNewComment] = useState("");
   const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
   const [editedContent, setEditedContent] = useState("");
+  const [replyingToCommentId, setReplyingToCommentId] = useState<number | null>(null);
+  const [newReply, setNewReply] = useState("");
 
   const { user } = useUser();
   const currentUserId = user?.userId || "";
@@ -81,7 +83,7 @@ const PostDetail: React.FC = () => {
     const commentData = {
       content: newComment,
       postId: post.id,
-      parentCommentId: 0,
+      parentCommentId: null,
     };
 
     try {
@@ -95,18 +97,73 @@ const PostDetail: React.FC = () => {
         body: JSON.stringify(commentData),
       });
 
-      if (!response.ok) {
-        const responseText = await response.text();
-        throw new Error(`Failed to post comment: ${response.status} - ${responseText}`);
-      }
-
+      if (!response.ok) throw new Error("Failed to post comment");
       const newCommentData: Comment = await response.json();
       setPost({
         ...post,
-        comments: [...post.comments, newCommentData],
+        comments: [...post.comments, { ...newCommentData, replies: [] }],
       });
       setNewComment("");
       setError(null);
+    } catch (err) {
+      setError((err as Error).message);
+    }
+  };
+
+  const handleReplySubmit = async (e: React.FormEvent, parentCommentId: number) => {
+    e.preventDefault();
+    if (!isLoggedIn) {
+      setError("Please log in to reply.");
+      return;
+    }
+    if (!post) return;
+
+    const replyData = {
+      content: newReply,
+      postId: post.id,
+      parentCommentId,
+    };
+
+    try {
+      const response = await fetch("https://voiceinfo.onrender.com/api/Comment/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${user?.token}`,
+          userId: currentUserId,
+        },
+        body: JSON.stringify(replyData),
+      });
+
+      if (!response.ok) throw new Error("Failed to post reply");
+      const newReplyData: Comment = await response.json();
+
+      const updateCommentsWithReply = (comments: Comment[]): Comment[] => {
+        return comments.map((comment) => {
+          if (comment.id === parentCommentId) {
+            return { ...comment, replies: [...comment.replies, { ...newReplyData, replies: [] }] };
+          }
+          if (comment.replies.length > 0) {
+            return { ...comment, replies: updateCommentsWithReply(comment.replies) };
+          }
+          return comment;
+        });
+      };
+
+      setPost({
+        ...post,
+        comments: updateCommentsWithReply(post.comments),
+      });
+      setNewReply("");
+      setReplyingToCommentId(null);
+      setError(null);
+
+      // Re-fetch to sync with backend
+      const postResponse = await fetch(`https://voiceinfo.onrender.com/api/Post/${post.id}`);
+      if (postResponse.ok) {
+        const updatedPostData: Post = await postResponse.json();
+        setPost(updatedPostData);
+      }
     } catch (err) {
       setError((err as Error).message);
     }
@@ -139,16 +196,22 @@ const PostDetail: React.FC = () => {
         body: JSON.stringify(editData),
       });
 
-      if (!response.ok) {
-        const responseText = await response.text();
-        throw new Error(`Failed to edit comment: ${response.status} - ${responseText}`);
-      }
+      if (!response.ok) throw new Error("Failed to edit comment");
+
+      const updateCommentContent = (comments: Comment[]): Comment[] => {
+        return comments.map((comment) => {
+          if (comment.id === commentId) {
+            return { ...comment, content: editedContent };
+          }
+          if (comment.replies.length > 0) {
+            return { ...comment, replies: updateCommentContent(comment.replies) };
+          }
+          return comment;
+        });
+      };
 
       if (post) {
-        const updatedComments = post.comments.map((comment) =>
-          comment.id === commentId ? { ...comment, content: editedContent } : comment
-        );
-        setPost({ ...post, comments: updatedComments });
+        setPost({ ...post, comments: updateCommentContent(post.comments) });
       }
       setEditingCommentId(null);
       setEditedContent("");
@@ -173,14 +236,19 @@ const PostDetail: React.FC = () => {
         },
       });
 
-      if (!response.ok) {
-        const responseText = await response.text();
-        throw new Error(`Failed to delete comment: ${response.status} - ${responseText}`);
-      }
+      if (!response.ok) throw new Error("Failed to delete comment");
+
+      const removeComment = (comments: Comment[]): Comment[] => {
+        return comments
+          .filter((comment) => comment.id !== commentId)
+          .map((comment) => ({
+            ...comment,
+            replies: removeComment(comment.replies),
+          }));
+      };
 
       if (post) {
-        const updatedComments = post.comments.filter((comment) => comment.id !== commentId);
-        setPost({ ...post, comments: updatedComments });
+        setPost({ ...post, comments: removeComment(post.comments) });
       }
       setError(null);
     } catch (err) {
@@ -194,9 +262,139 @@ const PostDetail: React.FC = () => {
     }
   };
 
+  const flattenRepliesBeyondLevel1 = (comments: Comment[]): Comment[] => {
+    const flattened: Comment[] = [];
+    
+    const processComment = (comment: Comment, level: number) => {
+      if (level === 0) {
+        // Root comment, add it and process its direct replies
+        flattened.push({ ...comment, replies: [] });
+        comment.replies.forEach((reply) => processComment(reply, 1));
+      } else if (level === 1) {
+        // Direct reply, nest it under its parent in the original structure
+        const parentIndex = flattened.findIndex(c => c.id === comment.parentCommentId);
+        if (parentIndex !== -1) {
+          flattened[parentIndex].replies.push({ ...comment, replies: [] });
+        }
+        // Process any deeper replies as new top-level comments
+        comment.replies.forEach((deepReply) => processComment(deepReply, 2));
+      } else {
+        // Level 2+, add as a new top-level comment with parent reference
+        flattened.push({
+          ...comment,
+          replies: [], // No further nesting
+          parentCommentId: comment.parentCommentId // Keep reference for display
+        });
+        comment.replies.forEach((deeperReply) => processComment(deeperReply, level + 1));
+      }
+    };
+
+    comments.forEach((comment) => processComment(comment, 0));
+    return flattened;
+  };
+
+  const renderComment = (comment: Comment, isReply: boolean = false) => (
+    <div key={comment.id} className={`comment-card ${isReply ? "reply" : ""}`}>
+      <div className="comment-header">
+        <span className="comment-author">{comment.userName}</span>
+        <span className="comment-timestamp">{new Date(comment.createdAt).toLocaleString()}</span>
+      </div>
+      {comment.parentCommentId && isReply && (
+        <div className="parent-comment-reference">
+          <p className="parent-comment-content">
+            Replying to: "{findParentContent(comment.parentCommentId, post?.comments || [])?.substring(0, 50)}..."
+          </p>
+        </div>
+      )}
+      {editingCommentId === comment.id ? (
+        <div className="edit-form">
+          <textarea
+            value={editedContent}
+            onChange={(e) => setEditedContent(e.target.value)}
+            className="edit-textarea"
+          />
+          <div className="edit-actions">
+            <button onClick={() => handleEditSave(comment.id)} className="save-btn">
+              Save
+            </button>
+            <button onClick={() => setEditingCommentId(null)} className="cancel-btn">
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : (
+        <>
+          <p className="comment-body">{comment.content}</p>
+          <div className="comment-actions">
+            {isLoggedIn && (
+              <button
+                onClick={() => setReplyingToCommentId(comment.id)}
+                className="reply-btn"
+              >
+                Reply
+              </button>
+            )}
+            {(comment.userId === currentUserId || isAdmin) && (
+              <>
+                <button onClick={() => handleEditStart(comment)} className="edit-btn">
+                  Edit
+                </button>
+                <button onClick={() => handleDelete(comment.id)} className="delete-btn">
+                  Delete
+                </button>
+              </>
+            )}
+          </div>
+          {replyingToCommentId === comment.id && (
+            <form
+              onSubmit={(e) => handleReplySubmit(e, comment.id)}
+              className="reply-form"
+            >
+              <textarea
+                value={newReply}
+                onChange={(e) => setNewReply(e.target.value)}
+                placeholder="Write your reply..."
+                required
+              />
+              <div className="reply-actions">
+                <button type="submit" className="submit-btn">
+                  Post Reply
+                </button>
+                <button
+                  onClick={() => setReplyingToCommentId(null)}
+                  className="cancel-btn"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          )}
+          {comment.replies.length > 0 && (
+            <div className="replies">
+              {comment.replies.map((reply) => renderComment(reply, true))}
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+
+  const findParentContent = (parentId: number, comments: Comment[]): string | undefined => {
+    for (const comment of comments) {
+      if (comment.id === parentId) return comment.content;
+      if (comment.replies.length > 0) {
+        const found = findParentContent(parentId, comment.replies);
+        if (found) return found;
+      }
+    }
+    return undefined;
+  };
+
   if (loading) return <div className="article-loading">Loading...</div>;
   if (error) return <div className="article-error">Error: {error}</div>;
   if (!post) return <div className="article-not-found">Post not found</div>;
+
+  const flattenedComments = flattenRepliesBeyondLevel1(post.comments);
 
   return (
     <article className="article-page">
@@ -230,52 +428,10 @@ const PostDetail: React.FC = () => {
       </section>
 
       <section className="comments-section">
-        <h2>Comments ({post.comments.length})</h2>
-
+        <h2>Comments ({flattenedComments.length})</h2>
         <div className="comments-list">
-          {post.comments.map((comment) => (
-            <div key={comment.id} className="comment-card">
-              <div className="comment-header">
-                <span className="comment-author">{comment.userName}</span>
-                <span className="comment-timestamp">
-                  {new Date(comment.createdAt).toLocaleString()}
-                </span>
-              </div>
-              {editingCommentId === comment.id ? (
-                <div className="edit-form">
-                  <textarea
-                    value={editedContent}
-                    onChange={(e) => setEditedContent(e.target.value)}
-                    className="edit-textarea"
-                  />
-                  <div className="edit-actions">
-                    <button onClick={() => handleEditSave(comment.id)} className="save-btn">
-                      Save
-                    </button>
-                    <button onClick={() => setEditingCommentId(null)} className="cancel-btn">
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <p className="comment-body">{comment.content}</p>
-                  {(comment.userId === currentUserId || isAdmin) && (
-                    <div className="comment-actions">
-                      <button onClick={() => handleEditStart(comment)} className="edit-btn">
-                        Edit
-                      </button>
-                      <button onClick={() => handleDelete(comment.id)} className="delete-btn">
-                        Delete
-                      </button>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-          ))}
+          {flattenedComments.map((comment) => renderComment(comment, comment.parentCommentId !== null))}
         </div>
-
         <form onSubmit={handleCommentSubmit} className="comment-form">
           <h3>Leave a Comment</h3>
           {isLoggedIn ? (
