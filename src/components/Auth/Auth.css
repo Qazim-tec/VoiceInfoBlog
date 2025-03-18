@@ -17,7 +17,7 @@
   --border-focus-dark: #ffffff;
 }
 
-/* Apply dark mode variables - unchanged */
+/* Apply dark mode variables */
 body.dark-mode {
   --background: var(--background-dark);
   --form-bg: var(--form-bg-dark);
@@ -42,11 +42,11 @@ body:not(.dark-mode) {
 /* Container styling */
 .auth-container.signin-auth-container,
 .auth-container.signup-auth-container {
-  min-height: 100vh;
+  min-height: 100vh; /* Ensures footer stays at bottom if content is short */
   display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  padding-top: 5rem;
+  flex-direction: column;
+  justify-content: space-between; /* Default behavior for desktop */
+  padding: 5rem 0 0 0; /* Top padding only */
   background: var(--background);
   position: relative;
   overflow: hidden;
@@ -78,7 +78,7 @@ body:not(.dark-mode) {
   border: 1px solid rgba(255, 255, 255, 0.18);
   position: relative;
   z-index: 1;
-  margin: 1rem;
+  margin: 1rem auto;
 }
 
 /* Heading */
@@ -103,7 +103,7 @@ body:not(.dark-mode) {
   padding: 0.2rem 0.8rem;
   border: 1px solid var(--border);
   transition: border-color 0.3s ease;
-  position: relative; /* Added for toggle positioning */
+  position: relative;
 }
 
 /* Enhance border on focus */
@@ -181,11 +181,11 @@ body:not(.dark-mode) {
 }
 
 .password-validation .valid {
-  color: #4ecdc4; /* Matches success-message color */
+  color: #4ecdc4;
 }
 
 .password-validation .invalid {
-  color: #ff6b6b; /* Matches error-message color */
+  color: #ff6b6b;
 }
 
 /* Messages */
@@ -283,13 +283,15 @@ body:not(.dark-mode) {
 @media (max-width: 480px) {
   .auth-container.signin-auth-container,
   .auth-container.signup-auth-container {
-    padding-top: 3rem;
+    padding: 2rem 0;
+    justify-content: flex-start;
+    min-height: auto;
   }
 
   .auth-form.signin-auth-form,
   .auth-form.signup-auth-form {
     padding: 1.5rem;
-    margin: 0.5rem;
+    margin: 0.5rem auto;
   }
 
   .auth-form.signin-auth-form h2,
@@ -314,19 +316,24 @@ body:not(.dark-mode) {
     font-size: 0.8rem;
     gap: 8px;
   }
+
+  .auth-container.signin-auth-container {
+    padding-bottom: 1rem;
+  }
 }
 
-/* Desktop-specific adjustments (wider form) */
+/* Desktop-specific adjustments */
 @media (min-width: 769px) {
   .auth-container.signin-auth-container,
   .auth-container.signup-auth-container {
-    padding-top: 4rem;
+    padding: 4rem 0; /* Added bottom padding for desktop */
   }
 
   .auth-form.signin-auth-form,
   .auth-form.signup-auth-form {
     max-width: 600px;
     padding: 2.5rem;
+    margin: 1rem auto;
   }
 
   .auth-form.signin-auth-form h2,
@@ -343,5 +350,12 @@ body:not(.dark-mode) {
   .auth-button.signup-auth-button {
     padding: 1rem;
     font-size: 1.1rem;
+  }
+
+  /* Specific adjustment for sign-in page on desktop */
+  .auth-container.signin-auth-container {
+    min-height: auto; /* Allows container to shrink to content */
+    justify-content: flex-start; /* Stacks content from top */
+    padding-bottom: 2rem; /* Reduced bottom padding for closer footer */
   }
 }
