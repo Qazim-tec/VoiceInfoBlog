@@ -267,23 +267,19 @@ const PostDetail: React.FC = () => {
     
     const processComment = (comment: Comment, level: number) => {
       if (level === 0) {
-        // Root comment, add it and process its direct replies
         flattened.push({ ...comment, replies: [] });
         comment.replies.forEach((reply) => processComment(reply, 1));
       } else if (level === 1) {
-        // Direct reply, nest it under its parent in the original structure
         const parentIndex = flattened.findIndex(c => c.id === comment.parentCommentId);
         if (parentIndex !== -1) {
           flattened[parentIndex].replies.push({ ...comment, replies: [] });
         }
-        // Process any deeper replies as new top-level comments
         comment.replies.forEach((deepReply) => processComment(deepReply, 2));
       } else {
-        // Level 2+, add as a new top-level comment with parent reference
         flattened.push({
           ...comment,
-          replies: [], // No further nesting
-          parentCommentId: comment.parentCommentId // Keep reference for display
+          replies: [],
+          parentCommentId: comment.parentCommentId
         });
         comment.replies.forEach((deeperReply) => processComment(deeperReply, level + 1));
       }
@@ -293,13 +289,19 @@ const PostDetail: React.FC = () => {
     return flattened;
   };
 
+  const isLevel1Reply = (comment: Comment): boolean => {
+    if (!comment.parentCommentId) return false;
+    const parent = post?.comments.find(c => c.id === comment.parentCommentId);
+    return parent?.parentCommentId === null;
+  };
+
   const renderComment = (comment: Comment, isReply: boolean = false) => (
     <div key={comment.id} className={`comment-card ${isReply ? "reply" : ""}`}>
       <div className="comment-header">
         <span className="comment-author">{comment.userName}</span>
         <span className="comment-timestamp">{new Date(comment.createdAt).toLocaleString()}</span>
       </div>
-      {comment.parentCommentId && isReply && (
+      {comment.parentCommentId && !isLevel1Reply(comment) && isReply && (
         <div className="parent-comment-reference">
           <p className="parent-comment-content">
             Replying to: "{findParentContent(comment.parentCommentId, post?.comments || [])?.substring(0, 50)}..."
