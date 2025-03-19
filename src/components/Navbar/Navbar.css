@@ -68,7 +68,7 @@
   outline: none;
   padding: 0.4rem 0.6rem;
   font-size: 1rem;
-  width: 220px;
+  width: 280px; /* Increased from 220px */
   background: transparent;
   color: #222;
 }
@@ -330,7 +330,7 @@
   }
 
   .search-bar input {
-    width: 180px; /* Slightly smaller for tablet */
+    width: 240px; /* Increased from 180px (previous adjustment) */
   }
 }
 
@@ -365,21 +365,18 @@
     display: flex;
     position: absolute;
     top: 100%;
-    left: 0;
-    width: 100%;
-    padding: 0.5rem 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 75%;
+    max-width: 320px; /* Increased from 260px */
+    padding: 0.5rem;
     background: #fff;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    z-index: 1001;
   }
 
   .dark-mode .search-bar.desktop.open {
     background: #292929;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-  }
-
-  .search-bar input {
-    width: 100%; /* Full width on mobile */
   }
 }
 
@@ -421,5 +418,10 @@
 
   .mobile-menu {
     padding: 0.75rem; /* Slightly less padding */
+  }
+
+  .search-bar.desktop.open {
+    width: 90%; /* Slightly wider for small screens */
+    max-width: 300px; /* Increased from implied 260px */
   }
 }
