@@ -27,7 +27,7 @@ const App: React.FC = () => {
           element={
             <main>
               <h1>Unveil the Stories That Matter</h1>
-              <p className="p_title">Dive into trending topics, breaking news, and hidden gems—updated daily.</p>
+              
               <FeaturedPostsCarousel />
               <LatestNews />
               <CategoriesSection />
