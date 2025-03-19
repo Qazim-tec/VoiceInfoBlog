@@ -1,295 +1,329 @@
-/* src/components/MyPosts/MyPosts.css */
-.my-posts-wrapper {
-    min-height: calc(100vh - 60px); /* Adjust based on Navbar height */
-    display: flex;
+/* components/MyPosts/MyPosts.css */
+.myposts-wrapper {
+  padding: 2rem;
+  background: #f5f5f5; /* Light mode background */
+  min-height: calc(100vh - 200px); /* Adjust based on Navbar/Footer */
+}
+
+.dark-mode .myposts-wrapper {
+  background: #1e1e1e; /* Dark mode background */
+}
+
+.myposts-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 1.5rem;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.dark-mode .myposts-container {
+  background: #252525;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.myposts-message {
+  text-align: center;
+  font-size: 1.2rem;
+  color: #333;
+  padding: 2rem;
+}
+
+.dark-mode .myposts-message {
+  color: #d0d0d0;
+}
+
+.myposts-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.myposts-header h1 {
+  font-size: 1.8rem;
+  color: #333;
+  margin: 0;
+}
+
+.dark-mode .myposts-header h1 {
+  color: #e0e0e0;
+}
+
+.myposts-create-btn {
+  background: #4caf50;
+  color: #fff;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: background 0.3s ease;
+}
+
+.myposts-create-btn:hover {
+  background: #45a049;
+}
+
+.dark-mode .myposts-create-btn {
+  background: #66bb6a;
+}
+
+.dark-mode .myposts-create-btn:hover {
+  background: #5daf61;
+}
+
+.myposts-no-posts {
+  text-align: center;
+  font-size: 1.1rem;
+  color: #666;
+  padding: 2rem 0;
+}
+
+.dark-mode .myposts-no-posts {
+  color: #b0b0b0;
+}
+
+.myposts-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 2rem 0; /* Space before pagination */
+}
+
+.myposts-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: #f9f9f9;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  transition: background 0.2s ease;
+}
+
+.dark-mode .myposts-item {
+  background: #2a2a2a;
+}
+
+.myposts-item:hover {
+  background: #f0f0f0;
+}
+
+.dark-mode .myposts-item:hover {
+  background: #333;
+}
+
+.myposts-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.myposts-title {
+  color: #1976d2;
+  text-decoration: none;
+  font-size: 1.2rem;
+  font-weight: 500;
+}
+
+.myposts-title:hover {
+  text-decoration: underline;
+}
+
+.dark-mode .myposts-title {
+  color: #42a5f5;
+}
+
+.myposts-date {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.dark-mode .myposts-date {
+  color: #b0b0b0;
+}
+
+.myposts-delete-btn {
+  background: #ef5350; /* Red in light mode */
+  color: #fff; /* White text */
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.3s ease;
+}
+
+.myposts-delete-btn:hover {
+  background: #e53935; /* Darker red on hover */
+}
+
+.dark-mode .myposts-delete-btn {
+  background: #f44336; /* Red in dark mode */
+  color: #fff; /* White text */
+}
+
+.dark-mode .myposts-delete-btn:hover {
+  background: #d32f2f; /* Darker red on hover */
+}
+
+.myposts-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2rem 0; /* Ensure visibility below posts */
+  border-top: 1px solid #ddd; /* Visual separation */
+}
+
+.dark-mode .myposts-pagination {
+  border-top: 1px solid #444;
+}
+
+.myposts-pagination-btn {
+  background: #fff;
+  color: #333;
+  border: 1px solid #ddd;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  min-width: 2.5rem;
+}
+
+.myposts-pagination-btn:hover:not(:disabled) {
+  background: #f0f0f0;
+  border-color: #bbb;
+}
+
+.myposts-pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.myposts-pagination-btn.myposts-active {
+  background: #1976d2;
+  color: #fff;
+  border-color: #1976d2;
+}
+
+.dark-mode .myposts-pagination-btn {
+  background: #2a2a2a;
+  color: #e0e0e0;
+  border-color: #444;
+}
+
+.dark-mode .myposts-pagination-btn:hover:not(:disabled) {
+  background: #333;
+  border-color: #666;
+}
+
+.dark-mode .myposts-pagination-btn.myposts-active {
+  background: #42a5f5;
+  border-color: #42a5f5;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .myposts-wrapper {
+    padding: 1rem;
+  }
+
+  .myposts-container {
+    padding: 1rem;
+  }
+
+  .myposts-header {
     flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
   }
-  
-  .my-posts-container {
-    max-width: 1000px;
-    margin: 2rem auto;
-    padding: 0 1rem;
-    color: #333;
-    flex-grow: 1;
+
+  .myposts-header h1 {
+    font-size: 1.5rem;
   }
-  
-  .my-posts-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.5rem;
-  }
-  
-  .my-posts-header h1 {
-    font-size: 1.75rem;
-    font-weight: 600;
-  }
-  
-  .create-post-btn {
-    background-color: #28a745;
-    color: white;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    text-decoration: none;
-    font-weight: 500;
-  }
-  
-  .create-post-btn:hover {
-    background-color: #218838;
-  }
-  
-  .posts-table {
-    background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
-  }
-  
-  .table-header {
-    display: grid;
-    grid-template-columns: 3fr 1fr 1fr; /* More space for title */
-    padding: 1rem;
-    background-color: #f8f9fa;
-    border-bottom: 1px solid #e9ecef;
-    font-weight: 600;
-    color: #495057;
-  }
-  
-  .header-title,
-  .header-date,
-  .header-action {
-    padding: 0 0.5rem;
-  }
-  
-  .posts-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-  }
-  
-  .post-item {
-    display: grid;
-    grid-template-columns: 3fr 1fr 1fr; /* Match table-header */
-    align-items: center;
-    padding: 1rem;
-    border-bottom: 1px solid #e9ecef;
-    transition: background-color 0.2s;
-  }
-  
-  .post-item:hover {
-    background-color: #f8f9fa;
-  }
-  
-  .post-title {
-    text-decoration: none;
-    color: #007bff;
-    font-size: 1rem;
-    padding: 0 0.5rem;
-    line-height: 1.5; /* Better readability for long titles */
-  }
-  
-  .post-title:hover {
-    text-decoration: underline;
-  }
-  
-  .post-date {
+
+  .myposts-create-btn,
+  .myposts-delete-btn {
+    padding: 0.4rem 0.8rem;
     font-size: 0.9rem;
-    color: #6c757d;
-    padding: 0 0.5rem;
   }
-  
-  .delete-button {
-    background-color: #dc3545;
-    color: white;
-    border: none;
-    padding: 0.4rem 1rem;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.9rem;
-    transition: background-color 0.2s;
+
+  .myposts-item {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 0.8rem;
+    gap: 0.5rem;
   }
-  
-  .delete-button:hover {
-    background-color: #c82333;
-  }
-  
-  .my-posts-message,
-  .no-posts {
-    text-align: center;
-    padding: 2rem;
-    color: #495057;
+
+  .myposts-title {
     font-size: 1.1rem;
   }
-  
-  .pagination {
-    display: flex;
-    justify-content: center;
-    align-items: center;
+
+  .myposts-date {
+    font-size: 0.85rem;
+  }
+
+  .myposts-pagination {
+    padding: 1.5rem 0;
     gap: 0.5rem;
-    margin-top: 2rem;
-    padding-bottom: 1rem;
   }
-  
-  .pagination-button {
-    padding: 0.5rem 1rem;
-    border: 1px solid #dee2e6;
+
+  .myposts-pagination-btn {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .myposts-wrapper {
+    padding: 0.5rem;
+  }
+
+  .myposts-container {
+    padding: 0.75rem;
     border-radius: 4px;
-    background-color: #fff;
-    cursor: pointer;
-    color: #007bff;
-    font-weight: 500;
-    transition: all 0.2s;
   }
-  
-  .pagination-button:hover:not(:disabled) {
-    background-color: #e9ecef;
+
+  .myposts-header h1 {
+    font-size: 1.25rem;
   }
-  
-  .pagination-button.active {
-    background-color: #007bff;
-    color: white;
-    border-color: #007bff;
+
+  .myposts-create-btn,
+  .myposts-delete-btn {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.85rem;
   }
-  
-  .pagination-button:disabled {
-    cursor: not-allowed;
-    opacity: 0.5;
-    color: #6c757d;
+
+  .myposts-no-posts {
+    font-size: 1rem;
+    padding: 1.5rem 0;
   }
-  
-  /* Dark mode styles */
-  body.dark-mode .my-posts-container {
-    color: #e0e0e0;
+
+  .myposts-item {
+    padding: 0.6rem;
+    margin-bottom: 0.75rem;
   }
-  
-  body.dark-mode .posts-table {
-    background-color: #2a2a2a;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+
+  .myposts-title {
+    font-size: 1rem;
   }
-  
-  body.dark-mode .table-header {
-    background-color: #343a40;
-    border-bottom: 1px solid #495057;
-    color: #ced4da;
+
+  .myposts-date {
+    font-size: 0.8rem;
   }
-  
-  body.dark-mode .post-item {
-    border-bottom: 1px solid #495057;
+
+  .myposts-pagination {
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    padding: 1rem 0;
   }
-  
-  body.dark-mode .post-item:hover {
-    background-color: #343a40;
+
+  .myposts-pagination-btn {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.8rem;
+    min-width: 2rem;
   }
-  
-  body.dark-mode .post-title {
-    color: #66b0ff;
-  }
-  
-  body.dark-mode .post-date {
-    color: #adb5bd;
-  }
-  
-  body.dark-mode .delete-button {
-    background-color: #dc3545;
-  }
-  
-  body.dark-mode .delete-button:hover {
-    background-color: #c82333;
-  }
-  
-  body.dark-mode .my-posts-message,
-  body.dark-mode .no-posts {
-    color: #ced4da;
-  }
-  
-  body.dark-mode .pagination-button {
-    background-color: #343a40;
-    border-color: #495057;
-    color: #66b0ff;
-  }
-  
-  body.dark-mode .pagination-button:hover:not(:disabled) {
-    background-color: #495057;
-  }
-  
-  body.dark-mode .pagination-button.active {
-    background-color: #66b0ff;
-    border-color: #66b0ff;
-    color: #fff;
-  }
-  
-  body.dark-mode .create-post-btn {
-    background-color: #28a745;
-  }
-  
-  body.dark-mode .create-post-btn:hover {
-    background-color: #218838;
-  }
-  
-  /* Responsive Design */
-  @media (max-width: 768px) {
-    .table-header,
-    .post-item {
-      grid-template-columns: 2fr 1fr 1fr; /* Adjusted for tablets */
-    }
-  
-    .my-posts-header {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 1rem;
-    }
-  
-    .create-post-btn {
-      width: 100%;
-      text-align: center;
-    }
-  }
-  
-  @media (max-width: 480px) {
-    .table-header {
-      display: none; /* Hide header on mobile for simplicity */
-    }
-  
-    .post-item {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      padding: 1rem;
-      gap: 0.75rem; /* Space between elements */
-      border: 1px solid #e9ecef;
-      border-radius: 4px;
-      margin-bottom: 1rem; /* Space between posts */
-    }
-  
-    .post-title {
-      font-size: 1.1rem;
-      padding: 0;
-      width: 100%; /* Full width for readability */
-    }
-  
-    .post-date {
-      font-size: 0.85rem;
-      padding: 0;
-      color: #6c757d;
-    }
-  
-    .delete-button {
-      width: 100%;
-      padding: 0.5rem;
-      font-size: 1rem;
-    }
-  
-    .pagination {
-      flex-wrap: wrap;
-      gap: 0.3rem;
-    }
-  
-    .pagination-button {
-      padding: 0.4rem 0.8rem;
-      font-size: 0.9rem;
-    }
-  
-    body.dark-mode .post-item {
-      border-color: #495057;
-    }
-  }
+}

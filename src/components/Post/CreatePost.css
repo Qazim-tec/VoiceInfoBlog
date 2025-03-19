@@ -1,3 +1,4 @@
+/* components/CreatePost/CreatePost.css */
 /* Custom Properties for Consistency */
 :root {
   --spacing-sm: 0.5rem;
@@ -143,6 +144,7 @@
   font-family: 'Segoe UI', sans-serif;
   font-size: 1rem;
   color: var(--text-primary-light);
+  background: var(--card-bg-light); /* Ensure consistent background in light mode */
 }
 
 .file-preview {
@@ -222,6 +224,10 @@ body.dark-mode .form-group select:focus {
   border-color: var(--input-focus-dark);
 }
 
+body.dark-mode .form-group .quill-editor {
+  background: var(--input-bg-dark); /* Match other input fields */
+}
+
 body.dark-mode .form-group .quill-editor .ql-toolbar {
   border-color: var(--input-border-dark);
   background: #2c2c2c;
@@ -229,7 +235,8 @@ body.dark-mode .form-group .quill-editor .ql-toolbar {
 
 body.dark-mode .form-group .quill-editor .ql-container {
   border-color: var(--input-border-dark);
-  color: var(--text-primary-dark);
+  background: var(--input-bg-dark); /* Fix white background in dark mode */
+  color: var(--text-primary-dark); /* Fix white text to readable color */
 }
 
 body.dark-mode .form-group .quill-editor .ql-picker-label,

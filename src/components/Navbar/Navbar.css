@@ -1,9 +1,11 @@
+/* components/Navbar/Navbar.css */
 /* General Navbar Styles */
-*{
+* {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
+
 .navbar {
   display: flex;
   align-items: center;
@@ -30,6 +32,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  text-decoration: none;
 }
 
 .navbar-logo {
@@ -39,6 +42,12 @@
 .blog-name {
   font-size: 1.4rem;
   font-weight: bold;
+  color: #222;
+  text-decoration: none;
+}
+
+.dark-mode .blog-name {
+  color: #e0e0e0;
 }
 
 /* Search Bar */
@@ -51,6 +60,7 @@
   border-radius: 20px;
   background: #f3f3f3;
   transition: background 0.3s, border 0.3s;
+  position: relative;
 }
 
 .search-bar input {
@@ -60,6 +70,11 @@
   font-size: 1rem;
   width: 220px;
   background: transparent;
+  color: #222; /* Explicitly set for light mode */
+}
+
+.dark-mode .search-bar input {
+  color: #ffffff; /* White text in dark mode */
 }
 
 .search-icon {
@@ -74,10 +89,60 @@
   color: #333;
 }
 
+/* Search Results */
+.search-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  list-style: none;
+  padding: 0.5rem 0;
+  margin: 0.5rem 0 0;
+  z-index: 1000;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.search-result-item {
+  padding: 0.6rem 1rem;
+  color: #222;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.search-result-item:hover {
+  background: #f5f5f5;
+}
 
 /* Dark Mode Fix */
 .dark-mode .search-toggle {
-  color: #f5f5f5; /* Light icon in Dark Mode */
+  color: #f5f5f5;
+}
+
+.dark-mode .search-bar {
+  background: #292929;
+  border-color: #444;
+}
+
+.dark-mode .search-icon {
+  color: #ccc;
+}
+
+.dark-mode .search-results {
+  background: #292929;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.dark-mode .search-result-item {
+  color: #e0e0e0;
+}
+
+.dark-mode .search-result-item:hover {
+  background: #444;
 }
 
 /* Navbar Links */
@@ -155,15 +220,6 @@
   color: #4fa3ff;
 }
 
-.dark-mode .search-bar {
-  background: #292929;
-  border-color: #444;
-}
-
-.dark-mode .search-icon {
-  color: #ccc;
-}
-
 /* Ensuring Icons Stay Visible */
 .dark-mode .search-icon,
 .dark-mode .theme-toggle,
@@ -200,6 +256,7 @@
   flex-direction: column;
 }
 
+/* Dark Mode for Mobile Menu */
 .dark-mode .mobile-menu {
   background: #222;
 }
@@ -357,5 +414,10 @@
     padding: 0.5rem;
     background: #fff;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .dark-mode .search-bar.desktop.open {
+    background: #292929;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
   }
 }

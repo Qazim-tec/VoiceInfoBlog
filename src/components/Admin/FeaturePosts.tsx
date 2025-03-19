@@ -40,7 +40,6 @@ const FeaturePosts: React.FC = () => {
         return res.json();
       })
       .then((data: Post[]) => {
-        // Sort posts by createdAt, newest first
         const sortedPosts = data.sort((a, b) =>
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
@@ -171,50 +170,50 @@ const FeaturePosts: React.FC = () => {
 
   if (!isAdmin) {
     return (
-      <div className="admin-container">
-        <p className="error">Only admins can access this page.</p>
+      <div className="featureposts-container">
+        <p className="featureposts-error">Only admins can access this page.</p>
       </div>
     );
   }
 
   return (
-    <div className="admin-container">
-      <div className="sidebar">
+    <div className="featureposts-container">
+      <div className="featureposts-sidebar">
         <h3>Admin Menu</h3>
         <button
-          className={`sidebar-btn ${activeTab === "featured" ? "active" : ""}`}
+          className={`featureposts-sidebar-btn ${activeTab === "featured" ? "featureposts-active" : ""}`}
           onClick={() => setActiveTab("featured")}
         >
           Manage Featured Posts
         </button>
         <button
-          className={`sidebar-btn ${activeTab === "latest" ? "active" : ""}`}
+          className={`featureposts-sidebar-btn ${activeTab === "latest" ? "featureposts-active" : ""}`}
           onClick={() => setActiveTab("latest")}
         >
           Manage Latest News
         </button>
         <button
-          className={`sidebar-btn ${activeTab === "delete" ? "active" : ""}`}
+          className={`featureposts-sidebar-btn ${activeTab === "delete" ? "featureposts-active" : ""}`}
           onClick={() => setActiveTab("delete")}
         >
           Manage Delete Posts
         </button>
       </div>
 
-      <div className="content-area">
+      <div className="featureposts-content">
         {loading ? (
           <p>Loading posts...</p>
         ) : error ? (
-          <p className="error">{error}</p>
+          <p className="featureposts-error">{error}</p>
         ) : (
           <>
             {activeTab === "featured" && (
               <>
                 <h2>Manage Featured Posts</h2>
                 <h3>Unfeatured Posts</h3>
-                <ul className="post-list">
+                <ul className="featureposts-list">
                   {getPaginatedPosts(posts.filter((post) => !post.isFeatured)).map((post) => (
-                    <li key={post.id} className="post-item">
+                    <li key={post.id} className="featureposts-item">
                       <label>
                         <input
                           type="checkbox"
@@ -228,40 +227,40 @@ const FeaturePosts: React.FC = () => {
                   ))}
                 </ul>
                 <button
-                  className="feature-button"
+                  className="featureposts-feature-btn"
                   onClick={() => selectedPostId && togglePostStatus(selectedPostId, "isFeatured", true)}
                   disabled={saving || selectedPostId === null}
                 >
                   {saving ? "Featuring..." : "Feature Selected Post"}
                 </button>
 
-                <div className="pagination">
+                <div className="featureposts-pagination">
                   <button
                     onClick={() => handlePageChange("prev", getTotalPages(posts.filter((post) => !post.isFeatured)))}
                     disabled={currentPage[activeTab] === 1}
-                    className="pagination-btn"
+                    className="featureposts-pagination-btn"
                   >
                     Previous
                   </button>
-                  <span className="pagination-info">
+                  <span className="featureposts-pagination-info">
                     Page {currentPage[activeTab]} of {getTotalPages(posts.filter((post) => !post.isFeatured))}
                   </span>
                   <button
                     onClick={() => handlePageChange("next", getTotalPages(posts.filter((post) => !post.isFeatured)))}
                     disabled={currentPage[activeTab] === getTotalPages(posts.filter((post) => !post.isFeatured))}
-                    className="pagination-btn"
+                    className="featureposts-pagination-btn"
                   >
                     Next
                   </button>
                 </div>
 
                 <h3>Featured Posts</h3>
-                <ul className="post-list">
+                <ul className="featureposts-list">
                   {getPaginatedPosts(posts.filter((post) => post.isFeatured)).map((post) => (
-                    <li key={post.id} className="post-item featured">
+                    <li key={post.id} className="featureposts-item featureposts-featured">
                       <span>{post.title}</span>
                       <button
-                        className="unfeature-button"
+                        className="featureposts-unfeature-btn"
                         onClick={() => togglePostStatus(post.id, "isFeatured", false)}
                         disabled={saving}
                       >
@@ -270,21 +269,21 @@ const FeaturePosts: React.FC = () => {
                     </li>
                   ))}
                 </ul>
-                <div className="pagination">
+                <div className="featureposts-pagination">
                   <button
                     onClick={() => handlePageChange("prev", getTotalPages(posts.filter((post) => post.isFeatured)))}
                     disabled={currentPage[activeTab] === 1}
-                    className="pagination-btn"
+                    className="featureposts-pagination-btn"
                   >
                     Previous
                   </button>
-                  <span className="pagination-info">
+                  <span className="featureposts-pagination-info">
                     Page {currentPage[activeTab]} of {getTotalPages(posts.filter((post) => post.isFeatured))}
                   </span>
                   <button
                     onClick={() => handlePageChange("next", getTotalPages(posts.filter((post) => post.isFeatured)))}
                     disabled={currentPage[activeTab] === getTotalPages(posts.filter((post) => post.isFeatured))}
-                    className="pagination-btn"
+                    className="featureposts-pagination-btn"
                   >
                     Next
                   </button>
@@ -296,9 +295,9 @@ const FeaturePosts: React.FC = () => {
               <>
                 <h2>Manage Latest News</h2>
                 <h3>Non-Latest Posts</h3>
-                <ul className="post-list">
+                <ul className="featureposts-list">
                   {getPaginatedPosts(posts.filter((post) => !post.isLatestNews)).map((post) => (
-                    <li key={post.id} className="post-item">
+                    <li key={post.id} className="featureposts-item">
                       <label>
                         <input
                           type="checkbox"
@@ -312,40 +311,40 @@ const FeaturePosts: React.FC = () => {
                   ))}
                 </ul>
                 <button
-                  className="feature-button"
+                  className="featureposts-feature-btn"
                   onClick={() => selectedPostId && togglePostStatus(selectedPostId, "isLatestNews", true)}
                   disabled={saving || selectedPostId === null}
                 >
                   {saving ? "Marking..." : "Mark as Latest News"}
                 </button>
 
-                <div className="pagination">
+                <div className="featureposts-pagination">
                   <button
                     onClick={() => handlePageChange("prev", getTotalPages(posts.filter((post) => !post.isLatestNews)))}
                     disabled={currentPage[activeTab] === 1}
-                    className="pagination-btn"
+                    className="featureposts-pagination-btn"
                   >
                     Previous
                   </button>
-                  <span className="pagination-info">
+                  <span className="featureposts-pagination-info">
                     Page {currentPage[activeTab]} of {getTotalPages(posts.filter((post) => !post.isLatestNews))}
                   </span>
                   <button
                     onClick={() => handlePageChange("next", getTotalPages(posts.filter((post) => !post.isLatestNews)))}
                     disabled={currentPage[activeTab] === getTotalPages(posts.filter((post) => !post.isLatestNews))}
-                    className="pagination-btn"
+                    className="featureposts-pagination-btn"
                   >
                     Next
                   </button>
                 </div>
 
                 <h3>Latest News Posts</h3>
-                <ul className="post-list">
+                <ul className="featureposts-list">
                   {getPaginatedPosts(posts.filter((post) => post.isLatestNews)).map((post) => (
-                    <li key={post.id} className="post-item featured">
+                    <li key={post.id} className="featureposts-item featureposts-featured">
                       <span>{post.title}</span>
                       <button
-                        className="unfeature-button"
+                        className="featureposts-unfeature-btn"
                         onClick={() => togglePostStatus(post.id, "isLatestNews", false)}
                         disabled={saving}
                       >
@@ -354,21 +353,21 @@ const FeaturePosts: React.FC = () => {
                     </li>
                   ))}
                 </ul>
-                <div className="pagination">
+                <div className="featureposts-pagination">
                   <button
                     onClick={() => handlePageChange("prev", getTotalPages(posts.filter((post) => post.isLatestNews)))}
                     disabled={currentPage[activeTab] === 1}
-                    className="pagination-btn"
+                    className="featureposts-pagination-btn"
                   >
                     Previous
                   </button>
-                  <span className="pagination-info">
+                  <span className="featureposts-pagination-info">
                     Page {currentPage[activeTab]} of {getTotalPages(posts.filter((post) => post.isLatestNews))}
                   </span>
                   <button
                     onClick={() => handlePageChange("next", getTotalPages(posts.filter((post) => post.isLatestNews)))}
                     disabled={currentPage[activeTab] === getTotalPages(posts.filter((post) => post.isLatestNews))}
-                    className="pagination-btn"
+                    className="featureposts-pagination-btn"
                   >
                     Next
                   </button>
@@ -380,12 +379,12 @@ const FeaturePosts: React.FC = () => {
               <>
                 <h2>Manage Delete Posts</h2>
                 <h3>All Posts</h3>
-                <ul className="post-list">
+                <ul className="featureposts-list">
                   {getPaginatedPosts(posts).map((post) => (
-                    <li key={post.id} className="post-item">
+                    <li key={post.id} className="featureposts-item">
                       <span>{post.title}</span>
                       <button
-                        className="delete-button"
+                        className="featureposts-delete-btn"
                         onClick={() => handleDeletePost(post.id)}
                         disabled={saving}
                       >
@@ -394,21 +393,21 @@ const FeaturePosts: React.FC = () => {
                     </li>
                   ))}
                 </ul>
-                <div className="pagination">
+                <div className="featureposts-pagination">
                   <button
                     onClick={() => handlePageChange("prev", getTotalPages(posts))}
                     disabled={currentPage[activeTab] === 1}
-                    className="pagination-btn"
+                    className="featureposts-pagination-btn"
                   >
                     Previous
                   </button>
-                  <span className="pagination-info">
+                  <span className="featureposts-pagination-info">
                     Page {currentPage[activeTab]} of {getTotalPages(posts)}
                   </span>
                   <button
                     onClick={() => handlePageChange("next", getTotalPages(posts))}
                     disabled={currentPage[activeTab] === getTotalPages(posts)}
-                    className="pagination-btn"
+                    className="featureposts-pagination-btn"
                   >
                     Next
                   </button>

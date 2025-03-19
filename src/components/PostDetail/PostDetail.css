@@ -121,8 +121,9 @@
   text-align: left;
 }
 
+/* Root Comment Styling */
 .comment-card {
-  background: #fafafa;
+  background: #f0f0f0; /* Darker gray for root comments */
   border-radius: 8px;
   padding: 1.5rem;
   margin-bottom: 1.5rem;
@@ -131,6 +132,11 @@
   width: 100%;
   max-width: 100%;
   overflow-x: hidden;
+}
+
+/* Reply Styling */
+.comment-card.reply {
+  background: #fafafa; /* Lighter gray for replies */
 }
 
 .comment-card:hover {
@@ -157,7 +163,7 @@
 }
 
 .parent-comment-reference {
-  background: #f0f0f0;
+  background: #e8e8e8; /* Slightly darker than reply background for contrast */
   padding: 0.75rem;
   border-radius: 6px;
   margin-bottom: 0.75rem;
@@ -319,7 +325,7 @@
 .replies .comment-card {
   border: none;
   box-shadow: none;
-  background: #fafafa;
+  background: #fafafa; /* Consistent with .comment-card.reply */
   padding: 1rem;
   margin-bottom: 1rem;
 }
@@ -376,10 +382,14 @@ body.dark-mode .comments-section h2::after {
 }
 
 body.dark-mode .comment-card {
-  background: #404040;
+  background: #505050; /* Darker gray for root comments */
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
   max-width: 100%;
   overflow-x: hidden;
+}
+
+body.dark-mode .comment-card.reply {
+  background: #404040; /* Lighter gray for replies */
 }
 
 body.dark-mode .comment-card:hover {
@@ -395,7 +405,7 @@ body.dark-mode .comment-timestamp {
 }
 
 body.dark-mode .parent-comment-reference {
-  background: #505050;
+  background: #585858; /* Slightly darker than reply background */
   color: #ccc;
   border-left-color: #1e90ff;
 }
@@ -477,7 +487,7 @@ body.dark-mode .comment-form .submit-btn:hover {
 }
 
 body.dark-mode .replies .comment-card {
-  background: #404040;
+  background: #404040; /* Consistent with .comment-card.reply */
 }
 
 /* Inside PostDetail.css */

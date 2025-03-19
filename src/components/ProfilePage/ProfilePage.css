@@ -1,0 +1,286 @@
+/* components/ProfilePage/ProfilePage.css */
+.profile-page {
+    padding: 2rem;
+    min-height: calc(100vh - 200px);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+  }
+  
+  .profile-container {
+    max-width: 800px;
+    width: 100%;
+    margin: 0 auto;
+    background: #fff;
+    border-radius: 10px;
+    padding: 2rem;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  }
+  
+  .dark-mode .profile-container {
+    background: #2a2a2a;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+  }
+  
+  .profile-header {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    margin-bottom: 2rem;
+  }
+  
+  .avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #fff;
+    flex-shrink: 0;
+  }
+  
+  .user-info h1 {
+    margin: 0;
+    color: #333;
+    font-size: 2rem;
+  }
+  
+  .dark-mode .user-info h1 {
+    color: #fff;
+  }
+  
+  .email {
+    color: #666;
+    margin: 0.5rem 0;
+    word-break: break-all;
+  }
+  
+  .dark-mode .email {
+    color: #ccc;
+  }
+  
+  .role-badge {
+    padding: 0.3rem 0.8rem;
+    border-radius: 15px;
+    font-size: 0.9rem;
+    display: inline-block;
+  }
+  
+  .role-badge[data-role="Admin"] {
+    background: #ff4444;
+    color: white;
+  }
+  
+  .role-badge[data-role="User"] {
+    background: #44ff44;
+    color: black;
+  }
+  
+  .profile-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+  
+  .stat-card {
+    text-align: center;
+    padding: 1rem;
+    background: #f9f9f9;
+    border-radius: 8px;
+  }
+  
+  .dark-mode .stat-card {
+    background: #333;
+  }
+  
+  .stat-number {
+    display: block;
+    font-size: 2rem;
+    font-weight: bold;
+    color: #333;
+  }
+  
+  .dark-mode .stat-number {
+    color: #fff;
+  }
+  
+  .stat-label {
+    color: #666;
+    font-size: 0.9rem;
+  }
+  
+  .dark-mode .stat-label {
+    color: #ccc;
+  }
+  
+  .profile-activity h2 {
+    color: #333;
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+  }
+  
+  .dark-mode .profile-activity h2 {
+    color: #fff;
+  }
+  
+  .activity-bar {
+    height: 20px;
+    background: #f0f0f0;
+    border-radius: 10px;
+    overflow: hidden;
+    display: flex;
+  }
+  
+  .dark-mode .activity-bar {
+    background: #404040;
+  }
+  
+  .posts-bar {
+    height: 100%;
+    background: #4caf50;
+    transition: width 0.3s ease;
+  }
+  
+  .comments-bar {
+    height: 100%;
+    background: #2196f3;
+    transition: width 0.3s ease;
+  }
+  
+  .activity-legend {
+    margin-top: 0.5rem;
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+  }
+  
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.9rem;
+  }
+  
+  .legend-item:before {
+    content: "";
+    width: 10px;
+    height: 10px;
+    display: inline-block;
+  }
+  
+  .legend-item.posts:before {
+    background: #4caf50;
+  }
+  
+  .legend-item.comments:before {
+    background: #2196f3;
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .profile-page {
+      padding: 1rem;
+    }
+  
+    .profile-container {
+      padding: 1.5rem;
+    }
+  
+    .profile-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+  
+    .avatar {
+      width: 80px;
+      height: 80px;
+      font-size: 2rem;
+    }
+  
+    .user-info h1 {
+      font-size: 1.5rem;
+    }
+  
+    .profile-stats {
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+    }
+  
+    .stat-card.status {
+      grid-column: span 2; /* Status takes full width on tablets */
+    }
+  
+    .stat-number {
+      font-size: 1.5rem;
+    }
+  
+    .profile-activity h2 {
+      font-size: 1.25rem;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .profile-page {
+      padding: 0.5rem;
+    }
+  
+    .profile-container {
+      padding: 1rem;
+      border-radius: 5px;
+    }
+  
+    .avatar {
+      width: 60px;
+      height: 60px;
+      font-size: 1.5rem;
+    }
+  
+    .user-info h1 {
+      font-size: 1.25rem;
+    }
+  
+    .email {
+      font-size: 0.9rem;
+    }
+  
+    .role-badge {
+      font-size: 0.8rem;
+      padding: 0.2rem 0.6rem;
+    }
+  
+    .profile-stats {
+      grid-template-columns: 1fr;
+      gap: 0.5rem;
+    }
+  
+    .stat-card.status {
+      grid-column: span 1; /* Reset to single column */
+    }
+  
+    .stat-number {
+      font-size: 1.25rem;
+    }
+  
+    .stat-label {
+      font-size: 0.8rem;
+    }
+  
+    .profile-activity h2 {
+      font-size: 1rem;
+    }
+  
+    .activity-bar {
+      height: 15px;
+    }
+  
+    .activity-legend {
+      flex-direction: column;
+      gap: 0.25rem;
+      align-items: flex-start;
+    }
+  }

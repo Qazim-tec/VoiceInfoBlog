@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useUser } from "../../context/UserContext";
 import "./MyPosts.css";
@@ -7,48 +7,40 @@ interface Post {
   id: number;
   title: string;
   slug: string;
-  content: string;
-  excerpt: string;
-  featuredImage: string;
-  views: number;
-  isFeatured: boolean;
-  isLatestNews: boolean;
   createdAt: string;
   authorId: string;
   authorName: string;
-  categoryId: number;
-  categoryName: string;
-  tags: string[];
-  comments: any[];
 }
 
-const POSTS_PER_PAGE = 15;
+const POSTS_PER_PAGE = 3; // Small value for testing pagination visibility
 
 const MyPosts: React.FC = () => {
   const [posts, setPosts] = useState<Post[]>([]);
+  const [currentPage, setCurrentPage] = useState<number>(1);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState<number>(1);
   const { user } = useUser();
 
   useEffect(() => {
-    const fetchUserPosts = async () => {
+    const fetchPosts = async () => {
       if (!user) return;
 
       try {
         setLoading(true);
         const response = await fetch("https://voiceinfo.onrender.com/api/Post/all", {
           headers: {
-            "Authorization": `Bearer ${user.token}`,
+            Authorization: `Bearer ${user.token}`,
           },
         });
+
         if (!response.ok) {
           throw new Error("Failed to fetch posts");
         }
-        const allPosts = await response.json();
+
+        const allPosts: Post[] = await response.json();
         const userPosts = allPosts
-          .filter((post: Post) => post.authorId === user.userId)
-          .sort((a: Post, b: Post) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+          .filter((post) => post.authorId === user.userId)
+          .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         setPosts(userPosts);
       } catch (err) {
         setError(err instanceof Error ? err.message : "An error occurred");
@@ -57,7 +49,7 @@ const MyPosts: React.FC = () => {
       }
     };
 
-    fetchUserPosts();
+    fetchPosts();
   }, [user]);
 
   const handleDelete = async (postId: number) => {
@@ -67,7 +59,7 @@ const MyPosts: React.FC = () => {
       const response = await fetch(`https://voiceinfo.onrender.com/api/Post/delete/${postId}`, {
         method: "DELETE",
         headers: {
-          "Authorization": `Bearer ${user?.token}`,
+          Authorization: `Bearer ${user?.token}`,
         },
       });
 
@@ -75,20 +67,28 @@ const MyPosts: React.FC = () => {
         throw new Error("Failed to delete post");
       }
 
-      setPosts(posts.filter((post) => post.id !== postId));
+      const updatedPosts = posts.filter((post) => post.id !== postId);
+      setPosts(updatedPosts);
+      const totalPagesAfterDelete = Math.ceil(updatedPosts.length / POSTS_PER_PAGE);
+      if (currentPage > totalPagesAfterDelete && totalPagesAfterDelete > 0) {
+        setCurrentPage(totalPagesAfterDelete);
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred while deleting");
+      setError(err instanceof Error ? err.message : "An error occurred");
     }
   };
 
-  const totalPages = Math.ceil(posts.length / POSTS_PER_PAGE);
+  const totalPosts = posts.length;
+  const totalPages = Math.ceil(totalPosts / POSTS_PER_PAGE);
   const startIndex = (currentPage - 1) * POSTS_PER_PAGE;
-  const endIndex = startIndex + POSTS_PER_PAGE;
+  const endIndex = Math.min(startIndex + POSTS_PER_PAGE, totalPosts);
   const currentPosts = posts.slice(startIndex, endIndex);
 
   const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -100,84 +100,79 @@ const MyPosts: React.FC = () => {
   };
 
   if (!user) {
-    return <div className="my-posts-message">Please sign in to view your posts.</div>;
+    return <div className="myposts-message">Please sign in to view your posts.</div>;
   }
 
   if (loading) {
-    return <div className="my-posts-message">Loading posts...</div>;
+    return <div className="myposts-message">Loading your posts...</div>;
   }
 
   if (error) {
-    return <div className="my-posts-message">Error: {error}</div>;
+    return <div className="myposts-message">Error: {error}</div>;
   }
 
   return (
-    <div className="my-posts-wrapper">
-      <div className="my-posts-container">
-        <header className="my-posts-header">
-          <h1>My Posts</h1>
-          <Link to="/create-post" className="create-post-btn">
+    <section className="myposts-wrapper">
+      <div className="myposts-container">
+        <header className="myposts-header">
+          <h1>My Posts ({totalPosts})</h1>
+          <Link to="/create-post" className="myposts-create-btn">
             Create New Post
           </Link>
         </header>
+
         {posts.length === 0 ? (
-          <p className="no-posts">You haven't created any posts yet.</p>
+          <p className="myposts-no-posts">No posts yet. Start writing!</p>
         ) : (
           <>
-            <div className="posts-table">
-              <div className="table-header">
-                <span className="header-title">Title</span>
-                <span className="header-date">Date Created</span>
-                <span className="header-action">Action</span>
-              </div>
-              <ul className="posts-list">
-                {currentPosts.map((post) => (
-                  <li key={post.id} className="post-item">
-                    <Link to={`/post/${post.slug}`} className="post-title">
+            <ul className="myposts-list">
+              {currentPosts.map((post) => (
+                <li key={post.id} className="myposts-item">
+                  <div className="myposts-details">
+                    <Link to={`/post/${post.slug}`} className="myposts-title">
                       {post.title}
                     </Link>
-                    <span className="post-date">{formatDate(post.createdAt)}</span>
-                    <button
-                      onClick={() => handleDelete(post.id)}
-                      className="delete-button"
-                    >
-                      Delete
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            {totalPages > 1 && (
-              <nav className="pagination">
-                <button
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  className="pagination-button"
-                >
-                  « Prev
-                </button>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <span className="myposts-date">{formatDate(post.createdAt)}</span>
+                  </div>
                   <button
-                    key={page}
-                    onClick={() => handlePageChange(page)}
-                    className={`pagination-button ${currentPage === page ? "active" : ""}`}
+                    className="myposts-delete-btn"
+                    onClick={() => handleDelete(post.id)}
                   >
-                    {page}
+                    Delete
                   </button>
-                ))}
+                </li>
+              ))}
+            </ul>
+
+            <nav className="myposts-pagination">
+              <button
+                className="myposts-pagination-btn myposts-prev"
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+              >
+                Previous
+              </button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                 <button
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                  className="pagination-button"
+                  key={page}
+                  className={`myposts-pagination-btn myposts-page ${currentPage === page ? "myposts-active" : ""}`}
+                  onClick={() => handlePageChange(page)}
                 >
-                  Next »
+                  {page}
                 </button>
-              </nav>
-            )}
+              ))}
+              <button
+                className="myposts-pagination-btn myposts-next"
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+              >
+                Next
+              </button>
+            </nav>
           </>
         )}
       </div>
-    </div>
+    </section>
   );
 };
 

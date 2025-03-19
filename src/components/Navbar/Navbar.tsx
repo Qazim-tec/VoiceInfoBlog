@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   FaSun,
@@ -13,15 +13,71 @@ import { useCategories } from "../../hooks/useCategories";
 import "./Navbar.css";
 import Logo from "../../assets/react.svg";
 
+interface Post {
+  id: number;
+  title: string;
+  slug: string;
+  createdAt: string;
+}
+
 const Navbar: React.FC = () => {
   const [darkMode, setDarkMode] = useState<boolean>(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
   const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [filteredPosts, setFilteredPosts] = useState<Post[]>([]);
   const { user, logout } = useUser();
   const { categories, loading, error } = useCategories();
   const navigate = useNavigate();
+
+  // Fetch posts on mount
+  useEffect(() => {
+    const headers: Record<string, string> = {};
+    if (user?.token) {
+      headers["Authorization"] = `Bearer ${user.token}`;
+    }
+
+    fetch("https://voiceinfo.onrender.com/api/Post/all", { headers })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch posts");
+        return res.json();
+      })
+      .then((data: Post[]) => {
+        setPosts(data);
+      })
+      .catch((err) => {
+        console.error("Fetch Posts Error:", err);
+      });
+  }, [user]);
+
+  // Filter posts based on search query (multiple words, any order)
+  useEffect(() => {
+    if (searchQuery.trim() === "") {
+      setFilteredPosts([]);
+      return;
+    }
+
+    // Split search query into individual words, remove empty strings
+    const searchWords = searchQuery
+      .toLowerCase()
+      .split(/\s+/)
+      .filter((word) => word.length > 0);
+
+    if (searchWords.length === 0) {
+      setFilteredPosts([]);
+      return;
+    }
+
+    // Filter posts where all search words are present in the title (any order)
+    const filtered = posts.filter((post) => {
+      const titleLower = post.title.toLowerCase();
+      return searchWords.every((word) => titleLower.includes(word));
+    });
+
+    setFilteredPosts(filtered);
+  }, [searchQuery, posts]);
 
   const toggleDarkMode = (): void => {
     setDarkMode((prev) => !prev);
@@ -34,6 +90,12 @@ const Navbar: React.FC = () => {
     navigate("/");
   };
 
+  const handleSearchSelect = (slug: string) => {
+    setSearchQuery("");
+    setIsSearchOpen(false);
+    navigate(`/post/${slug}`);
+  };
+
   return (
     <nav className={`navbar ${darkMode ? "dark-mode" : ""}`}>
       <div className="navbar-top">
@@ -43,10 +105,10 @@ const Navbar: React.FC = () => {
         >
           {isMobileMenuOpen ? <FaTimes /> : <FaBars />}
         </button>
-        <div className="navbar-brand">
+        <Link to="/" className="navbar-brand">
           <img src={Logo} alt="Logo" className="navbar-logo" />
           <span className="blog-name">VoiceInfo</span>
-        </div>
+        </Link>
         <button
           className="search-toggle"
           onClick={() => setIsSearchOpen(!isSearchOpen)}
@@ -56,9 +118,6 @@ const Navbar: React.FC = () => {
       </div>
 
       <ul className="navbar-links desktop">
-        <li key="home">
-          <Link to="/">Home</Link>
-        </li>
         {loading ? (
           <li>Loading...</li>
         ) : error ? (
@@ -78,12 +137,25 @@ const Navbar: React.FC = () => {
         <FaSearch className="search-icon" />
         <input
           type="text"
-          placeholder="Search..."
+          placeholder="Search posts..."
           value={searchQuery}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
             setSearchQuery(e.target.value)
           }
         />
+        {filteredPosts.length > 0 && searchQuery.trim() !== "" && (
+          <ul className="search-results">
+            {filteredPosts.slice(0, 5).map((post) => (
+              <li
+                key={post.id}
+                className="search-result-item"
+                onClick={() => handleSearchSelect(post.slug)}
+              >
+                {post.title}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
       <div className="navbar-actions">
@@ -118,7 +190,6 @@ const Navbar: React.FC = () => {
                     My Posts
                   </Link>
                 </li>
-                {/* Only show Settings for Admin */}
                 {user.role === "Admin" && (
                   <li>
                     <Link
@@ -146,11 +217,6 @@ const Navbar: React.FC = () => {
 
       <div className={`mobile-menu ${isMobileMenuOpen ? "open" : ""}`}>
         <ul className="navbar-links mobile">
-          <li key="home">
-            <Link to="/" onClick={() => setIsMobileMenuOpen(false)}>
-              Home
-            </Link>
-          </li>
           {loading ? (
             <li>Loading...</li>
           ) : error ? (

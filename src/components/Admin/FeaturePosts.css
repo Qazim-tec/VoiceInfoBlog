@@ -1,276 +1,396 @@
-.admin-container {
+/* components/FeaturePosts/FeaturePosts.css */
+.featureposts-container {
   display: flex;
-  min-height: 100vh;
-  background: #f8f9fa;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  min-height: calc(100vh - 200px); /* Adjust based on Navbar/Footer */
+  background: #f5f5f5; /* Light mode background */
+  padding: 2rem;
 }
 
-.sidebar {
+.dark-mode .featureposts-container {
+  background: #1e1e1e; /* Dark mode background */
+}
+
+.featureposts-sidebar {
   width: 250px;
-  background: #2c3e50;
-  color: #ecf0f1;
-  padding: 20px;
-  flex-shrink: 0;
+  padding: 1.5rem;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-right: 2rem;
 }
 
-.sidebar h3 {
+.dark-mode .featureposts-sidebar {
+  background: #252525;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.featureposts-sidebar h3 {
   font-size: 1.5rem;
-  margin: 0 0 20px;
-  text-align: center;
+  color: #333;
+  margin-bottom: 1.5rem;
 }
 
-.sidebar-btn {
+.dark-mode .featureposts-sidebar h3 {
+  color: #e0e0e0;
+}
+
+.featureposts-sidebar-btn {
   display: block;
   width: 100%;
-  padding: 10px;
-  margin-bottom: 10px;
-  background: #34495e;
-  color: #ecf0f1;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.5rem;
+  background: #ecf0f1;
+  color: #34495e;
   border: none;
-  border-radius: 5px;
+  border-radius: 4px;
   font-size: 1rem;
+  font-weight: 600;
   cursor: pointer;
+  text-align: left;
   transition: background 0.3s ease;
 }
 
-.sidebar-btn:hover {
-  background: #3498db;
+.featureposts-sidebar-btn:hover {
+  background: #bdc3c7;
 }
 
-.sidebar-btn.active {
+.featureposts-sidebar-btn.featureposts-active {
   background: #3498db;
-  font-weight: 600;
+  color: #fff;
 }
 
-.content-area {
+.dark-mode .featureposts-sidebar-btn {
+  background: #2c3e50;
+  color: #ecf0f1;
+}
+
+.dark-mode .featureposts-sidebar-btn:hover {
+  background: #34495e;
+}
+
+.dark-mode .featureposts-sidebar-btn.featureposts-active {
+  background: #3498db;
+  color: #fff;
+}
+
+.featureposts-content {
   flex: 1;
-  padding: 30px;
+  padding: 1.5rem;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.content-area h2 {
-  font-size: 2rem;
-  color: #2c3e50;
-  margin-bottom: 20px;
+.dark-mode .featureposts-content {
+  background: #252525;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
-.post-list {
+.featureposts-content h2 {
+  font-size: 1.8rem;
+  color: #333;
+  margin-bottom: 1.5rem;
+}
+
+.dark-mode .featureposts-content h2 {
+  color: #e0e0e0;
+}
+
+.featureposts-content h3 {
+  font-size: 1.4rem;
+  color: #666;
+  margin: 1rem 0;
+}
+
+.dark-mode .featureposts-content h3 {
+  color: #b0b0b0;
+}
+
+.featureposts-content p {
+  font-size: 1.1rem;
+  color: #333;
+}
+
+.dark-mode .featureposts-content p {
+  color: #e0e0e0;
+}
+
+.featureposts-error {
+  color: #c62828;
+  font-size: 1.1rem;
+  text-align: center;
+  padding: 1rem;
+  background: #ffebee;
+  border-radius: 4px;
+}
+
+.dark-mode .featureposts-error {
+  color: #ef5350;
+  background: #2c2c2c;
+}
+
+.featureposts-list {
   list-style: none;
   padding: 0;
-  margin: 0 0 20px;
+  margin: 0 0 1.5rem 0;
 }
 
-.post-item {
+.featureposts-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: #f9f9f9;
+  border-radius: 6px;
+  margin-bottom: 0.75rem;
+  transition: background 0.2s ease;
+}
+
+.dark-mode .featureposts-item {
+  background: #2a2a2a;
+}
+
+.featureposts-item:hover {
+  background: #f0f0f0;
+}
+
+.dark-mode .featureposts-item:hover {
+  background: #333;
+}
+
+.featureposts-item label {
   display: flex;
   align-items: center;
-  padding: 10px;
-  background: white;
-  border-radius: 5px;
-  margin-bottom: 10px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  gap: 0.5rem;
+  color: #333;
+  font-size: 1rem;
 }
 
-.post-item.featured {
+.dark-mode .featureposts-item label {
+  color: #e0e0e0;
+}
+
+.featureposts-item.featureposts-featured {
   background: #e8f4f8;
 }
 
-.post-item label {
-  display: flex;
-  align-items: center;
-  flex: 1;
-  cursor: pointer;
+.dark-mode .featureposts-item.featureposts-featured {
+  background: #34495e;
 }
 
-.post-item input[type="checkbox"] {
-  margin-right: 10px;
-}
-
-.post-item span {
-  flex: 1;
-  font-size: 1rem;
-  color: #34495e;
-}
-
-.feature-button {
-  padding: 10px 20px;
-  background: #3498db;
-  color: white;
+.featureposts-feature-btn,
+.featureposts-unfeature-btn,
+.featureposts-delete-btn {
+  padding: 0.5rem 1rem;
   border: none;
-  border-radius: 5px;
-  font-size: 1rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 600;
   cursor: pointer;
   transition: background 0.3s ease;
-  margin-bottom: 20px;
 }
 
-.feature-button:hover:not(:disabled) {
+.featureposts-feature-btn {
+  background: #3498db;
+  color: #fff;
+}
+
+.featureposts-feature-btn:hover:not(:disabled) {
   background: #2980b9;
 }
 
-.feature-button:disabled {
+.featureposts-unfeature-btn {
+  background: #bdc3c7;
+  color: #34495e;
+}
+
+.featureposts-unfeature-btn:hover:not(:disabled) {
+  background: #95a5a6;
+}
+
+.featureposts-delete-btn {
+  background: #ef5350;
+  color: #fff;
+}
+
+.featureposts-delete-btn:hover:not(:disabled) {
+  background: #e53935;
+}
+
+.dark-mode .featureposts-feature-btn {
+  background: #3498db;
+  color: #fff;
+}
+
+.dark-mode .featureposts-feature-btn:hover:not(:disabled) {
+  background: #2980b9;
+}
+
+.dark-mode .featureposts-unfeature-btn {
+  background: #7f8c8d;
+  color: #ecf0f1;
+}
+
+.dark-mode .featureposts-unfeature-btn:hover:not(:disabled) {
+  background: #95a5a6;
+}
+
+.dark-mode .featureposts-delete-btn {
+  background: #f44336;
+  color: #fff;
+}
+
+.dark-mode .featureposts-delete-btn:hover:not(:disabled) {
+  background: #d32f2f;
+}
+
+.featureposts-feature-btn:disabled,
+.featureposts-unfeature-btn:disabled,
+.featureposts-delete-btn:disabled {
   background: #bdc3c7;
   cursor: not-allowed;
+  opacity: 0.7;
 }
 
-.unfeature-button {
-  padding: 5px 10px;
-  background: #e74c3c;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: background 0.3s ease;
-  margin-left: 10px;
-}
-
-.unfeature-button:hover:not(:disabled) {
-  background: #c0392b;
-}
-
-.unfeature-button:disabled {
-  background: #bdc3c7;
-  cursor: not-allowed;
-}
-
-.delete-button {
-  padding: 5px 10px;
-  background: #e74c3c;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: background 0.3s ease;
-  margin-left: 10px;
-}
-
-.delete-button:hover:not(:disabled) {
-  background: #c0392b;
-}
-
-.delete-button:disabled {
-  background: #bdc3c7;
-  cursor: not-allowed;
-}
-
-.error {
-  color: #c0392b;
-  font-size: 1rem;
-  margin: 10px 0;
-}
-
-.pagination {
+.featureposts-pagination {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 10px;
-  margin-top: 20px;
+  gap: 1rem;
+  padding: 1.5rem 0;
+  border-top: 1px solid #ddd;
 }
 
-.pagination-btn {
-  padding: 8px 16px;
-  background: #3498db;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  font-size: 0.9rem;
+.dark-mode .featureposts-pagination {
+  border-top: 1px solid #444;
+}
+
+.featureposts-pagination-btn {
+  background: #fff;
+  color: #333;
+  border: 1px solid #ddd;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
   cursor: pointer;
+  font-size: 0.9rem;
   transition: background 0.3s ease;
 }
 
-.pagination-btn:hover:not(:disabled) {
-  background: #2980b9;
+.featureposts-pagination-btn:hover:not(:disabled) {
+  background: #f0f0f0;
 }
 
-.pagination-btn:disabled {
-  background: #bdc3c7;
+.featureposts-pagination-btn:disabled {
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
-.pagination-info {
+.dark-mode .featureposts-pagination-btn {
+  background: #2a2a2a;
+  color: #e0e0e0;
+  border-color: #444;
+}
+
+.dark-mode .featureposts-pagination-btn:hover:not(:disabled) {
+  background: #333;
+}
+
+.featureposts-pagination-info {
   font-size: 0.9rem;
-  color: #34495e;
+  color: #666;
+}
+
+.dark-mode .featureposts-pagination-info {
+  color: #b0b0b0;
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
-  .admin-container {
+  .featureposts-container {
     flex-direction: column;
+    padding: 1rem;
   }
 
-  .sidebar {
+  .featureposts-sidebar {
     width: 100%;
-    padding: 15px;
+    margin-right: 0;
+    margin-bottom: 1rem;
   }
 
-  .sidebar-btn {
-    padding: 8px;
-    font-size: 0.9rem;
+  .featureposts-content {
+    padding: 1rem;
   }
 
-  .content-area {
-    padding: 20px;
+  .featureposts-content h2 {
+    font-size: 1.5rem;
   }
 
-  .content-area h2 {
-    font-size: 1.75rem;
+  .featureposts-content h3 {
+    font-size: 1.2rem;
   }
 
-  .post-item {
-    padding: 8px;
+  .featureposts-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 0.8rem;
+  }
+
+  .featureposts-feature-btn,
+  .featureposts-unfeature-btn,
+  .featureposts-delete-btn {
+    width: 100%;
+    padding: 0.4rem;
+  }
+
+  .featureposts-pagination {
     flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 1rem 0;
   }
 
-  .feature-button,
-  .unfeature-button,
-  .delete-button {
-    padding: 8px 15px;
-    font-size: 0.9rem;
-    margin-left: 5px;
-  }
-
-  .pagination-btn {
-    padding: 6px 12px;
-    font-size: 0.85rem;
+  .featureposts-pagination-btn {
+    padding: 0.4rem 0.8rem;
   }
 }
 
 @media (max-width: 480px) {
-  .sidebar h3 {
+  .featureposts-container {
+    padding: 0.5rem;
+  }
+
+  .featureposts-sidebar,
+  .featureposts-content {
+    padding: 0.75rem;
+  }
+
+  .featureposts-sidebar h3 {
     font-size: 1.25rem;
   }
 
-  .sidebar-btn {
-    padding: 6px;
-    font-size: 0.85rem;
-  }
-
-  .content-area {
-    padding: 15px;
-  }
-
-  .content-area h2 {
-    font-size: 1.5rem;
-  }
-
-  .post-item span {
+  .featureposts-sidebar-btn {
+    padding: 0.5rem;
     font-size: 0.9rem;
   }
 
-  .feature-button,
-  .unfeature-button,
-  .delete-button {
-    padding: 6px 12px;
-    font-size: 0.85rem;
-    margin-left: 5px;
+  .featureposts-content h2 {
+    font-size: 1.25rem;
   }
 
-  .pagination-btn {
-    padding: 5px 10px;
+  .featureposts-content h3 {
+    font-size: 1.1rem;
+  }
+
+  .featureposts-item {
+    padding: 0.6rem;
+  }
+
+  .featureposts-pagination-btn {
+    padding: 0.3rem 0.6rem;
     font-size: 0.8rem;
   }
 
-  .pagination-info {
+  .featureposts-pagination-info {
     font-size: 0.8rem;
   }
 }
