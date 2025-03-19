@@ -44,28 +44,35 @@ const FeaturedPostsCarousel: React.FC = () => {
     }
   }, [featuredPosts]);
 
-  if (loading) return <div className="carousel-loading">Loading featured posts...</div>;
-  if (error) return <div className="carousel-error">Error: {error}</div>;
-  if (!featuredPosts.length) return <div className="carousel-empty">No featured posts available.</div>;
+  if (loading) return <div className="fpc-carousel-loading">Loading featured posts...</div>;
+  if (error) return <div className="fpc-carousel-error">Error: {error}</div>;
+  if (!featuredPosts.length) return <div className="fpc-carousel-empty">No featured posts available.</div>;
 
   return (
-    <section className="carousel-section">
-      <div className="carousel-container">
+    <section className="fpc-carousel-section">
+      <div className="fpc-carousel-container">
         <div
-          className="carousel-track"
+          className="fpc-carousel-track"
           style={{ transform: `translateX(-${currentIndex * 100}%)` }}
         >
           {featuredPosts.map((post) => (
-            <div className="carousel-item" key={post.id}>
-              <img
-                src={post.featuredImage.startsWith("data:image") ? post.featuredImage : `data:image/png;base64,${post.featuredImage}`}
-                alt={post.title}
-                className="carousel-image"
-              />
-              <div className="carousel-content">
-                <h2>{post.title}</h2>
+            <div className="fpc-carousel-item" key={post.id}>
+              <div className="fpc-image-wrapper">
+                <img
+                  src={post.featuredImage.startsWith("data:image") ? post.featuredImage : `data:image/png;base64,${post.featuredImage}`}
+                  alt={post.title}
+                  className="fpc-carousel-image"
+                />
+                <span className="fpc-featured-badge">Featured</span>
+              </div>
+              <div className="fpc-carousel-content">
+                <h2>
+                  <Link to={`/post/${post.slug}`} className="fpc-title-link">
+                    {post.title}
+                  </Link>
+                </h2>
                 <p>{post.excerpt}</p>
-                <Link to={`/post/${post.slug}`} className="read-more">
+                <Link to={`/post/${post.slug}`} className="fpc-read-more">
                   Read More
                 </Link>
               </div>
@@ -73,11 +80,11 @@ const FeaturedPostsCarousel: React.FC = () => {
           ))}
         </div>
       </div>
-      <div className="carousel-controls">
+      <div className="fpc-carousel-controls">
         {featuredPosts.map((_, idx) => (
           <button
             key={idx}
-            className={`dot ${idx === currentIndex ? "active" : ""}`}
+            className={`fpc-dot ${idx === currentIndex ? "fpc-active" : ""}`}
             onClick={() => setCurrentIndex(idx)}
           ></button>
         ))}
