@@ -1,16 +1,26 @@
 /* PostDetail.css */
+/* Apply box-sizing globally to prevent overflow issues */
+* {
+  box-sizing: border-box;
+}
+
 .article-page {
-  max-width: 900px;
+  width: 100%; /* Full width by default */
+  min-width: 900px; /* Minimum width for desktop */
+  max-width: 900px; /* Maximum width for desktop */
   margin: 2rem auto;
   padding: 1rem;
   background: #fff;
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  overflow-x: hidden; /* Prevent horizontal overflow */
 }
 
 .article-header {
   text-align: center;
   margin-bottom: 2rem;
+  width: 100%;
+  max-width: 100%;
 }
 
 .article-header h1 {
@@ -72,6 +82,7 @@
   word-wrap: break-word;
   overflow-wrap: break-word;
   max-width: 100%;
+  width: 100%;
   padding-left: 5px;
 }
 
@@ -79,6 +90,8 @@
   margin-top: 2rem;
   font-size: 0.9rem;
   color: #666;
+  width: 100%;
+  max-width: 100%;
 }
 
 .article-loading,
@@ -95,6 +108,8 @@
   margin-top: 3rem;
   padding-top: 2rem;
   border-top: 2px solid #e0e0e0;
+  width: 100%;
+  max-width: 100%;
 }
 
 .comments-section h2 {
@@ -128,7 +143,6 @@
   padding: 1.5rem;
   margin-bottom: 1.5rem;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
   width: 100%;
   max-width: 100%;
   overflow-x: hidden;
@@ -139,9 +153,9 @@
   background: #fafafa; /* Lighter gray for replies */
 }
 
+/* Removed hover scaling effect */
 .comment-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+  /* No transform or shadow changes */
 }
 
 .comment-header {
@@ -163,13 +177,15 @@
 }
 
 .parent-comment-reference {
-  background: #e8e8e8; /* Slightly darker than reply background for contrast */
+  background: #e8e8e8;
   padding: 0.75rem;
   border-radius: 6px;
   margin-bottom: 0.75rem;
   font-size: 0.9rem;
   color: #666;
   border-left: 4px solid #007bff;
+  width: 100%;
+  max-width: 100%;
 }
 
 .parent-comment-content {
@@ -182,7 +198,6 @@
   color: #444;
   margin: 0 0 1rem 0;
   overflow-wrap: break-word;
-  /* word-break: break-all; */
 }
 
 .comment-actions {
@@ -273,6 +288,8 @@
   padding: 1.5rem;
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  width: 100%;
+  max-width: 100%;
 }
 
 .comment-form h3 {
@@ -308,11 +325,12 @@
   font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  /* Removed transform transition to avoid shaking */
+  transition: box-shadow 0.2s ease;
 }
 
 .comment-form .submit-btn:hover {
-  transform: translateY(-2px);
+  /* Removed transform: translateY(-2px) to prevent movement */
   box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
 }
 
@@ -325,7 +343,7 @@
 .replies .comment-card {
   border: none;
   box-shadow: none;
-  background: #fafafa; /* Consistent with .comment-card.reply */
+  background: #fafafa;
   padding: 1rem;
   margin-bottom: 1rem;
 }
@@ -334,6 +352,7 @@
 body.dark-mode .article-page {
   background: #333;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  min-width: 900px;
 }
 
 body.dark-mode .article-header h1,
@@ -382,18 +401,18 @@ body.dark-mode .comments-section h2::after {
 }
 
 body.dark-mode .comment-card {
-  background: #505050; /* Darker gray for root comments */
+  background: #505050;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
   max-width: 100%;
   overflow-x: hidden;
 }
 
 body.dark-mode .comment-card.reply {
-  background: #404040; /* Lighter gray for replies */
+  background: #404040;
 }
 
 body.dark-mode .comment-card:hover {
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+  /* No changes on hover */
 }
 
 body.dark-mode .comment-author {
@@ -405,7 +424,7 @@ body.dark-mode .comment-timestamp {
 }
 
 body.dark-mode .parent-comment-reference {
-  background: #585858; /* Slightly darker than reply background */
+  background: #585858;
   color: #ccc;
   border-left-color: #1e90ff;
 }
@@ -413,7 +432,6 @@ body.dark-mode .parent-comment-reference {
 body.dark-mode .comment-body {
   color: #ddd;
   overflow-wrap: break-word;
-  /* word-break: break-all; */
 }
 
 body.dark-mode .edit-btn,
@@ -487,7 +505,7 @@ body.dark-mode .comment-form .submit-btn:hover {
 }
 
 body.dark-mode .replies .comment-card {
-  background: #404040; /* Consistent with .comment-card.reply */
+  background: #404040;
 }
 
 /* Inside PostDetail.css */
@@ -502,12 +520,14 @@ body.dark-mode .login-message {
   color: #f87171;
 }
 
-/* Responsive Design */
+/* Responsive Design - Stabilized for Mobile */
 @media (max-width: 768px) {
   .article-page {
-    max-width: 100%;
-    margin: 1rem;
+    min-width: 0; /* Remove min-width for mobile */
+    max-width: 100%; /* Full width on mobile */
+    margin: 0 auto; /* Center without left-right shifting */
     padding: 0.75rem;
+    overflow-x: hidden; /* Prevent horizontal scroll */
   }
 
   .article-header {
@@ -576,6 +596,7 @@ body.dark-mode .login-message {
     margin-bottom: 1rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     border-radius: 6px;
+    overflow-x: hidden; /* Prevent horizontal overflow */
   }
 
   .comment-header {
@@ -651,7 +672,7 @@ body.dark-mode .login-message {
   }
 
   .replies {
-    margin-left: 5px;
+    margin-left: 0; /* Remove left margin to avoid shifting */
     padding-left: 0.25rem;
   }
 
@@ -660,7 +681,6 @@ body.dark-mode .login-message {
     margin-bottom: 0.75rem;
   }
 
-  /* Dark Mode Responsive Adjustments */
   body.dark-mode .comment-card {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   }
@@ -669,8 +689,9 @@ body.dark-mode .login-message {
 /* Extra Small Screens (e.g., phones below 480px) */
 @media (max-width: 480px) {
   .article-page {
-    margin: 0.5rem;
+    margin: 0 auto; /* Consistent centering */
     padding: 0.5rem;
+    overflow-x: hidden; /* Ensure no horizontal scroll */
   }
 
   .article-header h1 {

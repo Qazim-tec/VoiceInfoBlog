@@ -57,7 +57,6 @@ const PostDetail: React.FC = () => {
   useEffect(() => {
     const fetchPost = async () => {
       try {
-        // Use updatedPost from navigation state if available
         if (updatedPost && updatedPost.slug === slug) {
           setPost(updatedPost);
           setComments(updatedPost.comments);
@@ -122,7 +121,7 @@ const PostDetail: React.FC = () => {
     };
 
     const optimisticComment: Comment = {
-      id: Date.now(),
+      id: Date.now(), // Temporary ID
       content: newComment,
       createdAt: new Date().toISOString(),
       userId: currentUserId,
@@ -150,14 +149,16 @@ const PostDetail: React.FC = () => {
       }
 
       const responseData: { data: Comment } = await response.json();
-      setComments(comments =>
-        comments.map(c => (c.id === optimisticComment.id ? { ...responseData.data, replies: [] } : c))
+      setComments((prevComments) =>
+        prevComments.map((c) =>
+          c.id === optimisticComment.id ? { ...responseData.data, replies: [] } : c
+        )
       );
       setError(null);
     } catch (err) {
       console.log("Post error:", err);
       setError((err as Error).message);
-      setComments(comments.filter(c => c.id !== optimisticComment.id));
+      setComments((prevComments) => prevComments.filter((c) => c.id !== optimisticComment.id));
     }
   };
 
@@ -177,7 +178,7 @@ const PostDetail: React.FC = () => {
     };
 
     const optimisticReply: Comment = {
-      id: Date.now(),
+      id: Date.now(), // Temporary ID
       content: newReply,
       createdAt: new Date().toISOString(),
       userId: currentUserId,
@@ -186,13 +187,17 @@ const PostDetail: React.FC = () => {
       replies: [],
     };
 
-    const updateCommentsWithReply = (comments: Comment[]): Comment[] =>
-      comments.map(comment =>
-        comment.id === parentCommentId
-          ? { ...comment, replies: [...comment.replies, optimisticReply] }
-          : { ...comment, replies: updateCommentsWithReply(comment.replies) }
-      );
-    setComments(updateCommentsWithReply(comments));
+    // Update comments with the optimistic reply
+    setComments((prevComments) => {
+      const updateCommentsWithReply = (comments: Comment[]): Comment[] =>
+        comments.map((comment) =>
+          comment.id === parentCommentId
+            ? { ...comment, replies: [...comment.replies, optimisticReply] }
+            : { ...comment, replies: updateCommentsWithReply(comment.replies) }
+        );
+      return updateCommentsWithReply(prevComments);
+    });
+
     setNewReply("");
     setReplyingToCommentId(null);
 
@@ -212,29 +217,33 @@ const PostDetail: React.FC = () => {
       }
 
       const responseData: { data: Comment } = await response.json();
-      const finalComments = (comments: Comment[]): Comment[] =>
-        comments.map(comment =>
-          comment.id === parentCommentId
-            ? {
-                ...comment,
-                replies: comment.replies.map(r =>
-                  r.id === optimisticReply.id ? { ...responseData.data, replies: [] } : r
-                ),
-              }
-            : { ...comment, replies: finalComments(comment.replies) }
-        );
-      setComments(finalComments(comments));
+      setComments((prevComments) => {
+        const syncReply = (comments: Comment[]): Comment[] =>
+          comments.map((comment) =>
+            comment.id === parentCommentId
+              ? {
+                  ...comment,
+                  replies: comment.replies.map((r) =>
+                    r.id === optimisticReply.id ? { ...responseData.data, replies: [] } : r
+                  ),
+                }
+              : { ...comment, replies: syncReply(comment.replies) }
+          );
+        return syncReply(prevComments);
+      });
       setError(null);
     } catch (err) {
       console.log("Reply error:", err);
       setError((err as Error).message);
-      const removeReply = (comments: Comment[]): Comment[] =>
-        comments.map(comment =>
-          comment.id === parentCommentId
-            ? { ...comment, replies: comment.replies.filter(r => r.id !== optimisticReply.id) }
-            : { ...comment, replies: removeReply(comment.replies) }
-        );
-      setComments(removeReply(comments));
+      setComments((prevComments) => {
+        const removeReply = (comments: Comment[]): Comment[] =>
+          comments.map((comment) =>
+            comment.id === parentCommentId
+              ? { ...comment, replies: comment.replies.filter((r) => r.id !== optimisticReply.id) }
+              : { ...comment, replies: removeReply(comment.replies) }
+          );
+        return removeReply(prevComments);
+      });
     }
   };
 
@@ -251,7 +260,7 @@ const PostDetail: React.FC = () => {
     };
 
     const updateCommentContent = (comments: Comment[]): Comment[] =>
-      comments.map(comment =>
+      comments.map((comment) =>
         comment.id === commentId
           ? { ...comment, content: editedContent }
           : { ...comment, replies: updateCommentContent(comment.replies) }
@@ -277,7 +286,7 @@ const PostDetail: React.FC = () => {
 
       const responseData: { data: Comment; message: string } = await response.json();
       const syncComments = (comments: Comment[]): Comment[] =>
-        comments.map(comment =>
+        comments.map((comment) =>
           comment.id === commentId
             ? { ...responseData.data, replies: comment.replies }
             : { ...comment, replies: syncComments(comment.replies) }
@@ -303,8 +312,8 @@ const PostDetail: React.FC = () => {
 
     const removeComment = (comments: Comment[]): Comment[] =>
       comments
-        .filter(comment => comment.id !== commentId)
-        .map(comment => ({ ...comment, replies: removeComment(comment.replies) }));
+        .filter((comment) => comment.id !== commentId)
+        .map((comment) => ({ ...comment, replies: removeComment(comment.replies) }));
 
     const originalComments = [...comments];
     setComments(removeComment(comments));
@@ -346,29 +355,29 @@ const PostDetail: React.FC = () => {
     const processComment = (comment: Comment, level: number) => {
       if (level === 0) {
         flattened.push({ ...comment, replies: [] });
-        comment.replies.forEach(reply => processComment(reply, 1));
+        comment.replies.forEach((reply) => processComment(reply, 1));
       } else if (level === 1) {
-        const parentIndex = flattened.findIndex(c => c.id === comment.parentCommentId);
+        const parentIndex = flattened.findIndex((c) => c.id === comment.parentCommentId);
         if (parentIndex !== -1) {
           flattened[parentIndex].replies.push({ ...comment, replies: [] });
         }
-        comment.replies.forEach(deepReply => processComment(deepReply, 2));
+        comment.replies.forEach((deepReply) => processComment(deepReply, 2));
       } else {
         flattened.push({
           ...comment,
           replies: [],
           parentCommentId: comment.parentCommentId,
         });
-        comment.replies.forEach(deeperReply => processComment(deeperReply, level + 1));
+        comment.replies.forEach((deeperReply) => processComment(deeperReply, level + 1));
       }
     };
-    comments.forEach(comment => processComment(comment, 0));
+    comments.forEach((comment) => processComment(comment, 0));
     return flattened;
   };
 
   const isLevel1Reply = (comment: Comment): boolean => {
     if (!comment.parentCommentId) return false;
-    const parent = comments.find(c => c.id === comment.parentCommentId);
+    const parent = comments.find((c) => c.id === comment.parentCommentId);
     return parent?.parentCommentId === null;
   };
 
@@ -389,7 +398,7 @@ const PostDetail: React.FC = () => {
         <div className="edit-form">
           <textarea
             value={editedContent}
-            onChange={e => setEditedContent(e.target.value)}
+            onChange={(e) => setEditedContent(e.target.value)}
             className="edit-textarea"
           />
           <div className="edit-actions">
@@ -426,12 +435,12 @@ const PostDetail: React.FC = () => {
           </div>
           {replyingToCommentId === comment.id && (
             <form
-              onSubmit={e => handleReplySubmit(e, comment.id)}
+              onSubmit={(e) => handleReplySubmit(e, comment.id)}
               className="reply-form"
             >
               <textarea
                 value={newReply}
-                onChange={e => setNewReply(e.target.value)}
+                onChange={(e) => setNewReply(e.target.value)}
                 placeholder="Write your reply..."
                 required
               />
@@ -450,7 +459,7 @@ const PostDetail: React.FC = () => {
           )}
           {comment.replies.length > 0 && (
             <div className="replies">
-              {comment.replies.map(reply => renderComment(reply, true))}
+              {comment.replies.map((reply) => renderComment(reply, true))}
             </div>
           )}
         </>
@@ -510,7 +519,7 @@ const PostDetail: React.FC = () => {
         <h2>Comments ({flattenedComments.length})</h2>
         {error && <div className="error-message">{error}</div>}
         <div className="comments-list">
-          {flattenedComments.map(comment => renderComment(comment, comment.parentCommentId !== null))}
+          {flattenedComments.map((comment) => renderComment(comment, comment.parentCommentId !== null))}
         </div>
         <form onSubmit={handleCommentSubmit} className="comment-form">
           <h3>Leave a Comment</h3>
@@ -518,7 +527,7 @@ const PostDetail: React.FC = () => {
             <>
               <textarea
                 value={newComment}
-                onChange={e => setNewComment(e.target.value)}
+                onChange={(e) => setNewComment(e.target.value)}
                 placeholder="Share your thoughts..."
                 required
               />

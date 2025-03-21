@@ -69,8 +69,8 @@ const FeaturePosts: React.FC = () => {
         const data: PaginatedResponse = await response.json();
         setPosts(data);
         localStorage.setItem(cacheKey, JSON.stringify({ data, timestamp: now }));
-      } catch (err) {
-        setError((err as Error).message || "Failed to load posts");
+      } catch {
+        setError("Failed to load posts");
       } finally {
         setLoading(false);
       }
@@ -127,15 +127,18 @@ const FeaturePosts: React.FC = () => {
             const cached = localStorage.getItem(cacheKey);
             if (cached) {
               const { data, timestamp } = JSON.parse(cached);
-              localStorage.setItem(cacheKey, JSON.stringify({
-                data: {
-                  ...data,
-                  items: data.items.map((post: Post) =>
-                    post.id === postId ? { ...post, [type]: value } : post
-                  ),
-                },
-                timestamp,
-              }));
+              localStorage.setItem(
+                cacheKey,
+                JSON.stringify({
+                  data: {
+                    ...data,
+                    items: data.items.map((post: Post) =>
+                      post.id === postId ? { ...post, [type]: value } : post
+                    ),
+                  },
+                  timestamp,
+                })
+              );
             }
           }
           if (postId === selectedPostId) setSelectedPostId(null);
@@ -143,8 +146,12 @@ const FeaturePosts: React.FC = () => {
           setError("Update succeeded but returned false");
         }
       })
-      .catch((err) => {
-        setError(`Failed to ${value ? "set" : "unset"} ${type === "isFeatured" ? "featured" : "latest news"} status`);
+      .catch(() => {
+        setError(
+          `Failed to ${value ? "set" : "unset"} ${
+            type === "isFeatured" ? "featured" : "latest news"
+          } status`
+        );
       })
       .finally(() => setSaving(false));
   };
@@ -190,22 +197,25 @@ const FeaturePosts: React.FC = () => {
             const cached = localStorage.getItem(cacheKey);
             if (cached) {
               const { data, timestamp } = JSON.parse(cached);
-              localStorage.setItem(cacheKey, JSON.stringify({
-                data: {
-                  ...data,
-                  items: data.items.filter((post: Post) => post.id !== postId),
-                  totalItems: data.totalItems - 1,
-                  totalPages: Math.ceil((data.totalItems - 1) / data.itemsPerPage),
-                },
-                timestamp,
-              }));
+              localStorage.setItem(
+                cacheKey,
+                JSON.stringify({
+                  data: {
+                    ...data,
+                    items: data.items.filter((post: Post) => post.id !== postId),
+                    totalItems: data.totalItems - 1,
+                    totalPages: Math.ceil((data.totalItems - 1) / data.itemsPerPage),
+                  },
+                  timestamp,
+                })
+              );
             }
           }
         } else {
           setError("Delete succeeded but returned false");
         }
       })
-      .catch((err) => {
+      .catch(() => {
         setError("Failed to delete post");
       })
       .finally(() => setSaving(false));
