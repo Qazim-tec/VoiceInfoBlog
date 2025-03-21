@@ -8,23 +8,33 @@ interface Post {
   title: string;
   content: string;
   excerpt: string;
-  featuredImage: string | null;
+  featuredImageUrl: string | null;
   views: number;
   isFeatured: boolean;
   createdAt: string;
   slug: string;
   authorId: string;
   authorName: string | null;
-  categoryId: number | null;
+  categoryId: number;
   categoryName: string | null;
   tags: string[];
-  comments: any[];
+  commentsCount: number;
+}
+
+interface PaginatedResponse {
+  items: Post[];
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
+  itemsPerPage: number;
 }
 
 const POSTS_PER_PAGE = 15;
+const CACHE_EXPIRY = 10 * 60 * 1000; // 10 minutes in milliseconds
 
 const CategoryPage: React.FC = () => {
   const [posts, setPosts] = useState<Post[]>([]);
+  const [totalPages, setTotalPages] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -33,6 +43,26 @@ const CategoryPage: React.FC = () => {
 
   useEffect(() => {
     const fetchPosts = async () => {
+      if (!categoryName) {
+        setError("Category name is missing.");
+        setLoading(false);
+        return;
+      }
+
+      const cacheKey = `category_${categoryName.toLowerCase()}_page_${currentPage}`;
+      const cachedData = localStorage.getItem(cacheKey);
+      const now = Date.now();
+
+      if (cachedData) {
+        const { data, timestamp } = JSON.parse(cachedData);
+        if (now - timestamp < CACHE_EXPIRY) {
+          setPosts(data.items);
+          setTotalPages(data.totalPages);
+          setLoading(false);
+          return;
+        }
+      }
+
       try {
         setLoading(true);
         const headers: HeadersInit = {};
@@ -40,30 +70,32 @@ const CategoryPage: React.FC = () => {
           headers["Authorization"] = `Bearer ${user.token}`;
         }
 
-        const response = await fetch("https://voiceinfo.onrender.com/api/Post/all", {
-          headers,
-        });
-        
-        if (!response.ok) {
-          throw new Error("Failed to fetch posts");
-        }
-        
-        const allPosts: Post[] = await response.json();
-        const filteredPosts = allPosts.filter(
-          (post) =>
-            post.categoryName?.toLowerCase() === categoryName?.toLowerCase()
+        const response = await fetch(
+          `https://voiceinfo.onrender.com/api/Category/${encodeURIComponent(categoryName)}/posts?page=${currentPage}&pageSize=${POSTS_PER_PAGE}`,
+          { headers }
         );
-        setPosts(filteredPosts);
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch posts: ${response.statusText}`);
+        }
+
+        const data: PaginatedResponse = await response.json();
+        setPosts(data.items);
+        setTotalPages(data.totalPages);
+
+        // Cache the response
+        localStorage.setItem(cacheKey, JSON.stringify({ data, timestamp: now }));
       } catch (err) {
         setError((err as Error).message || "An error occurred while fetching posts");
         setPosts([]);
+        setTotalPages(0);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchPosts(); // Fetch posts regardless of user authentication
-  }, [categoryName, user?.token]); // Refetch when categoryName or token changes
+    fetchPosts();
+  }, [categoryName, currentPage, user?.token]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -73,11 +105,6 @@ const CategoryPage: React.FC = () => {
       minute: "2-digit",
     });
   };
-
-  const totalPages = Math.ceil(posts.length / POSTS_PER_PAGE);
-  const startIndex = (currentPage - 1) * POSTS_PER_PAGE;
-  const endIndex = startIndex + POSTS_PER_PAGE;
-  const currentPosts = posts.slice(startIndex, endIndex);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -95,12 +122,12 @@ const CategoryPage: React.FC = () => {
       ) : (
         <>
           <div className="posts-list">
-            {currentPosts.map((post) => (
+            {posts.map((post) => (
               <div key={post.id} className="post-item">
                 <div className="post-image-container">
-                  {post.featuredImage ? (
+                  {post.featuredImageUrl ? (
                     <img
-                      src={`data:image/jpeg;base64,${post.featuredImage}`}
+                      src={post.featuredImageUrl}
                       alt={post.title}
                       className="post-image"
                     />

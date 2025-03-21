@@ -6,33 +6,67 @@ interface Post {
   id: number;
   title: string;
   excerpt: string;
-  featuredImage: string;
+  featuredImageUrl: string;
   slug: string;
   isFeatured: boolean;
 }
 
+const CACHE_EXPIRY = 10 * 60 * 1000; // 10 minutes in milliseconds
+const CACHE_KEY = "featuredPosts";
+
 const FeaturedPostsCarousel: React.FC = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [featuredPosts, setFeaturedPosts] = useState<Post[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [featuredPosts, setFeaturedPosts] = useState<Post[]>(() => {
+    const cachedData = localStorage.getItem(CACHE_KEY);
+    if (cachedData) {
+      const { data, timestamp } = JSON.parse(cachedData);
+      if (Date.now() - timestamp < CACHE_EXPIRY) {
+        return data;
+      }
+    }
+    return [];
+  });
+  const [loading, setLoading] = useState<boolean>(() => {
+    const cachedData = localStorage.getItem(CACHE_KEY);
+    if (cachedData) {
+      const { timestamp } = JSON.parse(cachedData);
+      return Date.now() - timestamp >= CACHE_EXPIRY;
+    }
+    return true;
+  });
   const [error, setError] = useState<string | null>(null);
 
+  const fetchFeaturedPosts = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch("https://voiceinfo.onrender.com/api/FeaturedPosts", {
+        headers: {
+          'Cache-Control': 'no-cache'
+        }
+      });
+      if (!response.ok) throw new Error("Failed to fetch featured posts");
+
+      const data: Post[] = await response.json();
+      setFeaturedPosts(data);
+      localStorage.setItem(CACHE_KEY, JSON.stringify({ data, timestamp: Date.now() }));
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        const response = await fetch("https://voiceinfo.onrender.com/api/Post/all");
-        if (!response.ok) throw new Error("Failed to fetch posts");
-
-        const data: Post[] = await response.json();
-        setFeaturedPosts(data.filter((post) => post.isFeatured));
-      } catch (err) {
-        setError((err as Error).message);
-      } finally {
+    const cachedData = localStorage.getItem(CACHE_KEY);
+    if (cachedData) {
+      const { data, timestamp } = JSON.parse(cachedData);
+      if (Date.now() - timestamp < CACHE_EXPIRY) {
+        setFeaturedPosts(data);
         setLoading(false);
+        return;
       }
-    };
-
-    fetchPosts();
+    }
+    fetchFeaturedPosts();
   }, []);
 
   useEffect(() => {
@@ -43,6 +77,19 @@ const FeaturedPostsCarousel: React.FC = () => {
       return () => clearInterval(interval);
     }
   }, [featuredPosts]);
+
+  // Handle browser reload or swipe-down
+  useEffect(() => {
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted || performance.navigation.type === 1) { // Reload or swipe-down
+        localStorage.removeItem(CACHE_KEY); // Clear cache on reload
+        fetchFeaturedPosts();
+      }
+    };
+
+    window.addEventListener("pageshow", handlePageShow);
+    return () => window.removeEventListener("pageshow", handlePageShow);
+  }, []);
 
   if (loading) return <div className="fpc-carousel-loading">Loading featured posts...</div>;
   if (error) return <div className="fpc-carousel-error">Error: {error}</div>;
@@ -59,7 +106,7 @@ const FeaturedPostsCarousel: React.FC = () => {
             <div className="fpc-carousel-item" key={post.id}>
               <div className="fpc-image-wrapper">
                 <img
-                  src={post.featuredImage.startsWith("data:image") ? post.featuredImage : `data:image/png;base64,${post.featuredImage}`}
+                  src={post.featuredImageUrl}
                   alt={post.title}
                   className="fpc-carousel-image"
                 />

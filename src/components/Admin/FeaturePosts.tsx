@@ -1,18 +1,30 @@
 import React, { useState, useEffect } from "react";
-import { useUser } from "../../context/UserContext"; // Adjust path as needed
+import { useUser } from "../../context/UserContext";
 import "./FeaturePosts.css";
 
 interface Post {
   id: number;
   title: string;
+  createdAt: string;
+  authorName: string;
   isFeatured: boolean;
   isLatestNews: boolean;
-  createdAt: string; // Assuming this exists for sorting
 }
+
+interface PaginatedResponse {
+  items: Post[];
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
+  itemsPerPage: number;
+}
+
+const POSTS_PER_PAGE = 15;
+const CACHE_EXPIRY = 10 * 60 * 1000; // 10 minutes
 
 const FeaturePosts: React.FC = () => {
   const { user } = useUser();
-  const [posts, setPosts] = useState<Post[]>([]);
+  const [posts, setPosts] = useState<PaginatedResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedPostId, setSelectedPostId] = useState<number | null>(null);
   const [saving, setSaving] = useState<boolean>(false);
@@ -25,35 +37,49 @@ const FeaturePosts: React.FC = () => {
   });
 
   const isAdmin = user?.role === "Admin";
-  const postsPerPage = 15;
 
-  // Fetch and sort posts on mount
   useEffect(() => {
-    const headers: Record<string, string> = {};
-    if (user?.token) {
-      headers["Authorization"] = `Bearer ${user.token}`;
-    }
+    const fetchPosts = async () => {
+      const cacheKey = `featurePosts_all_page_${currentPage[activeTab]}`;
+      const cachedData = localStorage.getItem(cacheKey);
+      const now = Date.now();
 
-    fetch("https://voiceinfo.onrender.com/api/Post/all", { headers })
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch posts");
-        return res.json();
-      })
-      .then((data: Post[]) => {
-        const sortedPosts = data.sort((a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      if (cachedData) {
+        const { data, timestamp } = JSON.parse(cachedData);
+        if (now - timestamp < CACHE_EXPIRY) {
+          setPosts(data);
+          setLoading(false);
+          return;
+        }
+      }
+
+      try {
+        setLoading(true);
+        const headers: Record<string, string> = {};
+        if (user?.token) {
+          headers["Authorization"] = `Bearer ${user.token}`;
+        }
+
+        const response = await fetch(
+          `https://voiceinfo.onrender.com/api/Post/all-posts-light?page=${currentPage[activeTab]}&pageSize=${POSTS_PER_PAGE}`,
+          { headers }
         );
-        setPosts(sortedPosts);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Fetch Error:", err);
-        setError("Failed to load posts");
-        setLoading(false);
-      });
-  }, [user]);
+        if (!response.ok) throw new Error("Failed to fetch posts");
 
-  // Toggle Featured or Latest News status
+        const data: PaginatedResponse = await response.json();
+        setPosts(data);
+        localStorage.setItem(cacheKey, JSON.stringify({ data, timestamp: now }));
+      } catch (err) {
+        setError((err as Error).message || "Failed to load posts");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (isAdmin) fetchPosts();
+    else setLoading(false);
+  }, [user?.token, currentPage, activeTab, isAdmin]);
+
   const togglePostStatus = (
     postId: number,
     type: "isFeatured" | "isLatestNews",
@@ -85,26 +111,44 @@ const FeaturePosts: React.FC = () => {
         return res.json();
       })
       .then((success) => {
-        console.log(`${type} Response:`, success);
         if (success) {
-          setPosts((prevPosts) =>
-            prevPosts.map((post) =>
-              post.id === postId ? { ...post, [type]: value } : post
-            )
-          );
+          setPosts((prev) => {
+            if (!prev) return null;
+            return {
+              ...prev,
+              items: prev.items.map((post) =>
+                post.id === postId ? { ...post, [type]: value } : post
+              ),
+            };
+          });
+          // Update cache for all pages
+          for (let i = 1; i <= 100; i++) {
+            const cacheKey = `featurePosts_all_page_${i}`;
+            const cached = localStorage.getItem(cacheKey);
+            if (cached) {
+              const { data, timestamp } = JSON.parse(cached);
+              localStorage.setItem(cacheKey, JSON.stringify({
+                data: {
+                  ...data,
+                  items: data.items.map((post: Post) =>
+                    post.id === postId ? { ...post, [type]: value } : post
+                  ),
+                },
+                timestamp,
+              }));
+            }
+          }
           if (postId === selectedPostId) setSelectedPostId(null);
         } else {
           setError("Update succeeded but returned false");
         }
       })
       .catch((err) => {
-        console.error(`${type} Error:`, err);
         setError(`Failed to ${value ? "set" : "unset"} ${type === "isFeatured" ? "featured" : "latest news"} status`);
       })
       .finally(() => setSaving(false));
   };
 
-  // Delete a post
   const handleDeletePost = (postId: number) => {
     if (!isAdmin) return;
 
@@ -130,15 +174,38 @@ const FeaturePosts: React.FC = () => {
         return res.json();
       })
       .then((success) => {
-        console.log("Delete Response:", success);
         if (success) {
-          setPosts((prevPosts) => prevPosts.filter((post) => post.id !== postId));
+          setPosts((prev) => {
+            if (!prev) return null;
+            return {
+              ...prev,
+              items: prev.items.filter((post) => post.id !== postId),
+              totalItems: prev.totalItems - 1,
+              totalPages: Math.ceil((prev.totalItems - 1) / prev.itemsPerPage),
+            };
+          });
+          // Update cache for all pages
+          for (let i = 1; i <= 100; i++) {
+            const cacheKey = `featurePosts_all_page_${i}`;
+            const cached = localStorage.getItem(cacheKey);
+            if (cached) {
+              const { data, timestamp } = JSON.parse(cached);
+              localStorage.setItem(cacheKey, JSON.stringify({
+                data: {
+                  ...data,
+                  items: data.items.filter((post: Post) => post.id !== postId),
+                  totalItems: data.totalItems - 1,
+                  totalPages: Math.ceil((data.totalItems - 1) / data.itemsPerPage),
+                },
+                timestamp,
+              }));
+            }
+          }
         } else {
           setError("Delete succeeded but returned false");
         }
       })
       .catch((err) => {
-        console.error("Delete Error:", err);
         setError("Failed to delete post");
       })
       .finally(() => setSaving(false));
@@ -148,23 +215,24 @@ const FeaturePosts: React.FC = () => {
     setSelectedPostId((prev) => (prev === postId ? null : postId));
   };
 
-  // Pagination logic
-  const getPaginatedPosts = (postList: Post[]) => {
-    const page = currentPage[activeTab];
-    const startIndex = (page - 1) * postsPerPage;
-    const endIndex = startIndex + postsPerPage;
-    return postList.slice(startIndex, endIndex);
-  };
-
-  const getTotalPages = (postList: Post[]) => {
-    return Math.ceil(postList.length / postsPerPage);
-  };
-
-  const handlePageChange = (direction: "prev" | "next", totalPages: number) => {
+  const handlePageChange = (direction: "prev" | "next") => {
     setCurrentPage((prev) => {
+      const totalPages = posts?.totalPages || 1;
       const newPage = direction === "prev" ? prev[activeTab] - 1 : prev[activeTab] + 1;
       if (newPage < 1 || newPage > totalPages) return prev;
       return { ...prev, [activeTab]: newPage };
+    });
+  };
+
+  const formatDateTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleString("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -205,6 +273,8 @@ const FeaturePosts: React.FC = () => {
           <p>Loading posts...</p>
         ) : error ? (
           <p className="featureposts-error">{error}</p>
+        ) : !posts ? (
+          <p>No posts available</p>
         ) : (
           <>
             {activeTab === "featured" && (
@@ -212,7 +282,7 @@ const FeaturePosts: React.FC = () => {
                 <h2>Manage Featured Posts</h2>
                 <h3>Unfeatured Posts</h3>
                 <ul className="featureposts-list">
-                  {getPaginatedPosts(posts.filter((post) => !post.isFeatured)).map((post) => (
+                  {posts.items.filter((post) => !post.isFeatured).map((post) => (
                     <li key={post.id} className="featureposts-item">
                       <label>
                         <input
@@ -221,7 +291,7 @@ const FeaturePosts: React.FC = () => {
                           onChange={() => handleCheckboxChange(post.id)}
                           disabled={saving}
                         />
-                        {post.title}
+                        {post.title} - {post.authorName} - {formatDateTime(post.createdAt)}
                       </label>
                     </li>
                   ))}
@@ -236,18 +306,18 @@ const FeaturePosts: React.FC = () => {
 
                 <div className="featureposts-pagination">
                   <button
-                    onClick={() => handlePageChange("prev", getTotalPages(posts.filter((post) => !post.isFeatured)))}
+                    onClick={() => handlePageChange("prev")}
                     disabled={currentPage[activeTab] === 1}
                     className="featureposts-pagination-btn"
                   >
                     Previous
                   </button>
                   <span className="featureposts-pagination-info">
-                    Page {currentPage[activeTab]} of {getTotalPages(posts.filter((post) => !post.isFeatured))}
+                    Page {currentPage[activeTab]} of {posts.totalPages}
                   </span>
                   <button
-                    onClick={() => handlePageChange("next", getTotalPages(posts.filter((post) => !post.isFeatured)))}
-                    disabled={currentPage[activeTab] === getTotalPages(posts.filter((post) => !post.isFeatured))}
+                    onClick={() => handlePageChange("next")}
+                    disabled={currentPage[activeTab] === posts.totalPages}
                     className="featureposts-pagination-btn"
                   >
                     Next
@@ -256,9 +326,9 @@ const FeaturePosts: React.FC = () => {
 
                 <h3>Featured Posts</h3>
                 <ul className="featureposts-list">
-                  {getPaginatedPosts(posts.filter((post) => post.isFeatured)).map((post) => (
+                  {posts.items.filter((post) => post.isFeatured).map((post) => (
                     <li key={post.id} className="featureposts-item featureposts-featured">
-                      <span>{post.title}</span>
+                      <span>{post.title} - {post.authorName} - {formatDateTime(post.createdAt)}</span>
                       <button
                         className="featureposts-unfeature-btn"
                         onClick={() => togglePostStatus(post.id, "isFeatured", false)}
@@ -269,25 +339,6 @@ const FeaturePosts: React.FC = () => {
                     </li>
                   ))}
                 </ul>
-                <div className="featureposts-pagination">
-                  <button
-                    onClick={() => handlePageChange("prev", getTotalPages(posts.filter((post) => post.isFeatured)))}
-                    disabled={currentPage[activeTab] === 1}
-                    className="featureposts-pagination-btn"
-                  >
-                    Previous
-                  </button>
-                  <span className="featureposts-pagination-info">
-                    Page {currentPage[activeTab]} of {getTotalPages(posts.filter((post) => post.isFeatured))}
-                  </span>
-                  <button
-                    onClick={() => handlePageChange("next", getTotalPages(posts.filter((post) => post.isFeatured)))}
-                    disabled={currentPage[activeTab] === getTotalPages(posts.filter((post) => post.isFeatured))}
-                    className="featureposts-pagination-btn"
-                  >
-                    Next
-                  </button>
-                </div>
               </>
             )}
 
@@ -296,7 +347,7 @@ const FeaturePosts: React.FC = () => {
                 <h2>Manage Latest News</h2>
                 <h3>Non-Latest Posts</h3>
                 <ul className="featureposts-list">
-                  {getPaginatedPosts(posts.filter((post) => !post.isLatestNews)).map((post) => (
+                  {posts.items.filter((post) => !post.isLatestNews).map((post) => (
                     <li key={post.id} className="featureposts-item">
                       <label>
                         <input
@@ -305,7 +356,7 @@ const FeaturePosts: React.FC = () => {
                           onChange={() => handleCheckboxChange(post.id)}
                           disabled={saving}
                         />
-                        {post.title}
+                        {post.title} - {post.authorName} - {formatDateTime(post.createdAt)}
                       </label>
                     </li>
                   ))}
@@ -320,18 +371,18 @@ const FeaturePosts: React.FC = () => {
 
                 <div className="featureposts-pagination">
                   <button
-                    onClick={() => handlePageChange("prev", getTotalPages(posts.filter((post) => !post.isLatestNews)))}
+                    onClick={() => handlePageChange("prev")}
                     disabled={currentPage[activeTab] === 1}
                     className="featureposts-pagination-btn"
                   >
                     Previous
                   </button>
                   <span className="featureposts-pagination-info">
-                    Page {currentPage[activeTab]} of {getTotalPages(posts.filter((post) => !post.isLatestNews))}
+                    Page {currentPage[activeTab]} of {posts.totalPages}
                   </span>
                   <button
-                    onClick={() => handlePageChange("next", getTotalPages(posts.filter((post) => !post.isLatestNews)))}
-                    disabled={currentPage[activeTab] === getTotalPages(posts.filter((post) => !post.isLatestNews))}
+                    onClick={() => handlePageChange("next")}
+                    disabled={currentPage[activeTab] === posts.totalPages}
                     className="featureposts-pagination-btn"
                   >
                     Next
@@ -340,9 +391,9 @@ const FeaturePosts: React.FC = () => {
 
                 <h3>Latest News Posts</h3>
                 <ul className="featureposts-list">
-                  {getPaginatedPosts(posts.filter((post) => post.isLatestNews)).map((post) => (
+                  {posts.items.filter((post) => post.isLatestNews).map((post) => (
                     <li key={post.id} className="featureposts-item featureposts-featured">
-                      <span>{post.title}</span>
+                      <span>{post.title} - {post.authorName} - {formatDateTime(post.createdAt)}</span>
                       <button
                         className="featureposts-unfeature-btn"
                         onClick={() => togglePostStatus(post.id, "isLatestNews", false)}
@@ -353,25 +404,6 @@ const FeaturePosts: React.FC = () => {
                     </li>
                   ))}
                 </ul>
-                <div className="featureposts-pagination">
-                  <button
-                    onClick={() => handlePageChange("prev", getTotalPages(posts.filter((post) => post.isLatestNews)))}
-                    disabled={currentPage[activeTab] === 1}
-                    className="featureposts-pagination-btn"
-                  >
-                    Previous
-                  </button>
-                  <span className="featureposts-pagination-info">
-                    Page {currentPage[activeTab]} of {getTotalPages(posts.filter((post) => post.isLatestNews))}
-                  </span>
-                  <button
-                    onClick={() => handlePageChange("next", getTotalPages(posts.filter((post) => post.isLatestNews)))}
-                    disabled={currentPage[activeTab] === getTotalPages(posts.filter((post) => post.isLatestNews))}
-                    className="featureposts-pagination-btn"
-                  >
-                    Next
-                  </button>
-                </div>
               </>
             )}
 
@@ -380,9 +412,9 @@ const FeaturePosts: React.FC = () => {
                 <h2>Manage Delete Posts</h2>
                 <h3>All Posts</h3>
                 <ul className="featureposts-list">
-                  {getPaginatedPosts(posts).map((post) => (
+                  {posts.items.map((post) => (
                     <li key={post.id} className="featureposts-item">
-                      <span>{post.title}</span>
+                      <span>{post.title} - {post.authorName} - {formatDateTime(post.createdAt)}</span>
                       <button
                         className="featureposts-delete-btn"
                         onClick={() => handleDeletePost(post.id)}
@@ -395,18 +427,18 @@ const FeaturePosts: React.FC = () => {
                 </ul>
                 <div className="featureposts-pagination">
                   <button
-                    onClick={() => handlePageChange("prev", getTotalPages(posts))}
+                    onClick={() => handlePageChange("prev")}
                     disabled={currentPage[activeTab] === 1}
                     className="featureposts-pagination-btn"
                   >
                     Previous
                   </button>
                   <span className="featureposts-pagination-info">
-                    Page {currentPage[activeTab]} of {getTotalPages(posts)}
+                    Page {currentPage[activeTab]} of {posts.totalPages}
                   </span>
                   <button
-                    onClick={() => handlePageChange("next", getTotalPages(posts))}
-                    disabled={currentPage[activeTab] === getTotalPages(posts)}
+                    onClick={() => handlePageChange("next")}
+                    disabled={currentPage[activeTab] === posts.totalPages}
                     className="featureposts-pagination-btn"
                   >
                     Next

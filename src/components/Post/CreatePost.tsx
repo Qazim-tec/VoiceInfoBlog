@@ -11,10 +11,19 @@ interface Post {
   title: string;
   content: string;
   excerpt: string;
-  featuredImage: string;
+  featuredImageUrl: string;
   categoryId: number;
   tags: string[];
   slug: string;
+  createdAt: string;
+  views: number;
+  isFeatured: boolean;
+  isLatestNews: boolean;
+  authorId: string;
+  authorName: string;
+  categoryName: string;
+  commentsCount: number;
+  comments: any[];
 }
 
 const CreatePost: React.FC = () => {
@@ -33,7 +42,6 @@ const CreatePost: React.FC = () => {
   const location = useLocation();
   const postToEdit = location.state?.postToEdit as Post | undefined;
 
-  // Pre-fill form if editing an existing post
   useEffect(() => {
     if (postToEdit) {
       setTitle(postToEdit.title);
@@ -41,12 +49,11 @@ const CreatePost: React.FC = () => {
       setExcerpt(postToEdit.excerpt || "");
       setCategoryId(postToEdit.categoryId);
       setTags(postToEdit.tags.join(", "));
-      // Note: featuredImage is not pre-filled as a File; it’s handled separately if needed
     }
   }, [postToEdit]);
 
   if (!user) {
-    navigate("/SignIn");
+    navigate("/SignIn", { replace: true });
     return null;
   }
 
@@ -74,7 +81,7 @@ const CreatePost: React.FC = () => {
     if (featuredImage) formData.append("FeaturedImage", featuredImage);
     formData.append("CategoryId", categoryId.toString());
     if (tags) {
-      const tagsArray = tags.split(",").map((tag) => tag.trim());
+      const tagsArray = tags.split(",").map((tag) => tag.trim()).filter(tag => tag);
       tagsArray.forEach((tag) => formData.append("Tags", tag));
     }
 
@@ -97,8 +104,14 @@ const CreatePost: React.FC = () => {
         throw new Error(errorText || `Failed to ${postToEdit ? "update" : "create"} post`);
       }
 
-      const data = await response.json();
-      navigate(`/post/${data.slug || postToEdit?.slug}`);
+      const data: { data: Post; message: string } = await response.json();
+      const newPost: Post = data.data;
+
+      // Navigate with the updated post data
+      navigate(`/post/${newPost.slug}`, {
+        replace: true,
+        state: { updatedPost: newPost },
+      });
     } catch (err) {
       setError(
         (err as Error).message || `An error occurred while ${postToEdit ? "updating" : "creating"} the post`
@@ -108,7 +121,6 @@ const CreatePost: React.FC = () => {
     }
   };
 
-  // Quill toolbar modules
   const quillModules = {
     toolbar: [
       [{ header: [1, 2, 3, false] }],
@@ -129,11 +141,7 @@ const CreatePost: React.FC = () => {
         {error && <div className="error-message">{error}</div>}
         {catError && <div className="error-message">{catError}</div>}
 
-        <form
-          onSubmit={handleSubmit}
-          encType="multipart/form-data"
-          className="post-form"
-        >
+        <form onSubmit={handleSubmit} encType="multipart/form-data" className="post-form">
           <div className="form-group">
             <label htmlFor="title">Title</label>
             <input
@@ -178,7 +186,7 @@ const CreatePost: React.FC = () => {
             />
             {featuredImage ? (
               <p className="file-preview">{featuredImage.name}</p>
-            ) : postToEdit?.featuredImage ? (
+            ) : postToEdit?.featuredImageUrl ? (
               <p className="file-preview">Current image: (Previously uploaded)</p>
             ) : null}
           </div>
@@ -219,7 +227,7 @@ const CreatePost: React.FC = () => {
             <button
               type="button"
               className="btn btn-secondary"
-              onClick={() => navigate(postToEdit ? `/post/${postToEdit.slug}` : "/")}
+              onClick={() => navigate(postToEdit ? `/post/${postToEdit.slug}` : "/", { replace: true })}
               disabled={isSubmitting}
             >
               Cancel

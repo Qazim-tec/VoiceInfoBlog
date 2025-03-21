@@ -20,64 +20,55 @@ interface Post {
   createdAt: string;
 }
 
+interface PaginatedResponse {
+  items: Post[];
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
+  itemsPerPage: number;
+}
+
 const Navbar: React.FC = () => {
   const [darkMode, setDarkMode] = useState<boolean>(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
   const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const [posts, setPosts] = useState<Post[]>([]);
   const [filteredPosts, setFilteredPosts] = useState<Post[]>([]);
   const { user, logout } = useUser();
   const { categories, loading, error } = useCategories();
   const navigate = useNavigate();
 
-  // Fetch posts on mount
-  useEffect(() => {
-    const headers: Record<string, string> = {};
-    if (user?.token) {
-      headers["Authorization"] = `Bearer ${user.token}`;
-    }
-
-    fetch("https://voiceinfo.onrender.com/api/Post/all", { headers })
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch posts");
-        return res.json();
-      })
-      .then((data: Post[]) => {
-        setPosts(data);
-      })
-      .catch((err) => {
-        console.error("Fetch Posts Error:", err);
-      });
-  }, [user]);
-
-  // Filter posts based on search query (multiple words, any order)
   useEffect(() => {
     if (searchQuery.trim() === "") {
       setFilteredPosts([]);
       return;
     }
 
-    // Split search query into individual words, remove empty strings
-    const searchWords = searchQuery
-      .toLowerCase()
-      .split(/\s+/)
-      .filter((word) => word.length > 0);
+    const fetchSearchResults = async () => {
+      try {
+        const headers: Record<string, string> = {};
+        if (user?.token) {
+          headers["Authorization"] = `Bearer ${user.token}`;
+        }
 
-    if (searchWords.length === 0) {
-      setFilteredPosts([]);
-      return;
-    }
+        const response = await fetch(
+          `https://voiceinfo.onrender.com/api/Search?query=${encodeURIComponent(searchQuery)}&page=1`,
+          { headers }
+        );
+        if (!response.ok) throw new Error("Failed to fetch search results");
 
-    // Filter posts where all search words are present in the title (any order)
-    const filtered = posts.filter((post) => {
-      const titleLower = post.title.toLowerCase();
-      return searchWords.every((word) => titleLower.includes(word));
-    });
+        const data: PaginatedResponse = await response.json();
+        setFilteredPosts(data.items);
+      } catch (err) {
+        console.error("Search Error:", err);
+        setFilteredPosts([]);
+      }
+    };
 
-    setFilteredPosts(filtered);
-  }, [searchQuery, posts]);
+    const debounce = setTimeout(fetchSearchResults, 300);
+    return () => clearTimeout(debounce);
+  }, [searchQuery, user]);
 
   const toggleDarkMode = (): void => {
     setDarkMode((prev) => !prev);
@@ -93,6 +84,7 @@ const Navbar: React.FC = () => {
   const handleSearchSelect = (slug: string) => {
     setSearchQuery("");
     setIsSearchOpen(false);
+    setFilteredPosts([]);
     navigate(`/post/${slug}`);
   };
 
@@ -145,7 +137,7 @@ const Navbar: React.FC = () => {
         />
         {filteredPosts.length > 0 && searchQuery.trim() !== "" && (
           <ul className="search-results">
-            {filteredPosts.slice(0, 5).map((post) => (
+            {filteredPosts.map((post) => (
               <li
                 key={post.id}
                 className="search-result-item"

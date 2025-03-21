@@ -1,68 +1,102 @@
 import React, { useState, useEffect } from "react";
-import { useUser } from "../../context/UserContext"; // Adjust path
+import { useUser } from "../../context/UserContext";
 import { Link } from "react-router-dom";
 import "./TrendingPosts.css";
-
-interface Comment {
-  id: number;
-  content: string;
-  createdAt: string;
-  userId: string;
-  userName: string;
-  parentCommentId: number | null;
-  replies: Comment[];
-}
 
 interface Post {
   id: number;
   title: string;
   createdAt: string;
   views: number;
-  comments: Comment[];
+  commentsCount: number;
   slug: string;
-  featuredImage: string; // Base64 or URL for the image
-  authorName: string;    // Author of the post
+  featuredImageUrl: string;
+  authorName: string;
 }
+
+const CACHE_EXPIRY = 10 * 60 * 1000; // 10 minutes in milliseconds
+const CACHE_KEY = "trendingPosts";
 
 const TrendingPosts: React.FC = () => {
   const { user } = useUser();
-  const [trendingPosts, setTrendingPosts] = useState<Post[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [trendingPosts, setTrendingPosts] = useState<Post[]>(() => {
+    const cachedData = localStorage.getItem(CACHE_KEY);
+    if (cachedData) {
+      const { data, timestamp } = JSON.parse(cachedData);
+      if (Date.now() - timestamp < CACHE_EXPIRY) {
+        return data;
+      }
+    }
+    return [];
+  });
+  const [loading, setLoading] = useState<boolean>(() => {
+    const cachedData = localStorage.getItem(CACHE_KEY);
+    if (cachedData) {
+      const { timestamp } = JSON.parse(cachedData);
+      return Date.now() - timestamp >= CACHE_EXPIRY;
+    }
+    return true;
+  });
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const headers: Record<string, string> = {};
-    if (user?.token) {
-      headers["Authorization"] = `Bearer ${user.token}`;
+  const fetchTrendingPosts = async () => {
+    try {
+      setLoading(true);
+      const headers: Record<string, string> = {};
+      if (user?.token) {
+        headers["Authorization"] = `Bearer ${user.token}`;
+      }
+
+      const response = await fetch(
+        "https://voiceinfo.onrender.com/api/TrendingPosts",
+        {
+          headers,
+        }
+      );
+
+      if (!response.ok) throw new Error("Failed to fetch trending posts");
+
+      const data: Post[] = await response.json();
+      setTrendingPosts(data);
+      localStorage.setItem(
+        CACHE_KEY,
+        JSON.stringify({ data, timestamp: Date.now() })
+      );
+    } catch (err) {
+      console.error("Fetch Error:", err);
+      setError("Failed to load trending posts");
+    } finally {
+      setLoading(false);
     }
+  };
 
-    fetch("https://voiceinfo.onrender.com/api/Post/all", { headers })
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch posts");
-        return res.json();
-      })
-      .then((data: Post[]) => {
-        const sortedPosts = data
-          .sort((a, b) => {
-            const scoreA = (a.comments.length * 2) + a.views;
-            const scoreB = (b.comments.length * 2) + b.views;
-            if (scoreB === scoreA) {
-              return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-            }
-            return scoreB - scoreA;
-          })
-          .slice(0, 4); // Top 4 trending posts
-        setTrendingPosts(sortedPosts);
+  useEffect(() => {
+    const cachedData = localStorage.getItem(CACHE_KEY);
+    if (cachedData) {
+      const { data, timestamp } = JSON.parse(cachedData);
+      if (Date.now() - timestamp < CACHE_EXPIRY && data.length > 0) {
+        setTrendingPosts(data);
         setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Fetch Error:", err);
-        setError("Failed to load trending posts");
-        setLoading(false);
-      });
-  }, [user]);
+        return;
+      }
+    }
+    fetchTrendingPosts();
+  }, [user]); // Re-fetch if user (token) changes
 
-  // Format createdAt to a readable date
+  // Handle browser reload or swipe-down
+  useEffect(() => {
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted || performance.navigation.type === 1) {
+        // Reload or swipe-down
+        localStorage.removeItem(CACHE_KEY); // Clear cache on reload
+        fetchTrendingPosts();
+      }
+    };
+
+    window.addEventListener("pageshow", handlePageShow);
+    return () => window.removeEventListener("pageshow", handlePageShow);
+  }, [user]); // Include user in dependency array to handle token changes on reload
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
@@ -71,34 +105,35 @@ const TrendingPosts: React.FC = () => {
     });
   };
 
+  if (loading) return <p>Loading trending posts...</p>;
+  if (error) return <p className="error">{error}</p>;
+
   return (
     <div className="trending-section">
       <h2>Trending Posts</h2>
-      {loading ? (
-        <p>Loading trending posts...</p>
-      ) : error ? (
-        <p className="error">{error}</p>
-      ) : (
-        <div className="trending-cards">
-          {trendingPosts.map((post) => (
-            <Link to={`/post/${post.slug}`} key={post.id} className="trending-card-link">
-              <div className="trending-card">
-                <img
-                  src={`data:image/png;base64,${post.featuredImage}`} // Assuming base64
-                  alt={post.title}
-                  className="trending-image"
-                />
-                <div className="trending-card-content">
-                  <h3 className="trending-title">{post.title}</h3>
-                  <p className="trending-meta">
-                    By {post.authorName} | {formatDate(post.createdAt)}
-                  </p>
-                </div>
+      <div className="trending-cards">
+        {trendingPosts.map((post) => (
+          <Link
+            to={`/post/${post.slug}`}
+            key={post.id}
+            className="trending-card-link"
+          >
+            <div className="trending-card">
+              <img
+                src={post.featuredImageUrl}
+                alt={post.title}
+                className="trending-image"
+              />
+              <div className="trending-card-content">
+                <h3 className="trending-title">{post.title}</h3>
+                <p className="trending-meta">
+                  By {post.authorName} | {formatDate(post.createdAt)}
+                </p>
               </div>
-            </Link>
-          ))}
-        </div>
-      )}
+            </div>
+          </Link>
+        ))}
+      </div>
     </div>
   );
 };

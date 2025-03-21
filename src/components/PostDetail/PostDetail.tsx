@@ -1,7 +1,10 @@
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useUser } from "../../context/UserContext";
 import "./PostDetail.css";
+
+const postCache: { [slug: string]: { data: Post; timestamp: number } } = {};
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 interface Comment {
   id: number;
@@ -18,7 +21,7 @@ interface Post {
   title: string;
   content: string;
   excerpt: string;
-  featuredImage: string;
+  featuredImageUrl: string;
   views: number;
   isFeatured: boolean;
   createdAt: string;
@@ -34,6 +37,7 @@ interface Post {
 const PostDetail: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const [post, setPost] = useState<Post | null>(null);
+  const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [newComment, setNewComment] = useState("");
@@ -47,21 +51,38 @@ const PostDetail: React.FC = () => {
   const isAdmin = user?.role === "Admin";
   const isLoggedIn = !!user;
   const navigate = useNavigate();
+  const location = useLocation();
+  const updatedPost = location.state?.updatedPost as Post | undefined;
 
   useEffect(() => {
     const fetchPost = async () => {
       try {
-        const allPostsResponse = await fetch("https://voiceinfo.onrender.com/api/Post/all");
-        if (!allPostsResponse.ok) throw new Error("Failed to fetch posts");
-        const allPosts: Post[] = await allPostsResponse.json();
-        const foundPost = allPosts.find((p) => p.slug === slug);
-        if (!foundPost) throw new Error("Post not found");
+        // Use updatedPost from navigation state if available
+        if (updatedPost && updatedPost.slug === slug) {
+          setPost(updatedPost);
+          setComments(updatedPost.comments);
+          setLoading(false);
+          postCache[slug!] = { data: updatedPost, timestamp: Date.now() };
+          return;
+        }
 
-        const postResponse = await fetch(`https://voiceinfo.onrender.com/api/Post/${foundPost.id}`);
-        if (!postResponse.ok) throw new Error("Failed to fetch post details");
-        const postData: Post = await postResponse.json();
+        const cached = postCache[slug!];
+        if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+          setPost(cached.data);
+          setComments(cached.data.comments);
+          setLoading(false);
+          return;
+        }
 
-        setPost(postData);
+        const response = await fetch(`https://voiceinfo.onrender.com/api/Post/slug/${slug}`, {
+          headers: user?.token ? { Authorization: `Bearer ${user.token}` } : {},
+        });
+        if (!response.ok) throw new Error("Failed to fetch post details");
+        const postData: { data: Post } = await response.json();
+
+        setPost(postData.data);
+        setComments(postData.data.comments);
+        postCache[slug!] = { data: postData.data, timestamp: Date.now() };
         setLoading(false);
       } catch (err) {
         setError((err as Error).message);
@@ -70,7 +91,20 @@ const PostDetail: React.FC = () => {
     };
 
     fetchPost();
-  }, [slug]);
+  }, [slug, user?.token, updatedPost]);
+
+  const fetchComments = async (postId: number) => {
+    try {
+      const response = await fetch(`https://voiceinfo.onrender.com/api/Comment/post/${postId}`, {
+        headers: user?.token ? { Authorization: `Bearer ${user.token}` } : {},
+      });
+      if (!response.ok) throw new Error("Failed to fetch comments");
+      const data: { data: Comment[] } = await response.json();
+      setComments(data.data);
+    } catch (err) {
+      setError((err as Error).message);
+    }
+  };
 
   const handleCommentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,30 +117,47 @@ const PostDetail: React.FC = () => {
     const commentData = {
       content: newComment,
       postId: post.id,
+      userId: currentUserId,
       parentCommentId: null,
     };
+
+    const optimisticComment: Comment = {
+      id: Date.now(),
+      content: newComment,
+      createdAt: new Date().toISOString(),
+      userId: currentUserId,
+      userName: user?.firstName || "Anonymous",
+      parentCommentId: null,
+      replies: [],
+    };
+
+    setComments([...comments, optimisticComment]);
+    setNewComment("");
 
     try {
       const response = await fetch("https://voiceinfo.onrender.com/api/Comment/create", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${user?.token}`,
-          userId: currentUserId,
+          Authorization: `Bearer ${user.token}`,
         },
         body: JSON.stringify(commentData),
       });
 
-      if (!response.ok) throw new Error("Failed to post comment");
-      const newCommentData: Comment = await response.json();
-      setPost({
-        ...post,
-        comments: [...post.comments, { ...newCommentData, replies: [] }],
-      });
-      setNewComment("");
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to post comment: ${errorText}`);
+      }
+
+      const responseData: { data: Comment } = await response.json();
+      setComments(comments =>
+        comments.map(c => (c.id === optimisticComment.id ? { ...responseData.data, replies: [] } : c))
+      );
       setError(null);
     } catch (err) {
+      console.log("Post error:", err);
       setError((err as Error).message);
+      setComments(comments.filter(c => c.id !== optimisticComment.id));
     }
   };
 
@@ -121,57 +172,70 @@ const PostDetail: React.FC = () => {
     const replyData = {
       content: newReply,
       postId: post.id,
+      userId: currentUserId,
       parentCommentId,
     };
+
+    const optimisticReply: Comment = {
+      id: Date.now(),
+      content: newReply,
+      createdAt: new Date().toISOString(),
+      userId: currentUserId,
+      userName: user?.firstName || "Anonymous",
+      parentCommentId,
+      replies: [],
+    };
+
+    const updateCommentsWithReply = (comments: Comment[]): Comment[] =>
+      comments.map(comment =>
+        comment.id === parentCommentId
+          ? { ...comment, replies: [...comment.replies, optimisticReply] }
+          : { ...comment, replies: updateCommentsWithReply(comment.replies) }
+      );
+    setComments(updateCommentsWithReply(comments));
+    setNewReply("");
+    setReplyingToCommentId(null);
 
     try {
       const response = await fetch("https://voiceinfo.onrender.com/api/Comment/create", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${user?.token}`,
-          userId: currentUserId,
+          Authorization: `Bearer ${user.token}`,
         },
         body: JSON.stringify(replyData),
       });
 
-      if (!response.ok) throw new Error("Failed to post reply");
-      const newReplyData: Comment = await response.json();
-
-      const updateCommentsWithReply = (comments: Comment[]): Comment[] => {
-        return comments.map((comment) => {
-          if (comment.id === parentCommentId) {
-            return { ...comment, replies: [...comment.replies, { ...newReplyData, replies: [] }] };
-          }
-          if (comment.replies.length > 0) {
-            return { ...comment, replies: updateCommentsWithReply(comment.replies) };
-          }
-          return comment;
-        });
-      };
-
-      setPost({
-        ...post,
-        comments: updateCommentsWithReply(post.comments),
-      });
-      setNewReply("");
-      setReplyingToCommentId(null);
-      setError(null);
-
-      // Re-fetch to sync with backend
-      const postResponse = await fetch(`https://voiceinfo.onrender.com/api/Post/${post.id}`);
-      if (postResponse.ok) {
-        const updatedPostData: Post = await postResponse.json();
-        setPost(updatedPostData);
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to post reply: ${errorText}`);
       }
-    } catch (err) {
-      setError((err as Error).message);
-    }
-  };
 
-  const handleEditStart = (comment: Comment) => {
-    setEditingCommentId(comment.id);
-    setEditedContent(comment.content);
+      const responseData: { data: Comment } = await response.json();
+      const finalComments = (comments: Comment[]): Comment[] =>
+        comments.map(comment =>
+          comment.id === parentCommentId
+            ? {
+                ...comment,
+                replies: comment.replies.map(r =>
+                  r.id === optimisticReply.id ? { ...responseData.data, replies: [] } : r
+                ),
+              }
+            : { ...comment, replies: finalComments(comment.replies) }
+        );
+      setComments(finalComments(comments));
+      setError(null);
+    } catch (err) {
+      console.log("Reply error:", err);
+      setError((err as Error).message);
+      const removeReply = (comments: Comment[]): Comment[] =>
+        comments.map(comment =>
+          comment.id === parentCommentId
+            ? { ...comment, replies: comment.replies.filter(r => r.id !== optimisticReply.id) }
+            : { ...comment, replies: removeReply(comment.replies) }
+        );
+      setComments(removeReply(comments));
+    }
   };
 
   const handleEditSave = async (commentId: number) => {
@@ -179,45 +243,54 @@ const PostDetail: React.FC = () => {
       setError("Please log in to edit a comment.");
       return;
     }
+    if (!post) return;
 
     const editData = {
       content: editedContent,
-      UserId: currentUserId,
+      userId: currentUserId,
     };
+
+    const updateCommentContent = (comments: Comment[]): Comment[] =>
+      comments.map(comment =>
+        comment.id === commentId
+          ? { ...comment, content: editedContent }
+          : { ...comment, replies: updateCommentContent(comment.replies) }
+      );
+    const originalComments = [...comments];
+    setComments(updateCommentContent(comments));
+    setEditingCommentId(null);
 
     try {
       const response = await fetch(`https://voiceinfo.onrender.com/api/Comment/update/${commentId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${user?.token}`,
-          userId: currentUserId,
+          Authorization: `Bearer ${user.token}`,
         },
         body: JSON.stringify(editData),
       });
 
-      if (!response.ok) throw new Error("Failed to edit comment");
-
-      const updateCommentContent = (comments: Comment[]): Comment[] => {
-        return comments.map((comment) => {
-          if (comment.id === commentId) {
-            return { ...comment, content: editedContent };
-          }
-          if (comment.replies.length > 0) {
-            return { ...comment, replies: updateCommentContent(comment.replies) };
-          }
-          return comment;
-        });
-      };
-
-      if (post) {
-        setPost({ ...post, comments: updateCommentContent(post.comments) });
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to edit comment: ${errorText}`);
       }
-      setEditingCommentId(null);
+
+      const responseData: { data: Comment; message: string } = await response.json();
+      const syncComments = (comments: Comment[]): Comment[] =>
+        comments.map(comment =>
+          comment.id === commentId
+            ? { ...responseData.data, replies: comment.replies }
+            : { ...comment, replies: syncComments(comment.replies) }
+        );
+      setComments(syncComments(comments));
       setEditedContent("");
       setError(null);
     } catch (err) {
+      console.log("Edit error:", err);
       setError((err as Error).message);
+      setComments(originalComments);
+      setEditingCommentId(commentId);
+      setEditedContent(editedContent);
     }
   };
 
@@ -226,34 +299,40 @@ const PostDetail: React.FC = () => {
       setError("Please log in to delete a comment.");
       return;
     }
+    if (!post) return;
+
+    const removeComment = (comments: Comment[]): Comment[] =>
+      comments
+        .filter(comment => comment.id !== commentId)
+        .map(comment => ({ ...comment, replies: removeComment(comment.replies) }));
+
+    const originalComments = [...comments];
+    setComments(removeComment(comments));
 
     try {
       const response = await fetch(`https://voiceinfo.onrender.com/api/Comment/delete/${commentId}`, {
         method: "DELETE",
         headers: {
-          Authorization: `Bearer ${user?.token}`,
-          userId: currentUserId,
+          Authorization: `Bearer ${user.token}`,
         },
       });
 
-      if (!response.ok) throw new Error("Failed to delete comment");
-
-      const removeComment = (comments: Comment[]): Comment[] => {
-        return comments
-          .filter((comment) => comment.id !== commentId)
-          .map((comment) => ({
-            ...comment,
-            replies: removeComment(comment.replies),
-          }));
-      };
-
-      if (post) {
-        setPost({ ...post, comments: removeComment(post.comments) });
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to delete comment: ${errorText}`);
       }
       setError(null);
     } catch (err) {
+      console.log("Delete error:", err);
       setError((err as Error).message);
+      setComments(originalComments);
+      if (post) await fetchComments(post.id);
     }
+  };
+
+  const handleEditStart = (comment: Comment) => {
+    setEditingCommentId(comment.id);
+    setEditedContent(comment.content);
   };
 
   const handleEditPost = () => {
@@ -264,34 +343,32 @@ const PostDetail: React.FC = () => {
 
   const flattenRepliesBeyondLevel1 = (comments: Comment[]): Comment[] => {
     const flattened: Comment[] = [];
-    
     const processComment = (comment: Comment, level: number) => {
       if (level === 0) {
         flattened.push({ ...comment, replies: [] });
-        comment.replies.forEach((reply) => processComment(reply, 1));
+        comment.replies.forEach(reply => processComment(reply, 1));
       } else if (level === 1) {
         const parentIndex = flattened.findIndex(c => c.id === comment.parentCommentId);
         if (parentIndex !== -1) {
           flattened[parentIndex].replies.push({ ...comment, replies: [] });
         }
-        comment.replies.forEach((deepReply) => processComment(deepReply, 2));
+        comment.replies.forEach(deepReply => processComment(deepReply, 2));
       } else {
         flattened.push({
           ...comment,
           replies: [],
-          parentCommentId: comment.parentCommentId
+          parentCommentId: comment.parentCommentId,
         });
-        comment.replies.forEach((deeperReply) => processComment(deeperReply, level + 1));
+        comment.replies.forEach(deeperReply => processComment(deeperReply, level + 1));
       }
     };
-
-    comments.forEach((comment) => processComment(comment, 0));
+    comments.forEach(comment => processComment(comment, 0));
     return flattened;
   };
 
   const isLevel1Reply = (comment: Comment): boolean => {
     if (!comment.parentCommentId) return false;
-    const parent = post?.comments.find(c => c.id === comment.parentCommentId);
+    const parent = comments.find(c => c.id === comment.parentCommentId);
     return parent?.parentCommentId === null;
   };
 
@@ -304,7 +381,7 @@ const PostDetail: React.FC = () => {
       {comment.parentCommentId && !isLevel1Reply(comment) && isReply && (
         <div className="parent-comment-reference">
           <p className="parent-comment-content">
-            Replying to: "{findParentContent(comment.parentCommentId, post?.comments || [])?.substring(0, 50)}..."
+            Replying to: "{findParentContent(comment.parentCommentId, comments)?.substring(0, 50)}..."
           </p>
         </div>
       )}
@@ -312,7 +389,7 @@ const PostDetail: React.FC = () => {
         <div className="edit-form">
           <textarea
             value={editedContent}
-            onChange={(e) => setEditedContent(e.target.value)}
+            onChange={e => setEditedContent(e.target.value)}
             className="edit-textarea"
           />
           <div className="edit-actions">
@@ -349,12 +426,12 @@ const PostDetail: React.FC = () => {
           </div>
           {replyingToCommentId === comment.id && (
             <form
-              onSubmit={(e) => handleReplySubmit(e, comment.id)}
+              onSubmit={e => handleReplySubmit(e, comment.id)}
               className="reply-form"
             >
               <textarea
                 value={newReply}
-                onChange={(e) => setNewReply(e.target.value)}
+                onChange={e => setNewReply(e.target.value)}
                 placeholder="Write your reply..."
                 required
               />
@@ -373,7 +450,7 @@ const PostDetail: React.FC = () => {
           )}
           {comment.replies.length > 0 && (
             <div className="replies">
-              {comment.replies.map((reply) => renderComment(reply, true))}
+              {comment.replies.map(reply => renderComment(reply, true))}
             </div>
           )}
         </>
@@ -396,7 +473,7 @@ const PostDetail: React.FC = () => {
   if (error) return <div className="article-error">Error: {error}</div>;
   if (!post) return <div className="article-not-found">Post not found</div>;
 
-  const flattenedComments = flattenRepliesBeyondLevel1(post.comments);
+  const flattenedComments = flattenRepliesBeyondLevel1(comments);
 
   return (
     <article className="article-page">
@@ -417,9 +494,9 @@ const PostDetail: React.FC = () => {
 
       <img
         src={
-          post.featuredImage && /^[A-Za-z0-9+/=]+$/.test(post.featuredImage)
-            ? `data:image/png;base64,${post.featuredImage}`
-            : post.featuredImage || "https://via.placeholder.com/600x400"
+          post.featuredImageUrl && /^[A-Za-z0-9+/=]+$/.test(post.featuredImageUrl)
+            ? `data:image/png;base64,${post.featuredImageUrl}`
+            : post.featuredImageUrl || "https://via.placeholder.com/600x400"
         }
         alt={post.title}
         className="article-image"
@@ -431,8 +508,9 @@ const PostDetail: React.FC = () => {
 
       <section className="comments-section">
         <h2>Comments ({flattenedComments.length})</h2>
+        {error && <div className="error-message">{error}</div>}
         <div className="comments-list">
-          {flattenedComments.map((comment) => renderComment(comment, comment.parentCommentId !== null))}
+          {flattenedComments.map(comment => renderComment(comment, comment.parentCommentId !== null))}
         </div>
         <form onSubmit={handleCommentSubmit} className="comment-form">
           <h3>Leave a Comment</h3>
@@ -440,7 +518,7 @@ const PostDetail: React.FC = () => {
             <>
               <textarea
                 value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
+                onChange={e => setNewComment(e.target.value)}
                 placeholder="Share your thoughts..."
                 required
               />

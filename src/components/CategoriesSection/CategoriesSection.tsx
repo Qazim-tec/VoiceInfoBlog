@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { useUser } from "../../context/UserContext"; // Adjust path as needed
+import { useUser } from "../../context/UserContext";
 import "./CategoriesSection.css";
 
 interface Post {
@@ -8,64 +8,90 @@ interface Post {
   title: string;
   slug: string;
   createdAt: string;
-  categoryId: number; // Assuming categoryId is in the post data
-  categoryName?: string; // Optional, if API includes it
+  categoryId: number;
+  categoryName?: string;
 }
 
-interface Category {
+interface CategoryWithPosts {
   id: number;
   name: string;
+  posts: Post[];
 }
+
+const CACHE_EXPIRY = 10 * 60 * 1000; // 10 minutes in milliseconds
+const CACHE_KEY = "categoriesWithPosts";
 
 const CategoriesSection: React.FC = () => {
   const { user } = useUser();
-  const [categoriesWithPosts, setCategoriesWithPosts] = useState<
-    { id: number; name: string; posts: Post[] }[]
-  >([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [categoriesWithPosts, setCategoriesWithPosts] = useState<CategoryWithPosts[]>(() => {
+    const cachedData = localStorage.getItem(CACHE_KEY);
+    if (cachedData) {
+      const { data, timestamp } = JSON.parse(cachedData);
+      if (Date.now() - timestamp < CACHE_EXPIRY) {
+        return data;
+      }
+    }
+    return [];
+  });
+  const [loading, setLoading] = useState<boolean>(() => {
+    const cachedData = localStorage.getItem(CACHE_KEY);
+    if (cachedData) {
+      const { timestamp } = JSON.parse(cachedData);
+      return Date.now() - timestamp >= CACHE_EXPIRY;
+    }
+    return true;
+  });
   const [error, setError] = useState<string | null>(null);
 
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const headers: Record<string, string> = {};
+      if (user?.token) {
+        headers["Authorization"] = `Bearer ${user.token}`;
+      }
+
+      const response = await fetch("https://voiceinfo.onrender.com/api/Category/top-posts?postsPerCategory=3", { headers });
+      if (!response.ok) {
+        throw new Error("Failed to fetch categories with posts");
+      }
+
+      const data: CategoryWithPosts[] = await response.json();
+      setCategoriesWithPosts(data);
+      localStorage.setItem(CACHE_KEY, JSON.stringify({ data, timestamp: Date.now() }));
+    } catch (err) {
+      console.error("Fetch Error:", err);
+      setError("Failed to load categories or posts");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const headers: Record<string, string> = {};
-        if (user?.token) {
-          headers["Authorization"] = `Bearer ${user.token}`;
-        }
-
-        // Fetch all categories from the Render endpoint
-        const categoriesResponse = await fetch("https://voiceinfo.onrender.com/api/Category/all", { headers });
-        if (!categoriesResponse.ok) throw new Error("Failed to fetch categories");
-        const categories: Category[] = await categoriesResponse.json();
-
-        // Fetch all posts from the Render endpoint
-        const postsResponse = await fetch("https://voiceinfo.onrender.com/api/Post/all", { headers });
-        if (!postsResponse.ok) throw new Error("Failed to fetch posts");
-        const posts: Post[] = await postsResponse.json();
-
-        // Group posts by category and limit to 3
-        const categoriesWithPosts = categories.map(category => {
-          const categoryPosts = posts
-            .filter(post => post.categoryId === category.id)
-            .slice(0, 3); // Limit to 3 posts
-          return {
-            id: category.id,
-            name: category.name,
-            posts: categoryPosts,
-          };
-        }).filter(category => category.posts.length > 0); // Only show categories with posts
-
-        setCategoriesWithPosts(categoriesWithPosts);
+    const cachedData = localStorage.getItem(CACHE_KEY);
+    if (cachedData) {
+      const { data, timestamp } = JSON.parse(cachedData);
+      if (Date.now() - timestamp < CACHE_EXPIRY) {
+        setCategoriesWithPosts(data);
         setLoading(false);
-      } catch (err) {
-        console.error("Fetch Error:", err);
-        setError("Failed to load categories or posts");
-        setLoading(false);
+        return;
+      }
+    }
+    fetchData();
+  }, [user?.token]);
+
+  // Handle browser reload or swipe-down
+  useEffect(() => {
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted || performance.navigation.type === 1) { // Reload or swipe-down
+        localStorage.removeItem(CACHE_KEY); // Clear cache on reload
+        fetchData();
       }
     };
 
-    fetchData();
-  }, [user]);
+    window.addEventListener("pageshow", handlePageShow);
+    return () => window.removeEventListener("pageshow", handlePageShow);
+  }, [user?.token]);
 
   if (loading) return <p>Loading categories...</p>;
   if (error) return <p className="error">{error}</p>;

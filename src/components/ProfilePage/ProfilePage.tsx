@@ -8,40 +8,11 @@ interface UserStats {
   commentsCount: number;
 }
 
-interface PostSummary {
-  id: number;
-  authorId: string;
-  authorName: string;
-  slug: string;
-}
-
-interface Post {
-  id: number;
-  title: string;
-  content: string;
-  excerpt: string;
-  featuredImage: string;
-  views: number;
-  isFeatured: boolean;
-  isLatestNews: boolean;
-  createdAt: string;
-  slug: string;
-  authorId: string;
-  authorName: string;
-  categoryId: number;
-  categoryName: string;
-  tags: string[];
-  comments: Comment[];
-}
-
-interface Comment {
-  id: number;
-  content: string;
-  createdAt: string;
-  userId: string;
-  userName: string;
-  parentCommentId: number | null;
-  replies: Comment[];
+interface ApiResponse {
+  fullName: string;
+  email: string;
+  postsCount: number;
+  commentsCount: number;
 }
 
 const ProfilePage: React.FC = () => {
@@ -58,55 +29,24 @@ const ProfilePage: React.FC = () => {
       try {
         setLoading(true);
 
-        // Step 1: Fetch all posts to get user's post IDs and full name
-        const allPostsResponse = await fetch("https://voiceinfo.onrender.com/api/Post/all", {
+        const response = await fetch("https://voiceinfo.onrender.com/api/User/profile-stats", {
           headers: {
             Authorization: `Bearer ${user.token}`,
           },
         });
 
-        if (!allPostsResponse.ok) {
-          throw new Error("Failed to fetch all posts");
+        if (!response.ok) {
+          throw new Error("Failed to fetch profile stats");
         }
 
-        const postsSummary: PostSummary[] = await allPostsResponse.json();
-        const userPosts = postsSummary.filter((post) => post.authorId === user.userId);
-
-        if (userPosts.length > 0) {
-          setFullName(userPosts[0].authorName); // Set full name from first post
-        }
-
-        const postsCount = userPosts.length;
-
-        // Step 2: Fetch each user post individually to get comments
-        let commentsCount = 0;
-        const postFetches = userPosts.map(async (post) => {
-          const response = await fetch(`https://voiceinfo.onrender.com/api/Post/${post.id}`, {
-            headers: {
-              Authorization: `Bearer ${user.token}`,
-            },
-          });
-
-          if (!response.ok) {
-            throw new Error(`Failed to fetch post ${post.id}`);
-          }
-
-          const postData: Post = await response.json();
-          const countComments = (comments: Comment[]) => {
-            comments.forEach((comment) => {
-              if (comment.userId === user.userId) commentsCount++;
-              if (comment.replies.length > 0) countComments(comment.replies);
-            });
-          };
-          countComments(postData.comments);
-        });
-
-        await Promise.all(postFetches);
-
+        const data: ApiResponse = await response.json();
+        
+        setFullName(data.fullName);
         setStats({
-          postsCount,
-          commentsCount,
+          postsCount: data.postsCount,
+          commentsCount: data.commentsCount,
         });
+
       } catch (err) {
         setError(err instanceof Error ? err.message : "An error occurred");
       } finally {
