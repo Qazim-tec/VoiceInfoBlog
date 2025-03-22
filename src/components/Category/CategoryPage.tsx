@@ -31,7 +31,6 @@ interface PaginatedResponse {
 
 const POSTS_PER_PAGE = 15;
 const CACHE_EXPIRY = 10 * 60 * 1000; // 10 minutes in milliseconds
-const CACHE_VERSION_KEY = "categoryPosts_cache_version";
 
 const CategoryPage: React.FC = () => {
   const [posts, setPosts] = useState<Post[]>([]);
@@ -42,131 +41,77 @@ const CategoryPage: React.FC = () => {
   const { user } = useUser();
   const { categoryName } = useParams<{ categoryName: string }>();
 
-  const getCacheKey = (page: number) => `category_${categoryName?.toLowerCase()}_page_${page}`;
-
-  const clearAllCaches = () => {
-    const newVersion = Date.now().toString();
-    localStorage.setItem(CACHE_VERSION_KEY, newVersion);
-    if (!categoryName) return;
-    const keys = Object.keys(localStorage);
-    keys.forEach((key) => {
-      if (key.startsWith(`category_${categoryName.toLowerCase()}_page_`)) {
-        localStorage.removeItem(key);
-      }
-    });
-  };
-
-  const getCurrentCacheVersion = () => {
-    return localStorage.getItem(CACHE_VERSION_KEY) || "0";
-  };
-
-  const fetchPosts = async (page: number) => {
-    if (!categoryName) {
-      setError("Category name is missing.");
-      setLoading(false);
-      return;
-    }
-
-    const cacheKey = getCacheKey(page);
-    const cachedData = localStorage.getItem(cacheKey);
-    const currentVersion = getCurrentCacheVersion();
-
-    if (cachedData) {
-      const { data, timestamp, version } = JSON.parse(cachedData);
-      if (Date.now() - timestamp < CACHE_EXPIRY && version === currentVersion) {
-        // console.log(`Loaded from cache: ${cacheKey}`);
-        setPosts(data.items);
-        setTotalPages(data.totalPages);
+  useEffect(() => {
+    const fetchPosts = async (forceFetch = false) => {
+      if (!categoryName) {
+        setError("Category name is missing.");
         setLoading(false);
         return;
       }
-    }
 
-    try {
-      setLoading(true);
-      const headers: HeadersInit = {
-        "Cache-Control": "no-cache, no-store, must-revalidate",
-        "Pragma": "no-cache",
-        "Expires": "0",
-      };
-      if (user?.token) {
-        headers["Authorization"] = `Bearer ${user.token}`;
-      }
+      const cacheKey = `category_${categoryName.toLowerCase()}_page_${currentPage}`;
+      const cachedData = localStorage.getItem(cacheKey);
+      const now = Date.now();
 
-      const response = await fetch(
-        `https://voiceinfo.onrender.com/api/Category/${encodeURIComponent(categoryName)}/posts?page=${page}&pageSize=${POSTS_PER_PAGE}&t=${Date.now()}`,
-        {
-          headers,
-          cache: "no-store",
+      // Skip cache if forceFetch is true (e.g., on page refresh)
+      if (!forceFetch && cachedData) {
+        const { data, timestamp } = JSON.parse(cachedData);
+        if (now - timestamp < CACHE_EXPIRY) {
+          setPosts(data.items);
+          setTotalPages(data.totalPages);
+          setLoading(false);
+          return;
         }
-      );
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch posts: ${response.statusText}`);
       }
 
-      const data: PaginatedResponse = await response.json();
-      setPosts(data.items);
-      setTotalPages(data.totalPages);
+      try {
+        setLoading(true);
+        const headers: HeadersInit = {};
+        if (user?.token) {
+          headers["Authorization"] = `Bearer ${user.token}`;
+        }
 
-      localStorage.setItem(cacheKey, JSON.stringify({
-        data: { items: data.items, totalPages: data.totalPages },
-        timestamp: Date.now(),
-        version: currentVersion,
-      }));
-    } catch (err) {
-      setError((err as Error).message || "An error occurred while fetching posts");
-      setPosts([]);
-      setTotalPages(0);
-    } finally {
-      setLoading(false);
-    }
-  };
+        const response = await fetch(
+          `https://voiceinfo.onrender.com/api/Category/${encodeURIComponent(categoryName)}/posts?page=${currentPage}&pageSize=${POSTS_PER_PAGE}`,
+          { headers }
+        );
 
-  // Fetch posts when page or category changes
-  useEffect(() => {
-    fetchPosts(currentPage);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch posts: ${response.statusText}`);
+        }
+
+        const data: PaginatedResponse = await response.json();
+        setPosts(data.items);
+        setTotalPages(data.totalPages);
+
+        // Cache the response
+        localStorage.setItem(cacheKey, JSON.stringify({ data, timestamp: now }));
+      } catch (err) {
+        setError((err as Error).message || "An error occurred while fetching posts");
+        setPosts([]);
+        setTotalPages(0);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    // Detect if this is a page refresh
+    const isPageRefresh = performance.navigation.type === 1; // 1 = Reload
+    fetchPosts(isPageRefresh); // Force fetch on refresh
   }, [categoryName, currentPage, user?.token]);
 
-  // Handle reloads and swipe-down refreshes
+  // Optional: Clear cache on page unload to ensure fresh data on next load
   useEffect(() => {
-    // Initialize cache version if missing
-    if (!localStorage.getItem(CACHE_VERSION_KEY)) {
-      localStorage.setItem(CACHE_VERSION_KEY, "0");
-    }
-
-    const handleRefresh = () => {
-      // console.log('Refresh triggered');
-      clearAllCaches();
-      fetchPosts(currentPage);
-    };
-
-    // Handle page show (reload or back-forward cache)
-    const handlePageShow = (event: PageTransitionEvent) => {
-      if (event.persisted || performance.navigation.type === 1) {
-        handleRefresh();
+    const handleBeforeUnload = () => {
+      if (!categoryName) return;
+      for (let i = 1; i <= 100; i++) {
+        localStorage.removeItem(`category_${categoryName.toLowerCase()}_page_${i}`);
       }
     };
 
-    // Handle visibility change (mobile swipe-down or tab switch)
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
-        handleRefresh();
-      }
-    };
-
-    // Add event listeners
-    window.addEventListener("pageshow", handlePageShow);
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    window.addEventListener("beforeunload", clearAllCaches);
-
-    // Cleanup
-    return () => {
-      window.removeEventListener("pageshow", handlePageShow);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-      window.removeEventListener("beforeunload", clearAllCaches);
-    };
-  }, [categoryName, currentPage]); // Depend on categoryName and currentPage
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [categoryName]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
