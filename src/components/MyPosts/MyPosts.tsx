@@ -65,7 +65,7 @@ const MyPosts: React.FC = () => {
     if (!window.confirm("Are you sure you want to delete this post?")) return;
 
     try {
-      const response = await fetch(`https://voiceinfo.onrender.com/api/Posts/${postId}`, {
+      const response = await fetch(`https://voiceinfo.onrender.com/api/Post/delete/${postId}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${user?.token}`,
@@ -73,10 +73,10 @@ const MyPosts: React.FC = () => {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to delete post");
+        const errorText = await response.text();
+        throw new Error(`Failed to delete post: ${response.status} - ${errorText}`);
       }
 
-      // Update posts after deletion
       const updatedPosts = posts.filter((post) => post.id !== postId);
       setPosts(updatedPosts);
       const totalPostsAfterDelete = totalItems - 1;
@@ -87,6 +87,7 @@ const MyPosts: React.FC = () => {
         setCurrentPage(totalPagesAfterDelete);
       }
     } catch (err) {
+      console.error(err);
       setError(err instanceof Error ? err.message : "An error occurred");
     }
   };
