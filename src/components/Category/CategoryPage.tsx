@@ -42,7 +42,7 @@ const CategoryPage: React.FC = () => {
   const { categoryName } = useParams<{ categoryName: string }>();
 
   useEffect(() => {
-    const fetchPosts = async () => {
+    const fetchPosts = async (forceFetch = false) => {
       if (!categoryName) {
         setError("Category name is missing.");
         setLoading(false);
@@ -53,7 +53,8 @@ const CategoryPage: React.FC = () => {
       const cachedData = localStorage.getItem(cacheKey);
       const now = Date.now();
 
-      if (cachedData) {
+      // Skip cache if forceFetch is true (e.g., on page refresh)
+      if (!forceFetch && cachedData) {
         const { data, timestamp } = JSON.parse(cachedData);
         if (now - timestamp < CACHE_EXPIRY) {
           setPosts(data.items);
@@ -94,8 +95,23 @@ const CategoryPage: React.FC = () => {
       }
     };
 
-    fetchPosts();
+    // Detect if this is a page refresh
+    const isPageRefresh = performance.navigation.type === 1; // 1 = Reload
+    fetchPosts(isPageRefresh); // Force fetch on refresh
   }, [categoryName, currentPage, user?.token]);
+
+  // Optional: Clear cache on page unload to ensure fresh data on next load
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (!categoryName) return;
+      for (let i = 1; i <= 100; i++) {
+        localStorage.removeItem(`category_${categoryName.toLowerCase()}_page_${i}`);
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [categoryName]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);

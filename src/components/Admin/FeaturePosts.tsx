@@ -39,12 +39,13 @@ const FeaturePosts: React.FC = () => {
   const isAdmin = user?.role === "Admin";
 
   useEffect(() => {
-    const fetchPosts = async () => {
+    const fetchPosts = async (forceFetch = false) => {
       const cacheKey = `featurePosts_all_page_${currentPage[activeTab]}`;
       const cachedData = localStorage.getItem(cacheKey);
       const now = Date.now();
 
-      if (cachedData) {
+      // Skip cache if forceFetch is true (e.g., on page refresh)
+      if (!forceFetch && cachedData) {
         const { data, timestamp } = JSON.parse(cachedData);
         if (now - timestamp < CACHE_EXPIRY) {
           setPosts(data);
@@ -76,10 +77,29 @@ const FeaturePosts: React.FC = () => {
       }
     };
 
-    if (isAdmin) fetchPosts();
-    else setLoading(false);
+    if (isAdmin) {
+      // Check if this is a page refresh
+      const isPageRefresh = performance.navigation.type === 1; // 1 = Reload
+      fetchPosts(isPageRefresh); // Force fetch on refresh
+    } else {
+      setLoading(false);
+    }
   }, [user?.token, currentPage, activeTab, isAdmin]);
 
+  // Add event listener to detect pull-to-refresh or manual refresh
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      // Optionally clear cache on unload to ensure next load is fresh
+      for (let i = 1; i <= 100; i++) {
+        localStorage.removeItem(`featurePosts_all_page_${i}`);
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, []);
+
+  // Rest of your functions (togglePostStatus, handleDeletePost, etc.) remain unchanged
   const togglePostStatus = (
     postId: number,
     type: "isFeatured" | "isLatestNews",
@@ -121,7 +141,6 @@ const FeaturePosts: React.FC = () => {
               ),
             };
           });
-          // Update cache for all pages
           for (let i = 1; i <= 100; i++) {
             const cacheKey = `featurePosts_all_page_${i}`;
             const cached = localStorage.getItem(cacheKey);
@@ -184,7 +203,6 @@ const FeaturePosts: React.FC = () => {
               totalPages: Math.ceil((prev.totalItems - 1) / prev.itemsPerPage),
             };
           });
-          // Update cache for all pages
           for (let i = 1; i <= 100; i++) {
             const cacheKey = `featurePosts_all_page_${i}`;
             const cached = localStorage.getItem(cacheKey);
