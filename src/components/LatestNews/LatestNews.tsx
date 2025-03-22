@@ -30,54 +30,43 @@ interface PaginatedResponse {
 }
 
 const CACHE_EXPIRY = 10 * 60 * 1000; // 10 minutes in milliseconds
-const CACHE_KEY = "latestNews";
 
 const LatestNews: React.FC = () => {
-  const [latestPosts, setLatestPosts] = useState<Post[]>(() => {
-    const cachedData = localStorage.getItem(CACHE_KEY);
-    if (cachedData) {
-      const { data, timestamp } = JSON.parse(cachedData);
-      if (Date.now() - timestamp < CACHE_EXPIRY) {
-        return data.items; // Return only the posts array
-      }
-    }
-    return [];
-  });
-  const [loading, setLoading] = useState<boolean>(() => {
-    const cachedData = localStorage.getItem(CACHE_KEY);
-    if (cachedData) {
-      const { timestamp } = JSON.parse(cachedData);
-      return Date.now() - timestamp >= CACHE_EXPIRY;
-    }
-    return true;
-  });
+  const [latestPosts, setLatestPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(() => {
-    const cachedData = localStorage.getItem(CACHE_KEY);
+  const [totalPages, setTotalPages] = useState(1);
+
+  const getCacheKey = (page: number) => `latestNews_page_${page}`;
+
+  const fetchLatestNews = async (page: number) => {
+    const cacheKey = getCacheKey(page);
+    const cachedData = localStorage.getItem(cacheKey);
+
     if (cachedData) {
       const { data, timestamp } = JSON.parse(cachedData);
       if (Date.now() - timestamp < CACHE_EXPIRY) {
-        return data.totalPages;
+        setLatestPosts(data.items);
+        setTotalPages(data.totalPages);
+        setLoading(false);
+        return;
       }
     }
-    return 1;
-  });
 
-  const fetchLatestNews = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`https://voiceinfo.onrender.com/api/LatestNews?page=${currentPage}`, {
+      const response = await fetch(`https://voiceinfo.onrender.com/api/LatestNews?page=${page}`, {
         headers: {
-          'Cache-Control': 'no-cache'
-        }
+          'Cache-Control': 'no-cache',
+        },
       });
       if (!response.ok) throw new Error('Failed to fetch latest news');
 
       const data: PaginatedResponse = await response.json();
       setLatestPosts(data.items);
       setTotalPages(data.totalPages);
-      localStorage.setItem(CACHE_KEY, JSON.stringify({ data: { items: data.items, totalPages: data.totalPages }, timestamp: Date.now() }));
+      localStorage.setItem(cacheKey, JSON.stringify({ data: { items: data.items, totalPages: data.totalPages }, timestamp: Date.now() }));
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -86,31 +75,22 @@ const LatestNews: React.FC = () => {
   };
 
   useEffect(() => {
-    const cachedData = localStorage.getItem(CACHE_KEY);
-    if (cachedData) {
-      const { data, timestamp } = JSON.parse(cachedData);
-      if (Date.now() - timestamp < CACHE_EXPIRY && data.items.length > 0) {
-        setLatestPosts(data.items);
-        setTotalPages(data.totalPages);
-        setLoading(false);
-        return;
-      }
-    }
-    fetchLatestNews();
-  }, [currentPage]); // Re-fetch when page changes
+    fetchLatestNews(currentPage);
+  }, [currentPage]); // Fetch when currentPage changes
 
   // Handle browser reload or swipe-down
   useEffect(() => {
     const handlePageShow = (event: PageTransitionEvent) => {
-      if (event.persisted || performance.navigation.type === 1) { // Reload or swipe-down
-        localStorage.removeItem(CACHE_KEY); // Clear cache on reload
-        fetchLatestNews();
+      if (event.persisted || performance.navigation.type === 1) {
+        const cacheKey = getCacheKey(currentPage);
+        localStorage.removeItem(cacheKey); // Clear cache for current page on reload
+        fetchLatestNews(currentPage);
       }
     };
 
-    window.addEventListener("pageshow", handlePageShow);
-    return () => window.removeEventListener("pageshow", handlePageShow);
-  }, [currentPage]); // Include currentPage to ensure it fetches the correct page on reload
+    window.addEventListener('pageshow', handlePageShow);
+    return () => window.removeEventListener('pageshow', handlePageShow);
+  }, [currentPage]);
 
   const formatDateTime = (dateString: string): string => {
     return new Date(dateString).toLocaleString('en-US', {

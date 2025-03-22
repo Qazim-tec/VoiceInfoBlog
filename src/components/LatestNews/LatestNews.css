@@ -54,7 +54,8 @@
 
 .latest-news-image {
   flex: 0 0 150px; /* Fixed width for desktop */
-  height: 100px;
+  width: 150px; /* Explicit width */
+  height: 150px; /* Consistent height */
   object-fit: cover;
   background: #ecf0f1; /* Fallback if image fails */
 }
@@ -199,8 +200,9 @@
   }
 
   .latest-news-image {
-    flex: 0 0 100px; /* Smaller fixed width */
-    height: 80px;
+    flex: 0 0 100px; /* Fixed width for tablets */
+    width: 100px; /* Explicit width */
+    height: 100px; /* Consistent height */
   }
 
   .latest-news-content {
@@ -245,8 +247,9 @@
   }
 
   .latest-news-image {
-    flex: 0 0 80px; /* Even smaller width for mobile */
-    height: 70px;
+    flex: 0 0 80px; /* Fixed width for mobile */
+    width: 80px; /* Explicit width */
+    height: 80px; /* Consistent height */
   }
 
   .latest-news-content {
