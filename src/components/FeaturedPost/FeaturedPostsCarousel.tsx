@@ -39,10 +39,13 @@ const FeaturedPostsCarousel: React.FC = () => {
   const fetchFeaturedPosts = async () => {
     try {
       setLoading(true);
-      const response = await fetch("https://voiceinfo.onrender.com/api/FeaturedPosts", {
+      const response = await fetch(`https://voiceinfo.onrender.com/api/FeaturedPosts?t=${Date.now()}`, {
         headers: {
-          'Cache-Control': 'no-cache'
-        }
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
+        },
+        cache: 'no-store', // Disable browser fetch cache
       });
       if (!response.ok) throw new Error("Failed to fetch featured posts");
 
@@ -56,11 +59,13 @@ const FeaturedPostsCarousel: React.FC = () => {
     }
   };
 
+  // Initial fetch or load from cache
   useEffect(() => {
     const cachedData = localStorage.getItem(CACHE_KEY);
     if (cachedData) {
       const { data, timestamp } = JSON.parse(cachedData);
       if (Date.now() - timestamp < CACHE_EXPIRY) {
+        // console.log('Loaded from cache');
         setFeaturedPosts(data);
         setLoading(false);
         return;
@@ -69,6 +74,7 @@ const FeaturedPostsCarousel: React.FC = () => {
     fetchFeaturedPosts();
   }, []);
 
+  // Auto-scroll carousel
   useEffect(() => {
     if (featuredPosts.length > 1) {
       const interval = setInterval(() => {
@@ -78,17 +84,39 @@ const FeaturedPostsCarousel: React.FC = () => {
     }
   }, [featuredPosts]);
 
-  // Handle browser reload or swipe-down
+  // Handle reloads and swipe-down refreshes
   useEffect(() => {
+    const handleRefresh = () => {
+      // console.log('Refresh triggered');
+      localStorage.removeItem(CACHE_KEY); // Clear cache
+      fetchFeaturedPosts();
+    };
+
+    // Handle page show (reload or back-forward cache)
     const handlePageShow = (event: PageTransitionEvent) => {
-      if (event.persisted || performance.navigation.type === 1) { // Reload or swipe-down
-        localStorage.removeItem(CACHE_KEY); // Clear cache on reload
-        fetchFeaturedPosts();
+      if (event.persisted || performance.navigation.type === 1) {
+        handleRefresh();
       }
     };
 
+    // Handle visibility change (mobile swipe-down or tab switch)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        handleRefresh();
+      }
+    };
+
+    // Add event listeners
     window.addEventListener("pageshow", handlePageShow);
-    return () => window.removeEventListener("pageshow", handlePageShow);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("beforeunload", () => localStorage.removeItem(CACHE_KEY)); // Clear cache before leaving
+
+    // Cleanup
+    return () => {
+      window.removeEventListener("pageshow", handlePageShow);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("beforeunload", () => localStorage.removeItem(CACHE_KEY));
+    };
   }, []);
 
   if (loading) return <div className="fpc-carousel-loading">Loading featured posts...</div>;
