@@ -11,7 +11,7 @@ interface User {
 interface UserContextType {
   user: User | null;
   setUser: (user: User | null) => void;
-  logout: () => void; // Add logout function
+  logout: () => void;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -32,7 +32,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const logout = () => {
-    handleSetUser(null); // Clear user from state and storage
+    handleSetUser(null);
   };
 
   return (

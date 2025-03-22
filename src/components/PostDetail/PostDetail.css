@@ -1,4 +1,3 @@
-/* PostDetail.css */
 /* Apply box-sizing globally to prevent overflow issues */
 * {
   box-sizing: border-box;
@@ -68,7 +67,7 @@
 
 .article-image {
   width: 100%;
-  max-width: 600px;
+  max-width: 600px; /* Default max-width for desktop */
   height: auto;
   border-radius: 8px;
   margin: 0 auto 2rem;
@@ -173,7 +172,7 @@
 
 .comment-timestamp {
   font-size: 0.85rem;
-  color: #888;
+  color: #888; /* Fixed from invalid #ṛ */
 }
 
 .parent-comment-reference {
@@ -325,12 +324,11 @@
   font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
-  /* Removed transform transition to avoid shaking */
-  transition: box-shadow 0.2s ease;
+  transition: background 0.3s ease, box-shadow 0.2s ease;
 }
 
 .comment-form .submit-btn:hover {
-  /* Removed transform: translateY(-2px) to prevent movement */
+  background: linear-gradient(90deg, #0056b3, #00b7d4);
   box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
 }
 
@@ -352,7 +350,6 @@
 body.dark-mode .article-page {
   background: #333;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-  min-width: 900px;
 }
 
 body.dark-mode .article-header h1,
@@ -501,6 +498,7 @@ body.dark-mode .comment-form .submit-btn {
 }
 
 body.dark-mode .comment-form .submit-btn:hover {
+  background: linear-gradient(90deg, #63b3ed, #1e90ff);
   box-shadow: 0 4px 15px rgba(30, 144, 255, 0.3);
 }
 
@@ -508,7 +506,7 @@ body.dark-mode .replies .comment-card {
   background: #404040;
 }
 
-/* Inside PostDetail.css */
+/* Login Message */
 .login-message {
   font-size: 1rem;
   color: #e74c3c;
@@ -520,14 +518,15 @@ body.dark-mode .login-message {
   color: #f87171;
 }
 
-/* Responsive Design - Stabilized for Mobile */
+/* Responsive Design - Optimized for Mobile */
 @media (max-width: 768px) {
-  .article-page {
-    min-width: 0; /* Remove min-width for mobile */
+  .article-page,
+  body.dark-mode .article-page {
+    min-width: 0; /* Override desktop min-width */
     max-width: 100%; /* Full width on mobile */
-    margin: 0 auto; /* Center without left-right shifting */
-    padding: 0.75rem;
-    overflow-x: hidden; /* Prevent horizontal scroll */
+    margin: 1rem auto; /* Reduced margin for mobile */
+    padding: 1rem; /* Increased padding for spacing from edges */
+    overflow-x: hidden;
   }
 
   .article-header {
@@ -551,18 +550,20 @@ body.dark-mode .login-message {
   }
 
   .article-image {
-    max-width: 100%;
-    margin: 0 auto 1.5rem;
+    max-width: 100%; /* Full width of container */
+    width: 90%; /* Slightly smaller than full width for spacing */
+    margin: 0 auto 1.5rem; /* Centered with bottom margin */
   }
 
   .article-content {
     font-size: 1rem;
-    padding-left: 0;
+    padding: 0 0.5rem; /* Added padding on both sides for spacing */
   }
 
   .article-footer {
     font-size: 0.85rem;
     margin-top: 1.5rem;
+    padding: 0 0.5rem; /* Added padding for spacing */
   }
 
   .article-loading,
@@ -573,9 +574,10 @@ body.dark-mode .login-message {
   }
 
   /* Comments Section */
-  .comments-section {
+  .comments-section,
+  body.dark-mode .comments-section {
     margin-top: 2rem;
-    padding-top: 1.5rem;
+    padding: 1.5rem 0.5rem; /* Equal padding on both sides */
   }
 
   .comments-section h2 {
@@ -591,12 +593,13 @@ body.dark-mode .login-message {
     margin-bottom: 1.5rem;
   }
 
-  .comment-card {
+  .comment-card,
+  body.dark-mode .comment-card {
     padding: 1rem;
-    margin-bottom: 1rem;
+    margin: 0.75rem 0.5rem; /* Equal margins on left and right */
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     border-radius: 6px;
-    overflow-x: hidden; /* Prevent horizontal overflow */
+    overflow-x: hidden;
   }
 
   .comment-header {
@@ -672,13 +675,13 @@ body.dark-mode .login-message {
   }
 
   .replies {
-    margin-left: 0; /* Remove left margin to avoid shifting */
+    margin-left: 0; /* Remove extra left margin for symmetry */
     padding-left: 0.25rem;
   }
 
   .replies .comment-card {
     padding: 0.75rem;
-    margin-bottom: 0.75rem;
+    margin: 0.75rem 0.5rem; /* Equal margins on left and right */
   }
 
   body.dark-mode .comment-card {
@@ -688,10 +691,11 @@ body.dark-mode .login-message {
 
 /* Extra Small Screens (e.g., phones below 480px) */
 @media (max-width: 480px) {
-  .article-page {
-    margin: 0 auto; /* Consistent centering */
-    padding: 0.5rem;
-    overflow-x: hidden; /* Ensure no horizontal scroll */
+  .article-page,
+  body.dark-mode .article-page {
+    margin: 0.5rem auto;
+    padding: 0.75rem; /* Adjusted padding */
+    overflow-x: hidden;
   }
 
   .article-header h1 {
@@ -703,16 +707,18 @@ body.dark-mode .login-message {
   }
 
   .article-image {
+    width: 85%; /* Further reduced for smaller screens */
     margin-bottom: 1rem;
   }
 
   .article-content {
     font-size: 0.9rem;
+    padding: 0 0.5rem; /* Consistent padding */
   }
 
   .comments-section {
     margin-top: 1.5rem;
-    padding-top: 1rem;
+    padding: 1rem 0.5rem; /* Equal padding on both sides */
   }
 
   .comments-section h2 {
@@ -721,7 +727,11 @@ body.dark-mode .login-message {
 
   .comment-card {
     padding: 0.75rem;
-    margin-bottom: 0.75rem;
+    margin: 0.5rem 0.25rem; /* Equal margins on left and right */
+  }
+
+  .replies .comment-card {
+    margin: 0.5rem 0.25rem; /* Equal margins for replies */
   }
 
   .comment-form {

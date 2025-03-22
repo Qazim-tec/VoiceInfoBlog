@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FaUser, FaLock, FaEnvelope, FaEye, FaEyeSlash } from "react-icons/fa";
+import { useUser } from "../../context/UserContext";
 import "./Auth.css";
 
 interface SignUpData {
@@ -31,6 +32,7 @@ const SignUp: React.FC = () => {
     minLength: false,
   });
   const navigate = useNavigate();
+  const { setUser } = useUser();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const { name, value } = e.target;
@@ -79,8 +81,16 @@ const SignUp: React.FC = () => {
         throw new Error(errorData.message || "Registration failed");
       }
 
-      await response.json();
-      setSuccess("Registration successful! Redirecting to sign-in...");
+      const data = await response.json();
+      const userData = {
+        userId: data.userId,
+        email: data.email,
+        token: data.token,
+        role: data.role,
+        firstName: data.firstName,
+      };
+      setUser(userData);
+      setSuccess("Registration successful! Redirecting to home page...");
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
       console.error("Registration error:", err);
@@ -92,7 +102,7 @@ const SignUp: React.FC = () => {
   useEffect(() => {
     if (success) {
       const timer = setTimeout(() => {
-        navigate("/signin");
+        navigate("/");
       }, 2000);
       return () => clearTimeout(timer);
     }

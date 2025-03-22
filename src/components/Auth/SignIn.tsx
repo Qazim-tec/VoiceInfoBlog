@@ -1,38 +1,18 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { FaUser, FaLock, FaEye, FaEyeSlash } from "react-icons/fa"; // Added FaEye, FaEyeSlash
+import { FaEnvelope, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
 import { useUser } from "../../context/UserContext";
 import "./Auth.css";
 
-interface LoginData {
-  email: string;
-  password: string;
-}
-
-interface LoginResponse {
-  userId: string;
-  email: string;
-  token: string;
-  role: string;
-  firstName: string;
-}
-
 const SignIn: React.FC = () => {
-  const [formData, setFormData] = useState<LoginData>({
-    email: "",
-    password: "",
-  });
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
-  const [showPassword, setShowPassword] = useState<boolean>(false); // Added for toggle
-  const { setUser } = useUser();
+  const [showPassword, setShowPassword] = useState<boolean>(false);
   const navigate = useNavigate();
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+  const { setUser } = useUser();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
@@ -46,7 +26,7 @@ const SignIn: React.FC = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ email, password }),
       });
 
       if (!response.ok) {
@@ -54,12 +34,16 @@ const SignIn: React.FC = () => {
         throw new Error(errorData.message || "Login failed");
       }
 
-      const result: LoginResponse = await response.json();
-      setUser(result);
-      setSuccess("Login successful!");
-      setTimeout(() => {
-        navigate("/");
-      }, 1000);
+      const data = await response.json();
+      const userData = {
+        userId: data.userId,
+        email: data.email,
+        token: data.token,
+        role: data.role,
+        firstName: data.firstName,
+      };
+      setUser(userData);
+      setSuccess("Login successful! Redirecting to home page...");
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
       console.error("Login error:", err);
@@ -68,30 +52,37 @@ const SignIn: React.FC = () => {
     }
   };
 
+  useEffect(() => {
+    if (success) {
+      const timer = setTimeout(() => {
+        navigate("/");
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [success, navigate]);
+
   return (
     <div className="auth-container signin-auth-container">
       <div className="auth-form signin-auth-form">
-        <h2>Sign In to VoiceInfo</h2>
+        <h2>Welcome Back</h2>
         <form onSubmit={handleSubmit}>
           <div className="form-group signin-form-group">
-            <FaUser className="input-icon signin-input-icon" />
+            <FaEnvelope className="input-icon signin-input-icon" />
             <input
               type="email"
-              name="email"
               placeholder="Email"
-              value={formData.email}
-              onChange={handleChange}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
             />
           </div>
           <div className="form-group signin-form-group">
             <FaLock className="input-icon signin-input-icon" />
             <input
-              type={showPassword ? "text" : "password"} // Toggle between text and password
-              name="password"
+              type={showPassword ? "text" : "password"}
               placeholder="Password"
-              value={formData.password}
-              onChange={handleChange}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               required
             />
             <span className="toggle-password" onClick={() => setShowPassword(!showPassword)}>
@@ -105,7 +96,7 @@ const SignIn: React.FC = () => {
           </button>
         </form>
         <p className="auth-switch signin-auth-switch">
-          New to VoiceInfo? <Link to="/signup">Sign Up</Link>
+          Not a member? <Link to="/signup">Sign Up</Link>
         </p>
       </div>
     </div>

@@ -30,6 +30,7 @@ interface PaginatedResponse {
 }
 
 const CACHE_EXPIRY = 10 * 60 * 1000; // 10 minutes in milliseconds
+const CACHE_VERSION_KEY = 'latestNews_cache_version';
 
 const LatestNews: React.FC = () => {
   const [latestPosts, setLatestPosts] = useState<Post[]>([]);
@@ -40,13 +41,32 @@ const LatestNews: React.FC = () => {
 
   const getCacheKey = (page: number) => `latestNews_page_${page}`;
 
+  const clearAllCaches = () => {
+    // Update cache version
+    const newVersion = Date.now().toString();
+    localStorage.setItem(CACHE_VERSION_KEY, newVersion);
+    
+    // Clear all existing page caches
+    const keys = Object.keys(localStorage);
+    keys.forEach(key => {
+      if (key.startsWith('latestNews_page_')) {
+        localStorage.removeItem(key);
+      }
+    });
+  };
+
+  const getCurrentCacheVersion = () => {
+    return localStorage.getItem(CACHE_VERSION_KEY) || '0';
+  };
+
   const fetchLatestNews = async (page: number) => {
     const cacheKey = getCacheKey(page);
     const cachedData = localStorage.getItem(cacheKey);
+    const currentVersion = getCurrentCacheVersion();
 
     if (cachedData) {
-      const { data, timestamp } = JSON.parse(cachedData);
-      if (Date.now() - timestamp < CACHE_EXPIRY) {
+      const { data, timestamp, version } = JSON.parse(cachedData);
+      if (Date.now() - timestamp < CACHE_EXPIRY && version === currentVersion) {
         setLatestPosts(data.items);
         setTotalPages(data.totalPages);
         setLoading(false);
@@ -66,7 +86,11 @@ const LatestNews: React.FC = () => {
       const data: PaginatedResponse = await response.json();
       setLatestPosts(data.items);
       setTotalPages(data.totalPages);
-      localStorage.setItem(cacheKey, JSON.stringify({ data: { items: data.items, totalPages: data.totalPages }, timestamp: Date.now() }));
+      localStorage.setItem(cacheKey, JSON.stringify({ 
+        data: { items: data.items, totalPages: data.totalPages }, 
+        timestamp: Date.now(),
+        version: currentVersion
+      }));
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -76,17 +100,21 @@ const LatestNews: React.FC = () => {
 
   useEffect(() => {
     fetchLatestNews(currentPage);
-  }, [currentPage]); // Fetch when currentPage changes
+  }, [currentPage]);
 
   // Handle browser reload or swipe-down
   useEffect(() => {
     const handlePageShow = (event: PageTransitionEvent) => {
       if (event.persisted || performance.navigation.type === 1) {
-        const cacheKey = getCacheKey(currentPage);
-        localStorage.removeItem(cacheKey); // Clear cache for current page on reload
+        clearAllCaches();
         fetchLatestNews(currentPage);
       }
     };
+
+    // Set initial cache version if it doesn't exist
+    if (!localStorage.getItem(CACHE_VERSION_KEY)) {
+      localStorage.setItem(CACHE_VERSION_KEY, '0');
+    }
 
     window.addEventListener('pageshow', handlePageShow);
     return () => window.removeEventListener('pageshow', handlePageShow);
