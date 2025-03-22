@@ -99,7 +99,6 @@ const FeaturePosts: React.FC = () => {
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, []);
 
-  // Rest of your functions (togglePostStatus, handleDeletePost, etc.) remain unchanged
   const togglePostStatus = (
     postId: number,
     type: "isFeatured" | "isLatestNews",
@@ -162,7 +161,7 @@ const FeaturePosts: React.FC = () => {
           setError("Update succeeded but returned false");
         }
       })
-      .catch((err) => {
+      .catch(() => {
         setError(`Failed to ${value ? "set" : "unset"} ${type === "isFeatured" ? "featured" : "latest news"} status`);
       })
       .finally(() => setSaving(false));
@@ -223,7 +222,7 @@ const FeaturePosts: React.FC = () => {
           setError("Delete succeeded but returned false");
         }
       })
-      .catch((err) => {
+      .catch(() => {
         setError("Failed to delete post");
       })
       .finally(() => setSaving(false));
