@@ -42,13 +42,10 @@ const LatestNews: React.FC = () => {
   const getCacheKey = (page: number) => `latestNews_page_${page}`;
 
   const clearAllCaches = () => {
-    // Update cache version
     const newVersion = Date.now().toString();
     localStorage.setItem(CACHE_VERSION_KEY, newVersion);
-    
-    // Clear all existing page caches
     const keys = Object.keys(localStorage);
-    keys.forEach(key => {
+    keys.forEach((key) => {
       if (key.startsWith('latestNews_page_')) {
         localStorage.removeItem(key);
       }
@@ -64,9 +61,11 @@ const LatestNews: React.FC = () => {
     const cachedData = localStorage.getItem(cacheKey);
     const currentVersion = getCurrentCacheVersion();
 
+    // Check cache first
     if (cachedData) {
       const { data, timestamp, version } = JSON.parse(cachedData);
       if (Date.now() - timestamp < CACHE_EXPIRY && version === currentVersion) {
+        // console.log('Loaded from cache');
         setLatestPosts(data.items);
         setTotalPages(data.totalPages);
         setLoading(false);
@@ -76,20 +75,25 @@ const LatestNews: React.FC = () => {
 
     try {
       setLoading(true);
-      const response = await fetch(`https://voiceinfo.onrender.com/api/LatestNews?page=${page}`, {
+      // Add timestamp to URL to bust server-side cache
+      const response = await fetch(`https://voiceinfo.onrender.com/api/LatestNews?page=${page}&t=${Date.now()}`, {
         headers: {
-          'Cache-Control': 'no-cache',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
         },
+        cache: 'no-store', // Disable browser fetch cache
       });
+
       if (!response.ok) throw new Error('Failed to fetch latest news');
 
       const data: PaginatedResponse = await response.json();
       setLatestPosts(data.items);
       setTotalPages(data.totalPages);
-      localStorage.setItem(cacheKey, JSON.stringify({ 
-        data: { items: data.items, totalPages: data.totalPages }, 
+      localStorage.setItem(cacheKey, JSON.stringify({
+        data: { items: data.items, totalPages: data.totalPages },
         timestamp: Date.now(),
-        version: currentVersion
+        version: currentVersion,
       }));
     } catch (err) {
       setError((err as Error).message);
@@ -98,26 +102,49 @@ const LatestNews: React.FC = () => {
     }
   };
 
+  // Fetch data when page changes
   useEffect(() => {
     fetchLatestNews(currentPage);
   }, [currentPage]);
 
-  // Handle browser reload or swipe-down
+  // Handle reloads and swipe-down refreshes
   useEffect(() => {
-    const handlePageShow = (event: PageTransitionEvent) => {
-      if (event.persisted || performance.navigation.type === 1) {
-        clearAllCaches();
-        fetchLatestNews(currentPage);
-      }
-    };
-
-    // Set initial cache version if it doesn't exist
+    // Initialize cache version if missing
     if (!localStorage.getItem(CACHE_VERSION_KEY)) {
       localStorage.setItem(CACHE_VERSION_KEY, '0');
     }
 
+    const handleRefresh = () => {
+      // console.log('Refresh triggered');
+      clearAllCaches();
+      fetchLatestNews(currentPage);
+    };
+
+    // Handle page show (reload or back-forward cache)
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted || performance.navigation.type === 1) {
+        handleRefresh();
+      }
+    };
+
+    // Handle visibility change (mobile swipe-down or tab switch)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        handleRefresh();
+      }
+    };
+
+    // Add event listeners
     window.addEventListener('pageshow', handlePageShow);
-    return () => window.removeEventListener('pageshow', handlePageShow);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('beforeunload', clearAllCaches); // Clear cache before leaving
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('pageshow', handlePageShow);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('beforeunload', clearAllCaches);
+    };
   }, [currentPage]);
 
   const formatDateTime = (dateString: string): string => {
