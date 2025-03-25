@@ -11,7 +11,7 @@ import {
 import { useUser } from "../../context/UserContext";
 import { useCategories } from "../../hooks/useCategories";
 import "./Navbar.css";
-import Logo from "../../assets/react.svg";
+import Logo from "../../assets/INFOS_LOGO[1].png";
 
 interface Post {
   id: number;
@@ -99,7 +99,6 @@ const Navbar: React.FC = () => {
         </button>
         <Link to="/" className="navbar-brand">
           <img src={Logo} alt="Logo" className="navbar-logo" />
-          <span className="blog-name">VoiceInfo</span>
         </Link>
         <button
           className="search-toggle"
