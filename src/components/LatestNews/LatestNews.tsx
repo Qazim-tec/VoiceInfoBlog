@@ -103,7 +103,6 @@ const LatestNews: React.FC = () => {
 
   useEffect(() => {
     fetchLatestNews(currentPage);
-    // Scroll to top when page changes
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [currentPage]);
 
@@ -153,7 +152,6 @@ const LatestNews: React.FC = () => {
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
-      // Alternative scroll method using ref
       topRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   };
@@ -165,19 +163,18 @@ const LatestNews: React.FC = () => {
   return (
     <section className="latest-news-section" ref={topRef}>
       <motion.h2
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
+        transition={{ duration: 0.3 }}
       >
         Latest News
       </motion.h2>
       
       <ul className="latest-news-list">
-        {latestPosts.map((post, index) => (
+        {latestPosts.map((post) => (
           <NewsItem 
             key={post.id} 
-            post={post} 
-            index={index}
+            post={post}
             formatDateTime={formatDateTime}
           />
         ))}
@@ -187,7 +184,7 @@ const LatestNews: React.FC = () => {
         className="pagination"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.3 }}
+        transition={{ duration: 0.2 }}
       >
         <button
           onClick={() => handlePageChange(currentPage - 1)}
@@ -213,45 +210,29 @@ const LatestNews: React.FC = () => {
 
 const NewsItem: React.FC<{
   post: Post;
-  index: number;
   formatDateTime: (dateString: string) => string;
-}> = ({ post, index, formatDateTime }) => {
+}> = ({ post, formatDateTime }) => {
   const ref = useRef<HTMLLIElement>(null);
   const isInView = useInView(ref, {
-    margin: "0px 0px -100px 0px",
-    amount: 0.2
+    margin: "0px 0px -50px 0px",  // Triggers 50px before entering viewport
+    amount: 0.1                   // Only needs 10% visibility
   });
-
-  const variants = {
-    hidden: { 
-      y: 50, 
-      opacity: 0,
-      transition: { duration: 0.3 }
-    },
-    visible: { 
-      y: 0, 
-      opacity: 1,
-      transition: {
-        type: "spring",
-        stiffness: 100,
-        damping: 10,
-        delay: index * 0.1
-      }
-    }
-  };
 
   return (
     <motion.li
       ref={ref}
       className="latest-news-item"
-      initial="hidden"
-      animate={isInView ? "visible" : "hidden"}
-      variants={variants}
+      initial={{ opacity: 0, y: 20 }}
+      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+      transition={{ 
+        duration: 0.3,
+        ease: "easeOut"
+      }}
     >
       <motion.div
         className="image-container"
-        whileHover={{ scale: 1.03 }}
-        transition={{ duration: 0.3 }}
+        whileHover={{ scale: 1.02 }}
+        transition={{ duration: 0.15 }}
       >
         <img src={post.featuredImageUrl} alt={post.title} className="latest-news-image" />
       </motion.div>
@@ -260,7 +241,7 @@ const NewsItem: React.FC<{
         <Link to={`/post/${post.slug}`} className="latest-news-link">
           <motion.h3 
             whileHover={{ color: "#0077cc" }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.1 }}
           >
             {post.title}
           </motion.h3>
@@ -269,8 +250,11 @@ const NewsItem: React.FC<{
         <motion.p 
           className="latest-news-meta"
           initial={{ opacity: 0 }}
-          animate={isInView ? { opacity: 1 } : {}}
-          transition={{ delay: index * 0.1 + 0.2 }}
+          animate={isInView ? { opacity: 1 } : { opacity: 0 }}
+          transition={{ 
+            duration: 0.25,
+            delay: 0.1
+          }}
         >
           By {post.authorName} | {formatDateTime(post.createdAt)}
         </motion.p>

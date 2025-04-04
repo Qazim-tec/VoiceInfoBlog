@@ -81,7 +81,6 @@ const CategoriesSection: React.FC = () => {
     fetchData();
   }, [user?.token]);
 
-  // Handle browser reload or swipe-down
   useEffect(() => {
     const handlePageShow = (event: PageTransitionEvent) => {
       if (event.persisted || performance.navigation.type === 1) {
@@ -100,45 +99,44 @@ const CategoriesSection: React.FC = () => {
   return (
     <section className="categories-section">
       <motion.h2
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
+        transition={{ duration: 0.25 }}
       >
         Explore Categories
       </motion.h2>
       
       <div className="categories-list">
-        {categoriesWithPosts.map((category, index) => {
+        {categoriesWithPosts.map((category) => {
           const CategoryItem = () => {
             const ref = React.useRef(null);
             const isInView = useInView(ref, {
-              margin: "0px 0px -50px 0px",
-              amount: 0.3
+              margin: "0px 0px -20px 0px", // Triggers 20px before entering viewport
+              amount: 0.08 // Only needs 8% visibility
             });
 
             return (
               <motion.div
                 ref={ref}
                 className="category-item"
-                initial={{ y: 50, opacity: 0 }}
-                animate={isInView ? { y: 0, opacity: 1 } : {}}
-                transition={{
-                  type: "spring",
-                  stiffness: 100,
-                  damping: 10,
-                  delay: index * 0.15
+                initial={{ opacity: 0, y: 15 }}
+                animate={isInView ? { opacity: 1, y: 0 } : {}}
+                transition={{ 
+                  duration: 0.22,
+                  ease: "easeOut"
                 }}
               >
                 <h3>{category.name}</h3>
                 
                 <ul className="category-posts">
-                  {category.posts.map((post, postIndex) => (
+                  {category.posts.map((post) => (
                     <motion.li
                       key={post.id}
-                      initial={{ x: -20, opacity: 0 }}
-                      animate={isInView ? { x: 0, opacity: 1 } : {}}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={isInView ? { opacity: 1, x: 0 } : {}}
                       transition={{
-                        delay: 0.2 + (index * 0.1) + (postIndex * 0.05)
+                        duration: 0.18,
+                        ease: "easeOut"
                       }}
                     >
                       <Link to={`/post/${post.slug}`}>{post.title}</Link>
@@ -149,7 +147,7 @@ const CategoriesSection: React.FC = () => {
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={isInView ? { opacity: 1 } : {}}
-                  transition={{ delay: 0.3 + (index * 0.1) }}
+                  transition={{ duration: 0.2 }}
                 >
                   <Link
                     to={`/${category.name.toLowerCase().replace(/\s+/g, "-")}`}
