@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useUser } from "../../context/UserContext";
+import { motion, useInView } from "framer-motion";
 import "./CategoriesSection.css";
 
 interface Post {
@@ -83,8 +84,8 @@ const CategoriesSection: React.FC = () => {
   // Handle browser reload or swipe-down
   useEffect(() => {
     const handlePageShow = (event: PageTransitionEvent) => {
-      if (event.persisted || performance.navigation.type === 1) { // Reload or swipe-down
-        localStorage.removeItem(CACHE_KEY); // Clear cache on reload
+      if (event.persisted || performance.navigation.type === 1) {
+        localStorage.removeItem(CACHE_KEY);
         fetchData();
       }
     };
@@ -98,23 +99,71 @@ const CategoriesSection: React.FC = () => {
 
   return (
     <section className="categories-section">
-      <h2>Explore Categories</h2>
+      <motion.h2
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        Explore Categories
+      </motion.h2>
+      
       <div className="categories-list">
-        {categoriesWithPosts.map(category => (
-          <div key={category.id} className="category-item">
-            <h3>{category.name}</h3>
-            <ul className="category-posts">
-              {category.posts.map(post => (
-                <li key={post.id}>
-                  <Link to={`/post/${post.slug}`}>{post.title}</Link>
-                </li>
-              ))}
-            </ul>
-            <Link to={`/${category.name.toLowerCase().replace(/\s+/g, "-")}`} className="see-more">
-              See More
-            </Link>
-          </div>
-        ))}
+        {categoriesWithPosts.map((category, index) => {
+          const CategoryItem = () => {
+            const ref = React.useRef(null);
+            const isInView = useInView(ref, {
+              margin: "0px 0px -50px 0px",
+              amount: 0.3
+            });
+
+            return (
+              <motion.div
+                ref={ref}
+                className="category-item"
+                initial={{ y: 50, opacity: 0 }}
+                animate={isInView ? { y: 0, opacity: 1 } : {}}
+                transition={{
+                  type: "spring",
+                  stiffness: 100,
+                  damping: 10,
+                  delay: index * 0.15
+                }}
+              >
+                <h3>{category.name}</h3>
+                
+                <ul className="category-posts">
+                  {category.posts.map((post, postIndex) => (
+                    <motion.li
+                      key={post.id}
+                      initial={{ x: -20, opacity: 0 }}
+                      animate={isInView ? { x: 0, opacity: 1 } : {}}
+                      transition={{
+                        delay: 0.2 + (index * 0.1) + (postIndex * 0.05)
+                      }}
+                    >
+                      <Link to={`/post/${post.slug}`}>{post.title}</Link>
+                    </motion.li>
+                  ))}
+                </ul>
+                
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={isInView ? { opacity: 1 } : {}}
+                  transition={{ delay: 0.3 + (index * 0.1) }}
+                >
+                  <Link
+                    to={`/${category.name.toLowerCase().replace(/\s+/g, "-")}`}
+                    className="see-more"
+                  >
+                    See More
+                  </Link>
+                </motion.div>
+              </motion.div>
+            );
+          };
+
+          return <CategoryItem key={category.id} />;
+        })}
       </div>
     </section>
   );

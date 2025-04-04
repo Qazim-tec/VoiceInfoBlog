@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { motion, useInView } from 'framer-motion';
 import './LatestNews.css';
 
 interface Post {
@@ -38,6 +39,7 @@ const LatestNews: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const topRef = useRef<HTMLDivElement>(null);
 
   const getCacheKey = (page: number) => `latestNews_page_${page}`;
 
@@ -61,11 +63,9 @@ const LatestNews: React.FC = () => {
     const cachedData = localStorage.getItem(cacheKey);
     const currentVersion = getCurrentCacheVersion();
 
-    // Check cache first
     if (cachedData) {
       const { data, timestamp, version } = JSON.parse(cachedData);
       if (Date.now() - timestamp < CACHE_EXPIRY && version === currentVersion) {
-        // console.log('Loaded from cache');
         setLatestPosts(data.items);
         setTotalPages(data.totalPages);
         setLoading(false);
@@ -75,14 +75,13 @@ const LatestNews: React.FC = () => {
 
     try {
       setLoading(true);
-      // Add timestamp to URL to bust server-side cache
       const response = await fetch(`https://voiceinfo.onrender.com/api/LatestNews?page=${page}&t=${Date.now()}`, {
         headers: {
           'Cache-Control': 'no-cache, no-store, must-revalidate',
           'Pragma': 'no-cache',
           'Expires': '0',
         },
-        cache: 'no-store', // Disable browser fetch cache
+        cache: 'no-store',
       });
 
       if (!response.ok) throw new Error('Failed to fetch latest news');
@@ -102,44 +101,38 @@ const LatestNews: React.FC = () => {
     }
   };
 
-  // Fetch data when page changes
   useEffect(() => {
     fetchLatestNews(currentPage);
+    // Scroll to top when page changes
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [currentPage]);
 
-  // Handle reloads and swipe-down refreshes
   useEffect(() => {
-    // Initialize cache version if missing
     if (!localStorage.getItem(CACHE_VERSION_KEY)) {
       localStorage.setItem(CACHE_VERSION_KEY, '0');
     }
 
     const handleRefresh = () => {
-      // console.log('Refresh triggered');
       clearAllCaches();
       fetchLatestNews(currentPage);
     };
 
-    // Handle page show (reload or back-forward cache)
     const handlePageShow = (event: PageTransitionEvent) => {
       if (event.persisted || performance.navigation.type === 1) {
         handleRefresh();
       }
     };
 
-    // Handle visibility change (mobile swipe-down or tab switch)
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
         handleRefresh();
       }
     };
 
-    // Add event listeners
     window.addEventListener('pageshow', handlePageShow);
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('beforeunload', clearAllCaches); // Clear cache before leaving
+    window.addEventListener('beforeunload', clearAllCaches);
 
-    // Cleanup
     return () => {
       window.removeEventListener('pageshow', handlePageShow);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
@@ -160,6 +153,8 @@ const LatestNews: React.FC = () => {
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
+      // Alternative scroll method using ref
+      topRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
@@ -168,28 +163,32 @@ const LatestNews: React.FC = () => {
   if (!latestPosts.length) return <div className="latest-news-empty">No latest news available.</div>;
 
   return (
-    <section className="latest-news-section">
-      <h2>Latest News</h2>
+    <section className="latest-news-section" ref={topRef}>
+      <motion.h2
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        Latest News
+      </motion.h2>
+      
       <ul className="latest-news-list">
-        {latestPosts.map((post) => (
-          <li key={post.id} className="latest-news-item">
-            <img
-              src={post.featuredImageUrl}
-              alt={post.title}
-              className="latest-news-image"
-            />
-            <div className="latest-news-content">
-              <Link to={`/post/${post.slug}`} className="latest-news-link">
-                <h3>{post.title}</h3>
-              </Link>
-              <p className="latest-news-meta">
-                By {post.authorName} | {formatDateTime(post.createdAt)}
-              </p>
-            </div>
-          </li>
+        {latestPosts.map((post, index) => (
+          <NewsItem 
+            key={post.id} 
+            post={post} 
+            index={index}
+            formatDateTime={formatDateTime}
+          />
         ))}
       </ul>
-      <div className="pagination">
+      
+      <motion.div 
+        className="pagination"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.3 }}
+      >
         <button
           onClick={() => handlePageChange(currentPage - 1)}
           disabled={currentPage === 1}
@@ -207,8 +206,76 @@ const LatestNews: React.FC = () => {
         >
           Next
         </button>
-      </div>
+      </motion.div>
     </section>
+  );
+};
+
+const NewsItem: React.FC<{
+  post: Post;
+  index: number;
+  formatDateTime: (dateString: string) => string;
+}> = ({ post, index, formatDateTime }) => {
+  const ref = useRef<HTMLLIElement>(null);
+  const isInView = useInView(ref, {
+    margin: "0px 0px -100px 0px",
+    amount: 0.2
+  });
+
+  const variants = {
+    hidden: { 
+      y: 50, 
+      opacity: 0,
+      transition: { duration: 0.3 }
+    },
+    visible: { 
+      y: 0, 
+      opacity: 1,
+      transition: {
+        type: "spring",
+        stiffness: 100,
+        damping: 10,
+        delay: index * 0.1
+      }
+    }
+  };
+
+  return (
+    <motion.li
+      ref={ref}
+      className="latest-news-item"
+      initial="hidden"
+      animate={isInView ? "visible" : "hidden"}
+      variants={variants}
+    >
+      <motion.div
+        className="image-container"
+        whileHover={{ scale: 1.03 }}
+        transition={{ duration: 0.3 }}
+      >
+        <img src={post.featuredImageUrl} alt={post.title} className="latest-news-image" />
+      </motion.div>
+      
+      <div className="latest-news-content">
+        <Link to={`/post/${post.slug}`} className="latest-news-link">
+          <motion.h3 
+            whileHover={{ color: "#0077cc" }}
+            transition={{ duration: 0.2 }}
+          >
+            {post.title}
+          </motion.h3>
+        </Link>
+        
+        <motion.p 
+          className="latest-news-meta"
+          initial={{ opacity: 0 }}
+          animate={isInView ? { opacity: 1 } : {}}
+          transition={{ delay: index * 0.1 + 0.2 }}
+        >
+          By {post.authorName} | {formatDateTime(post.createdAt)}
+        </motion.p>
+      </div>
+    </motion.li>
   );
 };
 
