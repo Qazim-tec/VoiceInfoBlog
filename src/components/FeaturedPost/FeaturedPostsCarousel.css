@@ -219,12 +219,14 @@ body.dark-mode .fpc-dot.fpc-active {
   }
 
   .fpc-image-wrapper {
-    width: 200px;
+    width: calc(100% - 20px); /* Match content width with padding */
+    max-width: 300px; /* Optional: set a max-width if needed */
   }
 
   .fpc-carousel-image {
-    height: 120px;
-    border-radius: 8px;
+    width: 100%;
+    height: auto; /* Maintain aspect ratio */
+    max-height: 200px; /* Optional: limit height */
   }
 
   .fpc-featured-badge {
@@ -260,6 +262,7 @@ body.dark-mode .fpc-dot.fpc-active {
     padding: 6px 12px;
     font-size: 0.9rem;
   }
+
 }
 
 /* Smaller Mobile (max-width: 480px) */
@@ -269,11 +272,13 @@ body.dark-mode .fpc-dot.fpc-active {
   }
 
   .fpc-image-wrapper {
-    width: 170px;
+    width: calc(100% - 20px); /* Match content width with padding */
+    max-width: 350px; /* Optional: adjust max-width for smaller screens */
+
   }
 
   .fpc-carousel-image {
-    height: 150px;
+    max-height: 180px; /* Adjust height for smaller screens */
   }
 
   .fpc-featured-badge {
@@ -298,6 +303,8 @@ body.dark-mode .fpc-dot.fpc-active {
     padding: 5px 10px;
     font-size: 0.85rem;
   }
+
+  
 }
 
 /* Loading/Error/Empty States */
