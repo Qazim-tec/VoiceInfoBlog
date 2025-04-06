@@ -1,6 +1,7 @@
 import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useUser } from "../../context/UserContext";
+import { Helmet } from "react-helmet-async"; // For dynamic meta tags
 import "./PostDetail.css";
 
 const postCache: { [slug: string]: { data: Post; timestamp: number } } = {};
@@ -515,91 +516,106 @@ const PostDetail: React.FC = () => {
 
   const flattenedComments = flattenRepliesBeyondLevel1(comments);
 
+  // Determine the image URL for both display and meta tags
+  const imageUrl = post.featuredImageUrl && /^[A-Za-z0-9+/=]+$/.test(post.featuredImageUrl)
+    ? `data:image/png;base64,${post.featuredImageUrl}` // Base64 image
+    : post.featuredImageUrl || "https://via.placeholder.com/600x400"; // URL or fallback
+
   return (
-    <article className="article-page">
-      <header className="article-header">
-        <h1>{post.title}</h1>
-        <p className="article-meta">
-          By {post.authorName} | {new Date(post.createdAt).toLocaleDateString()} |{" "}
-          <Link to={`/${post.categoryName}`} className="category-link">
-            {post.categoryName}
-          </Link>
-          {currentUserId === post.authorId && (
-            <button onClick={handleEditPost} className="edit-post-btn">
-              Edit Post
-            </button>
-          )}
-        </p>
-      </header>
+    <>
+      <Helmet>
+        <title>{post.title} | VoiceInfo</title>
+        <meta name="description" content={post.excerpt || post.content.substring(0, 160)} />
+        {/* Open Graph Meta Tags */}
+        <meta property="og:title" content={post.title} />
+        <meta property="og:description" content={post.excerpt || post.content.substring(0, 160)} />
+        <meta property="og:image" content={imageUrl} />
+        <meta property="og:url" content={shareUrl} />
+        <meta property="og:type" content="article" />
+        {/* Twitter Card Meta Tags */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={post.title} />
+        <meta name="twitter:description" content={post.excerpt || post.content.substring(0, 160)} />
+        <meta name="twitter:image" content={imageUrl} />
+      </Helmet>
 
-      <img
-        src={
-          post.featuredImageUrl && /^[A-Za-z0-9+/=]+$/.test(post.featuredImageUrl)
-            ? `data:image/png;base64,${post.featuredImageUrl}`
-            : post.featuredImageUrl || "https://via.placeholder.com/600x400"
-        }
-        alt={post.title}
-        className="article-image"
-      />
-
-      <section className="article-content">
-        <div dangerouslySetInnerHTML={{ __html: post.content }} />
-      </section>
-
-      {/* Share Buttons Section */}
-      <section className="share-section">
-        <h3>Share this post:</h3>
-        <div className="share-buttons">
-          <button onClick={handleWhatsAppShare} className="share-btn whatsapp">
-            WhatsApp
-          </button>
-          <button onClick={handleXShare} className="share-btn x">
-            X
-          </button>
-          <button onClick={handleFacebookShare} className="share-btn facebook">
-            Facebook
-          </button>
-          <button onClick={handleNativeShare} className="share-btn native">
-            Share More
-          </button>
-        </div>
-      </section>
-
-      <section className="comments-section">
-        <h2>Comments ({flattenedComments.length})</h2>
-        {error && <div className="error-message">{error}</div>}
-        <div className="comments-list">
-          {flattenedComments.map((comment) => renderComment(comment, comment.parentCommentId !== null))}
-        </div>
-        <form onSubmit={handleCommentSubmit} className="comment-form">
-          <h3>Leave a Comment</h3>
-          {isLoggedIn ? (
-            <>
-              <textarea
-                value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
-                placeholder="Share your thoughts..."
-                required
-              />
-              <button type="submit" className="submit-btn">
-                Post Comment
+      <article className="article-page">
+        <header className="article-header">
+          <h1>{post.title}</h1>
+          <p className="article-meta">
+            By {post.authorName} | {new Date(post.createdAt).toLocaleDateString()} |{" "}
+            <Link to={`/${post.categoryName}`} className="category-link">
+              {post.categoryName}
+            </Link>
+            {currentUserId === post.authorId && (
+              <button onClick={handleEditPost} className="edit-post-btn">
+                Edit Post
               </button>
-            </>
-          ) : (
-            <p className="login-message">Please log in to post a comment.</p>
-          )}
-        </form>
-      </section>
+            )}
+          </p>
+        </header>
 
-      <footer className="article-footer">
-        <p>
-          <strong>Tags:</strong> {post.tags.join(", ")}
-        </p>
-        <p>
-          <strong>Views:</strong> {post.views}
-        </p>
-      </footer>
-    </article>
+        <img src={imageUrl} alt={post.title} className="article-image" />
+
+        <section className="article-content">
+          <div dangerouslySetInnerHTML={{ __html: post.content }} />
+        </section>
+
+        {/* Share Buttons Section */}
+        <section className="share-section">
+          <h3>Share this post:</h3>
+          <div className="share-buttons">
+            <button onClick={handleWhatsAppShare} className="share-btn whatsapp">
+              WhatsApp
+            </button>
+            <button onClick={handleXShare} className="share-btn x">
+              X
+            </button>
+            <button onClick={handleFacebookShare} className="share-btn facebook">
+              Facebook
+            </button>
+            <button onClick={handleNativeShare} className="share-btn native">
+              Share More
+            </button>
+          </div>
+        </section>
+
+        <section className="comments-section">
+          <h2>Comments ({flattenedComments.length})</h2>
+          {error && <div className="error-message">{error}</div>}
+          <div className="comments-list">
+            {flattenedComments.map((comment) => renderComment(comment, comment.parentCommentId !== null))}
+          </div>
+          <form onSubmit={handleCommentSubmit} className="comment-form">
+            <h3>Leave a Comment</h3>
+            {isLoggedIn ? (
+              <>
+                <textarea
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  placeholder="Share your thoughts..."
+                  required
+                />
+                <button type="submit" className="submit-btn">
+                  Post Comment
+                </button>
+              </>
+            ) : (
+              <p className="login-message">Please log in to post a comment.</p>
+            )}
+          </form>
+        </section>
+
+        <footer className="article-footer">
+          <p>
+            <strong>Tags:</strong> {post.tags.join(", ")}
+          </p>
+          <p>
+            <strong>Views:</strong> {post.views}
+          </p>
+        </footer>
+      </article>
+    </>
   );
 };
 
