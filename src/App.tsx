@@ -1,7 +1,6 @@
 import { Routes, Route, useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { HelmetProvider } from "react-helmet-async"; // Import HelmetProvider
 import Navbar from "./components/Navbar/Navbar";
 import FeaturedPostsCarousel from "./components/FeaturedPost/FeaturedPostsCarousel";
 import PostDetail from "./components/PostDetail/PostDetail";
@@ -36,7 +35,7 @@ const App: React.FC = () => {
       transition: {
         duration: 0.5,
         when: "beforeChildren", // Animate parent before children
-        staggerChildren: 0.2, // Delay between each child animation
+        staggerChildren: 0.2,  // Delay between each child animation
       },
     },
     exit: { opacity: 0, transition: { duration: 0.5 } },
@@ -49,160 +48,158 @@ const App: React.FC = () => {
   };
 
   return (
-    <HelmetProvider>
-      <div className="App">
-        <Navbar />
-        <AnimatePresence mode="wait">
-          <Routes location={location} key={location.pathname}>
-            <Route
-              path="/"
-              element={
-                <motion.main
-                  variants={pageVariants}
-                  initial="initial"
-                  animate="animate"
-                  exit="exit"
-                >
-                  <motion.h1 variants={childVariants}>
-                    Unveil the Stories That Matter
-                  </motion.h1>
-                  <motion.div variants={childVariants}>
-                    <FeaturedPostsCarousel />
-                  </motion.div>
-                  <motion.div variants={childVariants}>
-                    <LatestNews />
-                  </motion.div>
-                  <motion.div variants={childVariants}>
-                    <CategoriesSection />
-                  </motion.div>
-                  <motion.div variants={childVariants}>
-                    <TrendingPosts />
-                  </motion.div>
-                </motion.main>
-              }
-            />
-            <Route
-              path="/post/:slug"
-              element={
-                <motion.div
-                  variants={pageVariants}
-                  initial="initial"
-                  animate="animate"
-                  exit="exit"
-                >
-                  <PostDetail />
+    <div className="App">
+      <Navbar />
+      <AnimatePresence mode="wait">
+        <Routes location={location} key={location.pathname}>
+          <Route
+            path="/"
+            element={
+              <motion.main
+                variants={pageVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+              >
+                <motion.h1 variants={childVariants}>
+                  Unveil the Stories That Matter
+                </motion.h1>
+                <motion.div variants={childVariants}>
+                  <FeaturedPostsCarousel />
                 </motion.div>
-              }
-            />
-            <Route
-              path="/SignIn"
-              element={
-                <motion.div
-                  variants={pageVariants}
-                  initial="initial"
-                  animate="animate"
-                  exit="exit"
-                >
-                  <SignIn />
+                <motion.div variants={childVariants}>
+                  <LatestNews />
                 </motion.div>
-              }
-            />
-            <Route
-              path="/signup"
-              element={
-                <motion.div
-                  variants={pageVariants}
-                  initial="initial"
-                  animate="animate"
-                  exit="exit"
-                >
-                  <SignUp />
+                <motion.div variants={childVariants}>
+                  <CategoriesSection />
                 </motion.div>
-              }
-            />
-            <Route
-              path="/create-post"
-              element={
-                <motion.div
-                  variants={pageVariants}
-                  initial="initial"
-                  animate="animate"
-                  exit="exit"
-                >
-                  <CreatePost />
+                <motion.div variants={childVariants}>
+                  <TrendingPosts />
                 </motion.div>
-              }
-            />
-            <Route
-              path="/my-posts"
-              element={
-                <motion.div
-                  variants={pageVariants}
-                  initial="initial"
-                  animate="animate"
-                  exit="exit"
-                >
-                  <MyPosts />
-                </motion.div>
-              }
-            />
-            <Route
-              path="/profile"
-              element={
-                <motion.div
-                  variants={pageVariants}
-                  initial="initial"
-                  animate="animate"
-                  exit="exit"
-                >
-                  <ProfilePage />
-                </motion.div>
-              }
-            />
-            <Route
-              path="/:categoryName"
-              element={
-                <motion.div
-                  variants={pageVariants}
-                  initial="initial"
-                  animate="animate"
-                  exit="exit"
-                >
-                  <CategoryPage />
-                </motion.div>
-              }
-            />
-            <Route
-              path="/settings"
-              element={
-                <motion.div
-                  variants={pageVariants}
-                  initial="initial"
-                  animate="animate"
-                  exit="exit"
-                >
-                  <Settings />
-                </motion.div>
-              }
-            />
-            <Route
-              path="/admin/feature-posts"
-              element={
-                <motion.div
-                  variants={pageVariants}
-                  initial="initial"
-                  animate="animate"
-                  exit="exit"
-                >
-                  <FeaturePosts />
-                </motion.div>
-              }
-            />
-          </Routes>
-        </AnimatePresence>
-        <Footer />
-      </div>
-    </HelmetProvider>
+              </motion.main>
+            }
+          />
+          <Route
+            path="/post/:slug"
+            element={
+              <motion.div
+                variants={pageVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+              >
+                <PostDetail />
+              </motion.div>
+            }
+          />
+          <Route
+            path="/SignIn"
+            element={
+              <motion.div
+                variants={pageVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+              >
+                <SignIn />
+              </motion.div>
+            }
+          />
+          <Route
+            path="/signup"
+            element={
+              <motion.div
+                variants={pageVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+              >
+                <SignUp />
+              </motion.div>
+            }
+          />
+          <Route
+            path="/create-post"
+            element={
+              <motion.div
+                variants={pageVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+              >
+                <CreatePost />
+              </motion.div>
+            }
+          />
+          <Route
+            path="/my-posts"
+            element={
+              <motion.div
+                variants={pageVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+              >
+                <MyPosts />
+              </motion.div>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <motion.div
+                variants={pageVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+              >
+                <ProfilePage />
+              </motion.div>
+            }
+          />
+          <Route
+            path="/:categoryName"
+            element={
+              <motion.div
+                variants={pageVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+              >
+                <CategoryPage />
+              </motion.div>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <motion.div
+                variants={pageVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+              >
+                <Settings />
+              </motion.div>
+            }
+          />
+          <Route
+            path="/admin/feature-posts"
+            element={
+              <motion.div
+                variants={pageVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+              >
+                <FeaturePosts />
+              </motion.div>
+            }
+          />
+        </Routes>
+      </AnimatePresence>
+      <Footer />
+    </div>
   );
 };
 

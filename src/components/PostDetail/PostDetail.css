@@ -152,10 +152,7 @@
   background: #fafafa; /* Lighter gray for replies */
 }
 
-/* Removed hover scaling effect */
-.comment-card:hover {
-  /* No transform or shadow changes */
-}
+
 
 .comment-header {
   display: flex;
@@ -408,9 +405,6 @@ body.dark-mode .comment-card.reply {
   background: #404040;
 }
 
-body.dark-mode .comment-card:hover {
-  /* No changes on hover */
-}
 
 body.dark-mode .comment-author {
   color: #1e90ff;
