@@ -121,7 +121,7 @@ const PostDetail: React.FC = () => {
     };
 
     const optimisticComment: Comment = {
-      id: Date.now(), // Temporary ID
+      id: Date.now(),
       content: newComment,
       createdAt: new Date().toISOString(),
       userId: currentUserId,
@@ -178,7 +178,7 @@ const PostDetail: React.FC = () => {
     };
 
     const optimisticReply: Comment = {
-      id: Date.now(), // Temporary ID
+      id: Date.now(),
       content: newReply,
       createdAt: new Date().toISOString(),
       userId: currentUserId,
@@ -187,7 +187,6 @@ const PostDetail: React.FC = () => {
       replies: [],
     };
 
-    // Update comments with the optimistic reply
     setComments((prevComments) => {
       const updateCommentsWithReply = (comments: Comment[]): Comment[] =>
         comments.map((comment) =>
@@ -478,6 +477,38 @@ const PostDetail: React.FC = () => {
     return undefined;
   };
 
+  // Share functionality
+  const shareUrl = post ? `${window.location.origin}/post/${post.slug}` : "";
+  const shareText = post ? `${post.title} - Check out this post!` : "";
+
+  const handleWhatsAppShare = () => {
+    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + " " + shareUrl)}`, "_blank");
+  };
+
+  const handleXShare = () => {
+    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`, "_blank");
+  };
+
+  const handleFacebookShare = () => {
+    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`, "_blank");
+  };
+
+  const handleNativeShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: post?.title,
+          text: shareText,
+          url: shareUrl,
+        });
+      } catch (err) {
+        console.log("Share error:", err);
+      }
+    } else {
+      alert("Web Share API is not supported in your browser.");
+    }
+  };
+
   if (loading) return <div className="article-loading">Loading...</div>;
   if (error) return <div className="article-error">Error: {error}</div>;
   if (!post) return <div className="article-not-found">Post not found</div>;
@@ -513,6 +544,25 @@ const PostDetail: React.FC = () => {
 
       <section className="article-content">
         <div dangerouslySetInnerHTML={{ __html: post.content }} />
+      </section>
+
+      {/* Share Buttons Section */}
+      <section className="share-section">
+        <h3>Share this post:</h3>
+        <div className="share-buttons">
+          <button onClick={handleWhatsAppShare} className="share-btn whatsapp">
+            WhatsApp
+          </button>
+          <button onClick={handleXShare} className="share-btn x">
+            X
+          </button>
+          <button onClick={handleFacebookShare} className="share-btn facebook">
+            Facebook
+          </button>
+          <button onClick={handleNativeShare} className="share-btn native">
+            Share More
+          </button>
+        </div>
       </section>
 
       <section className="comments-section">
