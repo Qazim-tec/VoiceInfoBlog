@@ -1,7 +1,7 @@
 import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useUser } from "../../context/UserContext";
-import { Helmet } from "react-helmet-async"; // Import Helmet for meta tags
+import { Helmet } from "react-helmet-async";
 import "./PostDetail.css";
 
 const postCache: { [slug: string]: { data: Post; timestamp: number } } = {};
@@ -54,6 +54,8 @@ const PostDetail: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const updatedPost = location.state?.updatedPost as Post | undefined;
+
+  const BASE_URL = "https://voice-info-blog.vercel.app"; // Your Vercel domain
 
   useEffect(() => {
     const fetchPost = async () => {
@@ -479,11 +481,9 @@ const PostDetail: React.FC = () => {
   };
 
   // Share functionality
-  const shareUrl = post ? `${window.location.origin}/post/${post.slug}` : "";
+  const shareUrl = post ? `${BASE_URL}/post/${post.slug}` : "";
   const shareText = post ? `${post.title} - Check out this post!` : "";
-  const imageUrl = post?.featuredImageUrl && /^[A-Za-z0-9+/=]+$/.test(post.featuredImageUrl)
-    ? `data:image/png;base64,${post.featuredImageUrl}`
-    : post?.featuredImageUrl || "https://via.placeholder.com/600x400";
+  const imageUrl = post?.featuredImageUrl || "https://via.placeholder.com/600x400";
 
   const handleWhatsAppShare = () => {
     window.open(
@@ -530,7 +530,6 @@ const PostDetail: React.FC = () => {
 
   return (
     <>
-      {/* Add Helmet to set Open Graph meta tags */}
       <Helmet>
         <title>{post.title}</title>
         <meta name="description" content={post.excerpt || post.content.substring(0, 160)} />
@@ -561,17 +560,12 @@ const PostDetail: React.FC = () => {
           </p>
         </header>
 
-        <img
-          src={imageUrl}
-          alt={post.title}
-          className="article-image"
-        />
+        <img src={imageUrl} alt={post.title} className="article-image" />
 
         <section className="article-content">
           <div dangerouslySetInnerHTML={{ __html: post.content }} />
         </section>
 
-        {/* Share Buttons Section */}
         <section className="share-section">
           <h3>Share this post:</h3>
           <div className="share-buttons">
