@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useUser } from "../../context/UserContext";
+import { motion } from "framer-motion";
 import "./CategoryPage.css";
 
 interface Post {
@@ -74,7 +75,6 @@ const CategoryPage: React.FC = () => {
     if (cachedData) {
       const { data, timestamp, version } = JSON.parse(cachedData);
       if (Date.now() - timestamp < CACHE_EXPIRY && version === currentVersion) {
-        // console.log(`Loaded from cache: ${cacheKey}`);
         setPosts(data.items);
         setTotalPages(data.totalPages);
         setLoading(false);
@@ -123,50 +123,49 @@ const CategoryPage: React.FC = () => {
     }
   };
 
-  // Fetch posts when page or category changes
   useEffect(() => {
     fetchPosts(currentPage);
   }, [categoryName, currentPage, user?.token]);
 
-  // Handle reloads and swipe-down refreshes
   useEffect(() => {
-    // Initialize cache version if missing
     if (!localStorage.getItem(CACHE_VERSION_KEY)) {
       localStorage.setItem(CACHE_VERSION_KEY, "0");
     }
 
     const handleRefresh = () => {
-      // console.log('Refresh triggered');
       clearAllCaches();
       fetchPosts(currentPage);
     };
 
-    // Handle page show (reload or back-forward cache)
     const handlePageShow = (event: PageTransitionEvent) => {
       if (event.persisted || performance.navigation.type === 1) {
         handleRefresh();
       }
     };
 
-    // Handle visibility change (mobile swipe-down or tab switch)
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
         handleRefresh();
       }
     };
 
-    // Add event listeners
     window.addEventListener("pageshow", handlePageShow);
     document.addEventListener("visibilitychange", handleVisibilityChange);
     window.addEventListener("beforeunload", clearAllCaches);
 
-    // Cleanup
     return () => {
       window.removeEventListener("pageshow", handlePageShow);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("beforeunload", clearAllCaches);
     };
-  }, [categoryName, currentPage]); // Depend on categoryName and currentPage
+  }, [categoryName, currentPage]);
+
+  // Loading animation variants
+  const loadingVariants = {
+    initial: { opacity: 0 },
+    animate: { opacity: 1, transition: { duration: 0.3 } },
+    exit: { opacity: 0, transition: { duration: 0.3 } }
+  };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -182,8 +181,39 @@ const CategoryPage: React.FC = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  if (loading) return <div className="category-page loading">Loading posts...</div>;
-  if (error) return <div className="category-page error">{error}</div>;
+  if (loading) {
+    return (
+      <motion.div
+        className="loading-container"
+        variants={loadingVariants}
+        initial="initial"
+        animate="animate"
+        exit="exit"
+      >
+        <div className="loader" />
+        <motion.p
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.4 }}
+        >
+          Loading Posts...
+        </motion.p>
+      </motion.div>
+    );
+  }
+
+  if (error) {
+    return (
+      <motion.div
+        className="category-page error"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3 }}
+      >
+        {error}
+      </motion.div>
+    );
+  }
 
   return (
     <div className="category-page">

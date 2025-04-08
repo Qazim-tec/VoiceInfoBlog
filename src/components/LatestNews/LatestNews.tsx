@@ -139,6 +139,13 @@ const LatestNews: React.FC = () => {
     };
   }, [currentPage]);
 
+  // Loading animation variants
+  const loadingVariants = {
+    initial: { opacity: 0 },
+    animate: { opacity: 1, transition: { duration: 0.3 } },
+    exit: { opacity: 0, transition: { duration: 0.3 } }
+  };
+
   const formatDateTime = (dateString: string): string => {
     return new Date(dateString).toLocaleString('en-US', {
       year: 'numeric',
@@ -156,9 +163,52 @@ const LatestNews: React.FC = () => {
     }
   };
 
-  if (loading) return <div className="latest-news-loading">Loading latest news...</div>;
-  if (error) return <div className="latest-news-error">Error: {error}</div>;
-  if (!latestPosts.length) return <div className="latest-news-empty">No latest news available.</div>;
+  if (loading) {
+    return (
+      <motion.div
+        className="loading-container"
+        variants={loadingVariants}
+        initial="initial"
+        animate="animate"
+        exit="exit"
+      >
+        <div className="loader" />
+        <motion.p
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.4 }}
+        >
+          Loading Latest News...
+        </motion.p>
+      </motion.div>
+    );
+  }
+
+  if (error) {
+    return (
+      <motion.div
+        className="latest-news-error"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3 }}
+      >
+        Error: {error}
+      </motion.div>
+    );
+  }
+
+  if (!latestPosts.length) {
+    return (
+      <motion.div
+        className="latest-news-empty"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3 }}
+      >
+        No latest news available.
+      </motion.div>
+    );
+  }
 
   return (
     <section className="latest-news-section" ref={topRef}>
@@ -214,8 +264,8 @@ const NewsItem: React.FC<{
 }> = ({ post, formatDateTime }) => {
   const ref = useRef<HTMLLIElement>(null);
   const isInView = useInView(ref, {
-    margin: "0px 0px -50px 0px",  // Triggers 50px before entering viewport
-    amount: 0.1                   // Only needs 10% visibility
+    margin: "0px 0px -50px 0px",
+    amount: 0.1
   });
 
   return (

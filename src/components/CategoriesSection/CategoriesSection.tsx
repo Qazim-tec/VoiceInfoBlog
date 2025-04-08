@@ -93,8 +93,46 @@ const CategoriesSection: React.FC = () => {
     return () => window.removeEventListener("pageshow", handlePageShow);
   }, [user?.token]);
 
-  if (loading) return <p>Loading categories...</p>;
-  if (error) return <p className="error">{error}</p>;
+  // Loading animation variants for container
+  const loadingVariants = {
+    initial: { opacity: 0 },
+    animate: { opacity: 1, transition: { duration: 0.3 } },
+    exit: { opacity: 0, transition: { duration: 0.3 } }
+  };
+
+  if (loading) {
+    return (
+      <motion.div
+        className="loading-container"
+        variants={loadingVariants}
+        initial="initial"
+        animate="animate"
+        exit="exit"
+      >
+        <div className="loader" />
+        <motion.p
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.4 }}
+        >
+          Loading Categories...
+        </motion.p>
+      </motion.div>
+    );
+  }
+
+  if (error) {
+    return (
+      <motion.p
+        className="error"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3 }}
+      >
+        {error}
+      </motion.p>
+    );
+  }
 
   return (
     <section className="categories-section">
@@ -111,8 +149,8 @@ const CategoriesSection: React.FC = () => {
           const CategoryItem = () => {
             const ref = React.useRef(null);
             const isInView = useInView(ref, {
-              margin: "0px 0px -20px 0px", // Triggers 20px before entering viewport
-              amount: 0.08 // Only needs 8% visibility
+              margin: "0px 0px -20px 0px",
+              amount: 0.08
             });
 
             return (

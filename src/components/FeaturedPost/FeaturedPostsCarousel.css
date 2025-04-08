@@ -322,3 +322,50 @@ body.dark-mode .fpc-carousel-error,
 body.dark-mode .fpc-carousel-empty {
   color: #b0b0b0;
 }
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  gap: 20px;
+  width: 100%;
+}
+
+.loader {
+  width: 50px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #514b82;
+  -webkit-mask: radial-gradient(circle closest-side at 50% 40%, #0000 94%, #000);
+  transform-origin: 50% 40%;
+  animation: l25 1s infinite linear;
+}
+
+@keyframes l25 {
+  100% {
+    transform: rotate(1turn);
+  }
+}
+
+.loading-container p {
+  color: #666;
+  font-size: 1.1rem;
+  font-weight: 500;
+  margin: 0;
+}
+
+.fpc-carousel-error {
+  color: #e74c3c;
+  text-align: center;
+  padding: 20px;
+  font-size: 1.1rem;
+}
+
+.fpc-carousel-empty {
+  color: #666;
+  text-align: center;
+  padding: 20px;
+  font-size: 1.1rem;
+}

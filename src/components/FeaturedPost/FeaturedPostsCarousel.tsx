@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import "./FeaturedPostsCarousel.css";
 
 interface Post {
@@ -45,7 +46,7 @@ const FeaturedPostsCarousel: React.FC = () => {
           'Pragma': 'no-cache',
           'Expires': '0',
         },
-        cache: 'no-store', // Disable browser fetch cache
+        cache: 'no-store',
       });
       if (!response.ok) throw new Error("Failed to fetch featured posts");
 
@@ -59,13 +60,11 @@ const FeaturedPostsCarousel: React.FC = () => {
     }
   };
 
-  // Initial fetch or load from cache
   useEffect(() => {
     const cachedData = localStorage.getItem(CACHE_KEY);
     if (cachedData) {
       const { data, timestamp } = JSON.parse(cachedData);
       if (Date.now() - timestamp < CACHE_EXPIRY) {
-        // console.log('Loaded from cache');
         setFeaturedPosts(data);
         setLoading(false);
         return;
@@ -74,7 +73,6 @@ const FeaturedPostsCarousel: React.FC = () => {
     fetchFeaturedPosts();
   }, []);
 
-  // Auto-scroll carousel
   useEffect(() => {
     if (featuredPosts.length > 1) {
       const interval = setInterval(() => {
@@ -84,34 +82,28 @@ const FeaturedPostsCarousel: React.FC = () => {
     }
   }, [featuredPosts]);
 
-  // Handle reloads and swipe-down refreshes
   useEffect(() => {
     const handleRefresh = () => {
-      // console.log('Refresh triggered');
-      localStorage.removeItem(CACHE_KEY); // Clear cache
+      localStorage.removeItem(CACHE_KEY);
       fetchFeaturedPosts();
     };
 
-    // Handle page show (reload or back-forward cache)
     const handlePageShow = (event: PageTransitionEvent) => {
       if (event.persisted || performance.navigation.type === 1) {
         handleRefresh();
       }
     };
 
-    // Handle visibility change (mobile swipe-down or tab switch)
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
         handleRefresh();
       }
     };
 
-    // Add event listeners
     window.addEventListener("pageshow", handlePageShow);
     document.addEventListener("visibilitychange", handleVisibilityChange);
-    window.addEventListener("beforeunload", () => localStorage.removeItem(CACHE_KEY)); // Clear cache before leaving
+    window.addEventListener("beforeunload", () => localStorage.removeItem(CACHE_KEY));
 
-    // Cleanup
     return () => {
       window.removeEventListener("pageshow", handlePageShow);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
@@ -119,9 +111,59 @@ const FeaturedPostsCarousel: React.FC = () => {
     };
   }, []);
 
-  if (loading) return <div className="fpc-carousel-loading">Loading featured posts...</div>;
-  if (error) return <div className="fpc-carousel-error">Error: {error}</div>;
-  if (!featuredPosts.length) return <div className="fpc-carousel-empty">No featured posts available.</div>;
+  // Loading animation variants
+  const loadingVariants = {
+    initial: { opacity: 0 },
+    animate: { opacity: 1, transition: { duration: 0.3 } },
+    exit: { opacity: 0, transition: { duration: 0.3 } }
+  };
+
+  if (loading) {
+    return (
+      <motion.div
+        className="loading-container"
+        variants={loadingVariants}
+        initial="initial"
+        animate="animate"
+        exit="exit"
+      >
+        <div className="loader" />
+        <motion.p
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.4 }}
+        >
+          Loading Featured Posts...
+        </motion.p>
+      </motion.div>
+    );
+  }
+
+  if (error) {
+    return (
+      <motion.div
+        className="fpc-carousel-error"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3 }}
+      >
+        Error: {error}
+      </motion.div>
+    );
+  }
+
+  if (!featuredPosts.length) {
+    return (
+      <motion.div
+        className="fpc-carousel-empty"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3 }}
+      >
+        No featured posts available.
+      </motion.div>
+    );
+  }
 
   return (
     <section className="fpc-carousel-section">
