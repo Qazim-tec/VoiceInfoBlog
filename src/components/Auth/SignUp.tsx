@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FaUser, FaLock, FaEnvelope, FaEye, FaEyeSlash } from "react-icons/fa";
 import { useUser } from "../../context/UserContext";
@@ -33,7 +33,7 @@ const SignUp: React.FC = () => {
     minLength: false,
   });
   const navigate = useNavigate();
-  const { setUser } = useUser();
+  const { } = useUser();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const { name, value } = e.target;
