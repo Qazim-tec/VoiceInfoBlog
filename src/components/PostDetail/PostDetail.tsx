@@ -41,6 +41,11 @@ interface Post {
   isLikedByUser: boolean;
 }
 
+// Simple function to strip HTML tags
+const stripHtml = (html: string): string => {
+  return html.replace(/<[^>]+>/g, "").trim();
+};
+
 const PostDetail: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const [post, setPost] = useState<Post | null>(null);
@@ -94,15 +99,17 @@ const PostDetail: React.FC = () => {
 
         // Sanitize post data
         const isTestTitle = /^[a-z0-9]{6,}$/i.test(postData.data.title) || postData.data.title.trim() === "";
-        const isTestExcerpt = postData.data.excerpt.startsWith("string") || postData.data.excerpt.trim() === "";
+        const cleanExcerpt = stripHtml(postData.data.excerpt);
+        const cleanContent = stripHtml(postData.data.content);
+        const isTestExcerpt = cleanExcerpt.startsWith("string") || cleanExcerpt === "" || /^[a-z0-9\s]{10,}$/i.test(cleanExcerpt);
         const sanitizedPost = {
           ...postData.data,
           title: isTestTitle ? "Untitled Post" : postData.data.title,
           excerpt: isTestExcerpt
-            ? postData.data.content && postData.data.content.trim() !== ""
-              ? postData.data.content.substring(0, 160)
+            ? cleanContent && cleanContent !== ""
+              ? cleanContent.substring(0, 160)
               : "No description available."
-            : postData.data.excerpt,
+            : cleanExcerpt,
           featuredImageUrl: postData.data.featuredImageUrl && postData.data.featuredImageUrl.trim() !== ""
             ? postData.data.featuredImageUrl
             : defaultImageUrl,
