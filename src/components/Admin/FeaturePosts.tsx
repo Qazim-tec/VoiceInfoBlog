@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useUser } from "../../context/UserContext";
+import { API_BASE_URL } from "../../config/apiConfig"; // Correct import path
 import "./FeaturePosts.css";
 
 interface Post {
@@ -62,7 +63,7 @@ const FeaturePosts: React.FC = () => {
         }
 
         const response = await fetch(
-          `https://voiceinfo.onrender.com/api/Post/all-posts-light?page=${currentPage[activeTab]}&pageSize=${POSTS_PER_PAGE}`,
+          `${API_BASE_URL}/api/Post/all-posts-light?page=${currentPage[activeTab]}&pageSize=${POSTS_PER_PAGE}`,
           { headers }
         );
         if (!response.ok) throw new Error("Failed to fetch posts");
@@ -118,8 +119,8 @@ const FeaturePosts: React.FC = () => {
 
     const endpoint =
       type === "isFeatured"
-        ? `https://voiceinfo.onrender.com/api/Post/feature/${postId}?isFeatured=${value}`
-        : `https://voiceinfo.onrender.com/api/Post/latest-news/${postId}?isLatestNews=${value}`;
+        ? `${API_BASE_URL}/api/Post/feature/${postId}?isFeatured=${value}`
+        : `${API_BASE_URL}/api/Post/latest-news/${postId}?isLatestNews=${value}`;
 
     fetch(endpoint, {
       method: "PUT",
@@ -183,7 +184,7 @@ const FeaturePosts: React.FC = () => {
       headers["Authorization"] = `Bearer ${user.token}`;
     }
 
-    fetch(`https://voiceinfo.onrender.com/api/Post/delete/${postId}`, {
+    fetch(`${API_BASE_URL}/api/Post/delete/${postId}`, {
       method: "DELETE",
       headers,
     })

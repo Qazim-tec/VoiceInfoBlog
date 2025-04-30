@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useUser } from "../../context/UserContext";
 import { motion } from "framer-motion";
+import { API_BASE_URL } from "../../config/apiConfig"; // Added import
 import "./CategoryPage.css";
 
 interface Post {
@@ -94,7 +95,7 @@ const CategoryPage: React.FC = () => {
       }
 
       const response = await fetch(
-        `https://voiceinfo.onrender.com/api/Category/${encodeURIComponent(categoryName)}/posts?page=${page}&pageSize=${POSTS_PER_PAGE}&t=${Date.now()}`,
+        `${API_BASE_URL}/api/Category/${encodeURIComponent(categoryName)}/posts?page=${page}&pageSize=${POSTS_PER_PAGE}&t=${Date.now()}`,
         {
           headers,
           cache: "no-store",

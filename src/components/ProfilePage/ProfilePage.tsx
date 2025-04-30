@@ -1,6 +1,7 @@
 // components/ProfilePage/ProfilePage.tsx
 import React, { useEffect, useState } from "react";
 import { useUser } from "../../context/UserContext";
+import { API_BASE_URL } from "../../config/apiConfig";
 import "./ProfilePage.css";
 
 interface UserStats {
@@ -29,7 +30,7 @@ const ProfilePage: React.FC = () => {
       try {
         setLoading(true);
 
-        const response = await fetch("https://voiceinfo.onrender.com/api/User/profile-stats", {
+        const response = await fetch(`${API_BASE_URL}/api/User/profile-stats`, {
           headers: {
             Authorization: `Bearer ${user.token}`,
           },

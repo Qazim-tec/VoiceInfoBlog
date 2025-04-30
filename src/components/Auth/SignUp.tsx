@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FaUser, FaLock, FaEnvelope, FaEye, FaEyeSlash } from "react-icons/fa";
 import { useUser } from "../../context/UserContext";
+import { API_BASE_URL } from "../../config/apiConfig"; // Added import
 import "./Auth.css";
 
 interface SignUpData {
@@ -68,7 +69,7 @@ const SignUp: React.FC = () => {
     }
 
     try {
-      const response = await fetch("https://voiceinfo.onrender.com/api/User/register", {
+      const response = await fetch(`${API_BASE_URL}/api/User/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -81,16 +82,12 @@ const SignUp: React.FC = () => {
         throw new Error(errorData.message || "Registration failed");
       }
 
-      const data = await response.json();
-      const userData = {
-        userId: data.userId,
-        email: data.email,
-        token: data.token,
-        role: data.role,
-        firstName: data.firstName,
-      };
-      setUser(userData);
-      setSuccess("Registration successful! Redirecting to home page...");
+      // Expecting "Registration successful. Please check your email for the OTP."
+      setSuccess("Registration successful! Redirecting to OTP verification...");
+      // Redirect to OTP verification page with email in state
+      setTimeout(() => {
+        navigate("/otp-verification", { state: { email: formData.email } });
+      }, 2000);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
       console.error("Registration error:", err);
@@ -98,15 +95,6 @@ const SignUp: React.FC = () => {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    if (success) {
-      const timer = setTimeout(() => {
-        navigate("/");
-      }, 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [success, navigate]);
 
   return (
     <div className="auth-container signup-auth-container">

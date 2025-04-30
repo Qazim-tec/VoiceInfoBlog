@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useUser } from "../../context/UserContext";
 import { Link } from "react-router-dom";
+import { API_BASE_URL } from "../../config/apiConfig";
 import "./TrendingPosts.css";
 
 interface Post {
@@ -48,7 +49,7 @@ const TrendingPosts: React.FC = () => {
       }
 
       const response = await fetch(
-        "https://voiceinfo.onrender.com/api/TrendingPosts",
+        `${API_BASE_URL}/api/TrendingPosts`,
         {
           headers,
         }

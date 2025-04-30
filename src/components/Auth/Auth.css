@@ -17,7 +17,7 @@
   --border-focus-dark: #ffffff;
 }
 
-/* Apply dark mode variables - unchanged */
+/* Apply dark mode variables */
 body.dark-mode {
   --background: var(--background-dark);
   --form-bg: var(--form-bg-dark);
@@ -39,9 +39,12 @@ body:not(.dark-mode) {
   --border-focus: var(--border-focus-light);
 }
 
-/* Container styling */
+/* Container styling for all auth pages */
 .auth-container.signin-auth-container,
-.auth-container.signup-auth-container {
+.auth-container.signup-auth-container,
+.auth-container.otp-auth-container,
+.auth-container.forgot-auth-container,
+.auth-container.reset-auth-container {
   min-height: 100vh;
   display: flex;
   justify-content: center;
@@ -53,7 +56,10 @@ body:not(.dark-mode) {
 }
 
 .auth-container.signin-auth-container::before,
-.auth-container.signup-auth-container::before {
+.auth-container.signup-auth-container::before,
+.auth-container.otp-auth-container::before,
+.auth-container.forgot-auth-container::before,
+.auth-container.reset-auth-container::before {
   content: '';
   position: absolute;
   width: 200%;
@@ -67,7 +73,10 @@ body:not(.dark-mode) {
 
 /* Form styling */
 .auth-form.signin-auth-form,
-.auth-form.signup-auth-form {
+.auth-form.signup-auth-form,
+.auth-form.otp-auth-form,
+.auth-form.forgot-auth-form,
+.auth-form.reset-auth-form {
   background: var(--form-bg);
   backdrop-filter: blur(10px);
   border-radius: 15px;
@@ -83,7 +92,10 @@ body:not(.dark-mode) {
 
 /* Heading */
 .auth-form.signin-auth-form h2,
-.auth-form.signup-auth-form h2 {
+.auth-form.signup-auth-form h2,
+.auth-form.otp-auth-form h2,
+.auth-form.forgot-auth-form h2,
+.auth-form.reset-auth-form h2 {
   color: var(--text);
   text-align: center;
   margin-bottom: 2rem;
@@ -93,7 +105,10 @@ body:not(.dark-mode) {
 
 /* Form group - horizontal flex layout with visible border */
 .form-group.signin-form-group,
-.form-group.signup-form-group {
+.form-group.signup-form-group,
+.form-group.otp-form-group,
+.form-group.forgot-form-group,
+.form-group.reset-form-group {
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -103,19 +118,25 @@ body:not(.dark-mode) {
   padding: 0.2rem 0.8rem;
   border: 1px solid var(--border);
   transition: border-color 0.3s ease;
-  position: relative; /* Added for toggle positioning */
+  position: relative;
 }
 
 /* Enhance border on focus */
 .form-group.signin-form-group:focus-within,
-.form-group.signup-form-group:focus-within {
+.form-group.signup-form-group:focus-within,
+.form-group.otp-form-group:focus-within,
+.form-group.forgot-form-group:focus-within,
+.form-group.reset-form-group:focus-within {
   border: 2px solid var(--border-focus);
   box-shadow: 0 0 8px rgba(0, 0, 0, 0.2);
 }
 
 /* Input icon - positioned to the left */
 .input-icon.signin-input-icon,
-.input-icon.signup-input-icon {
+.input-icon.signup-input-icon,
+.input-icon.otp-input-icon,
+.input-icon.forgot-input-icon,
+.input-icon.reset-input-icon {
   color: var(--text);
   opacity: 0.9;
   margin-right: 10px;
@@ -124,7 +145,10 @@ body:not(.dark-mode) {
 
 /* Input field */
 .form-group.signin-form-group input,
-.form-group.signup-form-group input {
+.form-group.signup-form-group input,
+.form-group.otp-form-group input,
+.form-group.forgot-form-group input,
+.form-group.reset-form-group input {
   flex-grow: 1;
   padding: 0.6rem 0.8rem;
   background: transparent;
@@ -135,18 +159,27 @@ body:not(.dark-mode) {
 }
 
 .form-group.signin-form-group input:focus,
-.form-group.signup-form-group input:focus {
+.form-group.signup-form-group input:focus,
+.form-group.otp-form-group input:focus,
+.form-group.forgot-form-group input:focus,
+.form-group.reset-form-group input:focus {
   outline: none;
 }
 
 .form-group.signin-form-group input::placeholder,
-.form-group.signup-form-group input::placeholder {
+.form-group.signup-form-group input::placeholder,
+.form-group.otp-form-group input::placeholder,
+.form-group.forgot-form-group input::placeholder,
+.form-group.reset-form-group input::placeholder {
   color: rgba(0, 0, 0, 0.7);
   transition: opacity 0.3s ease;
 }
 
 .form-group.signin-form-group input:focus::placeholder,
-.form-group.signup-form-group input:focus::placeholder {
+.form-group.signup-form-group input:focus::placeholder,
+.form-group.otp-form-group input:focus::placeholder,
+.form-group.forgot-form-group input:focus::placeholder,
+.form-group.reset-form-group input:focus::placeholder {
   opacity: 0.5;
 }
 
@@ -190,7 +223,10 @@ body:not(.dark-mode) {
 
 /* Messages */
 .error-message.signin-error-message,
-.error-message.signup-error-message {
+.error-message.signup-error-message,
+.error-message.otp-error-message,
+.error-message.forgot-error-message,
+.error-message.reset-error-message {
   color: #ff6b6b;
   text-align: center;
   margin: 0.5rem 0;
@@ -198,7 +234,10 @@ body:not(.dark-mode) {
 }
 
 .success-message.signin-success-message,
-.success-message.signup-success-message {
+.success-message.signup-success-message,
+.success-message.otp-success-message,
+.success-message.forgot-success-message,
+.success-message.reset-success-message {
   color: #4ecdc4;
   text-align: center;
   margin: 0.5rem 0;
@@ -207,7 +246,10 @@ body:not(.dark-mode) {
 
 /* Button */
 .auth-button.signin-auth-button,
-.auth-button.signup-auth-button {
+.auth-button.signup-auth-button,
+.auth-button.otp-auth-button,
+.auth-button.forgot-auth-button,
+.auth-button.reset-auth-button {
   width: 100%;
   padding: 0.8rem;
   background: var(--button-gradient);
@@ -223,20 +265,29 @@ body:not(.dark-mode) {
 }
 
 .auth-button.signin-auth-button:hover:not(:disabled),
-.auth-button.signup-auth-button:hover:not(:disabled) {
+.auth-button.signup-auth-button:hover:not(:disabled),
+.auth-button.otp-auth-button:hover:not(:disabled),
+.auth-button.forgot-auth-button:hover:not(:disabled),
+.auth-button.reset-auth-button:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 5px 15px rgba(0, 242, 254, 0.4);
 }
 
 .auth-button.signin-auth-button:disabled,
-.auth-button.signup-auth-button:disabled {
+.auth-button.signup-auth-button:disabled,
+.auth-button.otp-auth-button:disabled,
+.auth-button.forgot-auth-button:disabled,
+.auth-button.reset-auth-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
 /* Loader */
 .loader.signin-loader,
-.loader.signup-loader {
+.loader.signup-loader,
+.loader.otp-loader,
+.loader.forgot-loader,
+.loader.reset-loader {
   display: inline-block;
   width: 20px;
   height: 20px;
@@ -248,7 +299,10 @@ body:not(.dark-mode) {
 
 /* Switch link */
 .auth-switch.signin-auth-switch,
-.auth-switch.signup-auth-switch {
+.auth-switch.signup-auth-switch,
+.auth-switch.otp-auth-switch,
+.auth-switch.forgot-auth-switch,
+.auth-switch.reset-auth-switch {
   text-align: center;
   margin-top: 1.5rem;
   color: var(--text);
@@ -257,7 +311,10 @@ body:not(.dark-mode) {
 }
 
 .auth-switch.signin-auth-switch a,
-.auth-switch.signup-auth-switch a {
+.auth-switch.signup-auth-switch a,
+.auth-switch.otp-auth-switch a,
+.auth-switch.forgot-auth-switch a,
+.auth-switch.reset-auth-switch a {
   color: #00f2fe;
   text-decoration: none;
   font-weight: bold;
@@ -265,8 +322,56 @@ body:not(.dark-mode) {
 }
 
 .auth-switch.signin-auth-switch a:hover,
-.auth-switch.signup-auth-switch a:hover {
+.auth-switch.signup-auth-switch a:hover,
+.auth-switch.otp-auth-switch a:hover,
+.auth-switch.forgot-auth-switch a:hover,
+.auth-switch.reset-auth-switch a:hover {
   color: #4facfe;
+}
+
+/* Resend OTP link */
+.resend-otp {
+  text-align: center;
+  margin-top: 1.5rem;
+  color: var(--text);
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+.resend-otp-button {
+  background: none;
+  border: none;
+  color: #00f2fe;
+  text-decoration: none;
+  font-weight: bold;
+  cursor: pointer;
+  transition: color 0.3s ease;
+  font-size: 0.9rem;
+  padding: 0;
+}
+
+.resend-otp-button:hover:not(:disabled) {
+  color: #4facfe;
+}
+
+.resend-otp-button:disabled {
+  color: rgba(255, 255, 255, 0.3);
+  cursor: not-allowed;
+}
+
+/* Auth-specific text styling */
+.otp-auth-form p,
+.forgot-auth-form p,
+.reset-auth-form p {
+  color: var(--text);
+  text-align: center;
+  margin-bottom: 1.5rem;
+  font-size: 1rem;
+}
+
+.otp-auth-form p strong,
+.reset-auth-form p strong {
+  color: #00f2fe;
 }
 
 /* Animations */
@@ -282,30 +387,45 @@ body:not(.dark-mode) {
 /* Responsive design - mobile */
 @media (max-width: 480px) {
   .auth-container.signin-auth-container,
-  .auth-container.signup-auth-container {
+  .auth-container.signup-auth-container,
+  .auth-container.otp-auth-container,
+  .auth-container.forgot-auth-container,
+  .auth-container.reset-auth-container {
     padding-top: 3rem;
   }
 
   .auth-form.signin-auth-form,
-  .auth-form.signup-auth-form {
+  .auth-form.signup-auth-form,
+  .auth-form.otp-auth-form,
+  .auth-form.forgot-auth-form,
+  .auth-form.reset-auth-form {
     padding: 1.5rem;
     margin: 0.5rem;
   }
 
   .auth-form.signin-auth-form h2,
-  .auth-form.signup-auth-form h2 {
+  .auth-form.signup-auth-form h2,
+  .auth-form.otp-auth-form h2,
+  .auth-form.forgot-auth-form h2,
+  .auth-form.reset-auth-form h2 {
     font-size: 1.5rem;
     margin-bottom: 1.5rem;
   }
 
   .form-group.signin-form-group input,
-  .form-group.signup-form-group input {
+  .form-group.signup-form-group input,
+  .form-group.otp-form-group input,
+  .form-group.forgot-form-group input,
+  .form-group.reset-form-group input {
     padding: 0.5rem 0.7rem;
     font-size: 0.9rem;
   }
 
   .auth-button.signin-auth-button,
-  .auth-button.signup-auth-button {
+  .auth-button.signup-auth-button,
+  .auth-button.otp-auth-button,
+  .auth-button.forgot-auth-button,
+  .auth-button.reset-auth-button {
     padding: 0.7rem;
     font-size: 0.9rem;
   }
@@ -314,33 +434,54 @@ body:not(.dark-mode) {
     font-size: 0.8rem;
     gap: 8px;
   }
+
+  .otp-auth-form p,
+  .forgot-auth-form p,
+  .reset-auth-form p {
+    font-size: 0.9rem;
+  }
 }
 
 /* Desktop-specific adjustments (wider form) */
 @media (min-width: 769px) {
   .auth-container.signin-auth-container,
-  .auth-container.signup-auth-container {
+  .auth-container.signup-auth-container,
+  .auth-container.otp-auth-container,
+  .auth-container.forgot-auth-container,
+  .auth-container.reset-auth-container {
     padding-top: 4rem;
   }
 
   .auth-form.signin-auth-form,
-  .auth-form.signup-auth-form {
+  .auth-form.signup-auth-form,
+  .auth-form.otp-auth-form,
+  .auth-form.forgot-auth-form,
+  .auth-form.reset-auth-form {
     max-width: 600px;
     padding: 2.5rem;
   }
 
   .auth-form.signin-auth-form h2,
-  .auth-form.signup-auth-form h2 {
+  .auth-form.signup-auth-form h2,
+  .auth-form.otp-auth-form h2,
+  .auth-form.forgot-auth-form h2,
+  .auth-form.reset-auth-form h2 {
     font-size: 2rem;
   }
 
   .form-group.signin-form-group,
-  .form-group.signup-form-group {
+  .form-group.signup-form-group,
+  .form-group.otp-form-group,
+  .form-group.forgot-form-group,
+  .form-group.reset-form-group {
     padding: 0.3rem 1rem;
   }
 
   .auth-button.signin-auth-button,
-  .auth-button.signup-auth-button {
+  .auth-button.signup-auth-button,
+  .auth-button.otp-auth-button,
+  .auth-button.forgot-auth-button,
+  .auth-button.reset-auth-button {
     padding: 1rem;
     font-size: 1.1rem;
   }

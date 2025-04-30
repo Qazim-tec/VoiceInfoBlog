@@ -1,7 +1,9 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useUser } from "../../context/UserContext";
 import { useCategories } from "../../hooks/useCategories";
+import { API_BASE_URL } from "../../config/apiConfig";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import "./CreatePost.css";
@@ -10,10 +12,10 @@ interface Post {
   id: number;
   title: string;
   content: string;
-  excerpt: string;
+  excerpt: string | null;
   featuredImageUrl: string;
+  additionalImageUrls: string[];
   categoryId: number;
-  tags: string[];
   slug: string;
   createdAt: string;
   views: number;
@@ -22,6 +24,7 @@ interface Post {
   authorId: string;
   authorName: string;
   categoryName: string;
+  tags: string[];
   commentsCount: number;
   comments: any[];
 }
@@ -31,8 +34,11 @@ const CreatePost: React.FC = () => {
   const [content, setContent] = useState<string>("");
   const [excerpt, setExcerpt] = useState<string>("");
   const [featuredImage, setFeaturedImage] = useState<File | null>(null);
+  const [featuredImageUrl, setFeaturedImageUrl] = useState<string>("");
+  const [removeFeaturedImage, setRemoveFeaturedImage] = useState<boolean>(false);
+  const [additionalImages, setAdditionalImages] = useState<(File | string | null)[]>([null, null, null]);
+  const [additionalImagesToDelete, setAdditionalImagesToDelete] = useState<string[]>([]);
   const [categoryId, setCategoryId] = useState<number>(0);
-  const [tags, setTags] = useState<string>("");
   const [error, setError] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
@@ -48,7 +54,13 @@ const CreatePost: React.FC = () => {
       setContent(postToEdit.content);
       setExcerpt(postToEdit.excerpt || "");
       setCategoryId(postToEdit.categoryId);
-      setTags(postToEdit.tags.join(", "));
+      setFeaturedImageUrl(postToEdit.featuredImageUrl || "");
+      setAdditionalImages([
+        ...postToEdit.additionalImageUrls.slice(0, 3),
+        ...Array(3 - postToEdit.additionalImageUrls.slice(0, 3).length).fill(null),
+      ]);
+      setRemoveFeaturedImage(false);
+      setAdditionalImagesToDelete([]);
     }
   }, [postToEdit]);
 
@@ -57,10 +69,40 @@ const CreatePost: React.FC = () => {
     return null;
   }
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFeaturedImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setFeaturedImage(e.target.files[0]);
+      setFeaturedImageUrl("");
+      setRemoveFeaturedImage(false);
     }
+  };
+
+  const handleRemoveFeaturedImage = () => {
+    setFeaturedImage(null);
+    setFeaturedImageUrl("");
+    setRemoveFeaturedImage(true);
+  };
+
+  const handleAdditionalImageChange = (index: number) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const newAdditionalImages = [...additionalImages];
+      const existingImage = newAdditionalImages[index];
+      if (typeof existingImage === "string" && !additionalImagesToDelete.includes(existingImage)) {
+        setAdditionalImagesToDelete([...additionalImagesToDelete, existingImage]);
+      }
+      newAdditionalImages[index] = e.target.files[0];
+      setAdditionalImages(newAdditionalImages);
+    }
+  };
+
+  const handleRemoveAdditionalImage = (index: number) => {
+    const image = additionalImages[index];
+    if (typeof image === "string" && !additionalImagesToDelete.includes(image)) {
+      setAdditionalImagesToDelete([...additionalImagesToDelete, image]);
+    }
+    const newAdditionalImages = [...additionalImages];
+    newAdditionalImages[index] = null;
+    setAdditionalImages(newAdditionalImages);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -68,8 +110,20 @@ const CreatePost: React.FC = () => {
     setError("");
     setIsSubmitting(true);
 
-    if (!title.trim() || !content.trim()) {
-      setError("Title and Content are required");
+    if (!title.trim()) {
+      setError("Title is required");
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (!content.trim()) {
+      setError("Content is required");
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (categoryId === 0) {
+      setError("Please select a category");
       setIsSubmitting(false);
       return;
     }
@@ -77,17 +131,32 @@ const CreatePost: React.FC = () => {
     const formData = new FormData();
     formData.append("Title", title);
     formData.append("Content", content);
-    if (excerpt) formData.append("Excerpt", excerpt);
-    if (featuredImage) formData.append("FeaturedImage", featuredImage);
-    formData.append("CategoryId", categoryId.toString());
-    if (tags) {
-      const tagsArray = tags.split(",").map((tag) => tag.trim()).filter(tag => tag);
-      tagsArray.forEach((tag) => formData.append("Tags", tag));
+    formData.append("Excerpt", excerpt);
+    if (featuredImage && !removeFeaturedImage) {
+      formData.append("FeaturedImage", featuredImage);
     }
+    additionalImages.forEach((image) => {
+      if (image instanceof File) {
+        formData.append("AdditionalImages", image);
+      }
+    });
+    if (postToEdit && additionalImagesToDelete.length > 0) {
+      additionalImagesToDelete.forEach((url, index) => {
+        formData.append(`AdditionalImagesToDelete[${index}]`, url);
+      });
+    }
+    formData.append("CategoryId", categoryId.toString());
+
+    // Debug FormData
+    const formDataEntries: { [key: string]: any } = {};
+    for (const [key, value] of formData.entries()) {
+      formDataEntries[key] = value;
+    }
+    console.log("FormData sent:", formDataEntries);
 
     const url = postToEdit
-      ? `https://voiceinfo.onrender.com/api/Post/update/${postToEdit.id}`
-      : "https://voiceinfo.onrender.com/api/Post/create";
+      ? `${API_BASE_URL}/api/Post/update/${postToEdit.id}`
+      : `${API_BASE_URL}/api/Post/create`;
     const method = postToEdit ? "PUT" : "POST";
 
     try {
@@ -101,13 +170,17 @@ const CreatePost: React.FC = () => {
 
       if (!response.ok) {
         const errorText = await response.text();
+        console.error("API error response:", errorText);
         throw new Error(errorText || `Failed to ${postToEdit ? "update" : "create"} post`);
       }
 
       const data: { data: Post; message: string } = await response.json();
       const newPost: Post = data.data;
 
-      // Navigate with the updated post data
+      console.log("API response:", data);
+
+      
+
       navigate(`/post/${newPost.slug}`, {
         replace: true,
         state: { updatedPost: newPost },
@@ -143,7 +216,7 @@ const CreatePost: React.FC = () => {
 
         <form onSubmit={handleSubmit} encType="multipart/form-data" className="post-form">
           <div className="form-group">
-            <label htmlFor="title">Title</label>
+            <label htmlFor="title">Title *</label>
             <input
               type="text"
               id="title"
@@ -155,7 +228,7 @@ const CreatePost: React.FC = () => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="content">Content</label>
+            <label htmlFor="content">Content *</label>
             <ReactQuill
               value={content}
               onChange={setContent}
@@ -177,27 +250,77 @@ const CreatePost: React.FC = () => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="featuredImage">Featured Image</label>
+            <label htmlFor="featuredImage">Featured Image (Optional)</label>
             <input
               type="file"
               id="featuredImage"
               accept="image/*"
-              onChange={handleImageChange}
+              onChange={handleFeaturedImageChange}
             />
-            {featuredImage ? (
-              <p className="file-preview">{featuredImage.name}</p>
-            ) : postToEdit?.featuredImageUrl ? (
-              <p className="file-preview">Current image: (Previously uploaded)</p>
-            ) : null}
+            {(featuredImage || featuredImageUrl) && (
+              <div className="image-preview">
+                {featuredImage ? (
+                  <p className="file-preview">{featuredImage.name}</p>
+                ) : featuredImageUrl ? (
+                  <>
+                    <img src={featuredImageUrl} alt="Featured image" />
+                    <div className="remove-image-container">
+                      <button
+                        type="button"
+                        className="remove-image"
+                        onClick={handleRemoveFeaturedImage}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </>
+                ) : null}
+              </div>
+            )}
           </div>
 
           <div className="form-group">
-            <label htmlFor="category">Category</label>
+            <label>Additional Images (Optional, up to 3)</label>
+            {additionalImages.map((image, index) => (
+              <div key={index} className="additional-image-input">
+                <input
+                  type="file"
+                  id={`additionalImage${index}`}
+                  accept="image/*"
+                  onChange={handleAdditionalImageChange(index)}
+                />
+                {image && (
+                  <div className="image-preview">
+                    {image instanceof File ? (
+                      <p className="file-preview">{image.name}</p>
+                    ) : (
+                      <>
+                        <img src={image as string} alt={`Additional image ${index + 1}`} />
+                        <div className="remove-image-container">
+                          <button
+                            type="button"
+                            className="remove-image"
+                            onClick={() => handleRemoveAdditionalImage(index)}
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="category">Category *</label>
             <select
               id="category"
               value={categoryId}
               onChange={(e) => setCategoryId(parseInt(e.target.value))}
               disabled={catLoading}
+              required
             >
               <option value={0}>Select a category</option>
               {catLoading ? (
@@ -210,17 +333,6 @@ const CreatePost: React.FC = () => {
                 ))
               )}
             </select>
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="tags">Tags</label>
-            <input
-              type="text"
-              id="tags"
-              value={tags}
-              onChange={(e) => setTags(e.target.value)}
-              placeholder="e.g., health, tips, news (comma-separated)"
-            />
           </div>
 
           <div className="form-actions">

@@ -4,15 +4,15 @@
 }
 
 .article-page {
-  width: 100%; /* Full width by default */
-  min-width: 900px; /* Minimum width for desktop */
-  max-width: 900px; /* Maximum width for desktop */
+  width: 100%;
+  min-width: 900px;
+  max-width: 900px;
   margin: 2rem auto;
   padding: 1rem;
   background: #fff;
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  overflow-x: hidden; /* Prevent horizontal overflow */
+  overflow-x: hidden;
 }
 
 .article-header {
@@ -67,7 +67,7 @@
 
 .article-image {
   width: 100%;
-  max-width: 600px; /* Default max-width for desktop */
+  max-width: 600px;
   height: auto;
   border-radius: 8px;
   margin: 0 auto 2rem;
@@ -100,6 +100,147 @@
   padding: 2rem;
   font-size: 1.2rem;
   color: #333;
+}
+
+/* Interaction Section (Like Button) */
+.interaction-section {
+  margin: 1rem 0;
+  padding: 1rem 0;
+  border-top: 1px solid #ddd;
+  width: 100%;
+  max-width: 100%;
+}
+
+.like-section {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.like-btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  background: #007bff;
+  color: white;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.like-btn.liked {
+  background: #dc3545;
+}
+
+.like-btn:hover:not(:disabled) {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.like-btn:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+
+.login-prompt {
+  font-size: 0.9rem;
+  color: #e74c3c;
+}
+
+/* Share Section */
+.share-section {
+  margin: 20px 0;
+  padding: 15px 0;
+  border-top: 1px solid #ddd;
+  border-bottom: 1px solid #ddd;
+}
+
+.share-section h3 {
+  font-size: 1.2em;
+  margin-bottom: 10px;
+}
+
+.share-buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.share-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  color: white;
+  font-weight: bold;
+  font-size: 1em;
+  transition: opacity 0.2s;
+  flex-shrink: 0;
+}
+
+.share-btn.whatsapp {
+  background-color: #25D366;
+}
+
+.share-btn.x {
+  background-color: #000000;
+}
+
+.share-btn.facebook {
+  background-color: #3B5998;
+}
+
+.share-btn.native {
+  background-color: #6c757d;
+}
+
+.share-btn:hover {
+  opacity: 0.9;
+}
+
+/* Additional Images Section */
+.additional-images-section {
+  margin-top: 2rem;
+  padding: 1rem;
+  width: 100%;
+  max-width: 100%;
+}
+
+.additional-images-section h3 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  color: #333;
+  position: relative;
+  padding-bottom: 0.5rem;
+}
+
+.additional-images-section h3::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 50px;
+  height: 3px;
+  background: #007bff;
+  border-radius: 2px;
+}
+
+.additional-images {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.additional-image {
+  max-width: 300px;
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* Comments Section */
@@ -137,7 +278,7 @@
 
 /* Root Comment Styling */
 .comment-card {
-  background: #f0f0f0; /* Darker gray for root comments */
+  background: #f0f0f0;
   border-radius: 8px;
   padding: 1.5rem;
   margin-bottom: 1.5rem;
@@ -149,10 +290,8 @@
 
 /* Reply Styling */
 .comment-card.reply {
-  background: #fafafa; /* Lighter gray for replies */
+  background: #fafafa;
 }
-
-
 
 .comment-header {
   display: flex;
@@ -169,7 +308,7 @@
 
 .comment-timestamp {
   font-size: 0.85rem;
-  color: #888; /* Fixed from invalid #ṛ */
+  color: #888;
 }
 
 .parent-comment-reference {
@@ -343,6 +482,14 @@
   margin-bottom: 1rem;
 }
 
+/* Login Message */
+.login-message {
+  font-size: 1rem;
+  color: #e74c3c;
+  text-align: center;
+  margin: 1rem 0;
+}
+
 /* Dark Mode */
 body.dark-mode .article-page {
   background: #333;
@@ -382,6 +529,47 @@ body.dark-mode .edit-post-btn:hover {
   background: #63b3ed;
 }
 
+body.dark-mode .interaction-section {
+  border-top-color: #555;
+}
+
+body.dark-mode .like-btn {
+  background: #1e90ff;
+}
+
+body.dark-mode .like-btn.liked {
+  background: #e74c3c;
+}
+
+body.dark-mode .like-btn:disabled {
+  background: #555;
+}
+
+body.dark-mode .login-prompt {
+  color: #f87171;
+}
+
+body.dark-mode .share-section {
+  border-top-color: #555;
+  border-bottom-color: #555;
+}
+
+body.dark-mode .share-section h3 {
+  color: #f5f5f5;
+}
+
+body.dark-mode .additional-images-section h3 {
+  color: #f5f5f5;
+}
+
+body.dark-mode .additional-images-section h3::after {
+  background: #1e90ff;
+}
+
+body.dark-mode .additional-image {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
 body.dark-mode .comments-section {
   border-top-color: #555;
 }
@@ -404,7 +592,6 @@ body.dark-mode .comment-card {
 body.dark-mode .comment-card.reply {
   background: #404040;
 }
-
 
 body.dark-mode .comment-author {
   color: #1e90ff;
@@ -500,14 +687,6 @@ body.dark-mode .replies .comment-card {
   background: #404040;
 }
 
-/* Login Message */
-.login-message {
-  font-size: 1rem;
-  color: #e74c3c;
-  text-align: center;
-  margin: 1rem 0;
-}
-
 body.dark-mode .login-message {
   color: #f87171;
 }
@@ -516,10 +695,10 @@ body.dark-mode .login-message {
 @media (max-width: 768px) {
   .article-page,
   body.dark-mode .article-page {
-    min-width: 0; /* Override desktop min-width */
-    max-width: 100%; /* Full width on mobile */
-    margin: 1rem auto; /* Reduced margin for mobile */
-    padding: 1rem; /* Increased padding for spacing from edges */
+    min-width: 0;
+    max-width: 100%;
+    margin: 1rem auto;
+    padding: 1rem;
     overflow-x: hidden;
   }
 
@@ -544,20 +723,76 @@ body.dark-mode .login-message {
   }
 
   .article-image {
-    max-width: 100%; /* Full width of container */
-    width: 90%; /* Slightly smaller than full width for spacing */
-    margin: 0 auto 1.5rem; /* Centered with bottom margin */
+    max-width: 100%;
+    width: 90%;
+    margin: 0 auto 1.5rem;
   }
 
   .article-content {
     font-size: 1rem;
-    padding: 0 0.5rem; /* Added padding on both sides for spacing */
+    padding: 0 0.5rem;
+  }
+
+  .interaction-section {
+    padding: 0.5rem 0;
+  }
+
+  .like-section {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .like-btn {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+  }
+
+  .login-prompt {
+    font-size: 0.8rem;
+  }
+
+  .share-section {
+    padding: 10px 0;
+  }
+
+  .share-section h3 {
+    font-size: 1.1em;
+  }
+
+  .share-buttons {
+    gap: 8px;
+  }
+
+  .share-btn {
+    padding: 6px 12px;
+    font-size: 0.9em;
+  }
+
+  .additional-images-section {
+    padding: 0.5rem;
+  }
+
+  .additional-images-section h3 {
+    font-size: 1.3rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .additional-images-section h3::after {
+    width: 40px;
+  }
+
+  .additional-images {
+    gap: 0.75rem;
+  }
+
+  .additional-image {
+    max-width: 250px;
   }
 
   .article-footer {
     font-size: 0.85rem;
     margin-top: 1.5rem;
-    padding: 0 0.5rem; /* Added padding for spacing */
+    padding: 0 0.5rem;
   }
 
   .article-loading,
@@ -567,11 +802,10 @@ body.dark-mode .login-message {
     font-size: 1rem;
   }
 
-  /* Comments Section */
   .comments-section,
   body.dark-mode .comments-section {
     margin-top: 2rem;
-    padding: 1.5rem 0.5rem; /* Equal padding on both sides */
+    padding: 1.5rem 0.5rem;
   }
 
   .comments-section h2 {
@@ -590,7 +824,7 @@ body.dark-mode .login-message {
   .comment-card,
   body.dark-mode .comment-card {
     padding: 1rem;
-    margin: 0.75rem 0.5rem; /* Equal margins on left and right */
+    margin: 0.75rem 0.5rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     border-radius: 6px;
     overflow-x: hidden;
@@ -669,13 +903,13 @@ body.dark-mode .login-message {
   }
 
   .replies {
-    margin-left: 0; /* Remove extra left margin for symmetry */
+    margin-left: 0;
     padding-left: 0.25rem;
   }
 
   .replies .comment-card {
     padding: 0.75rem;
-    margin: 0.75rem 0.5rem; /* Equal margins on left and right */
+    margin: 0.75rem 0.5rem;
   }
 
   body.dark-mode .comment-card {
@@ -688,7 +922,7 @@ body.dark-mode .login-message {
   .article-page,
   body.dark-mode .article-page {
     margin: 0.5rem auto;
-    padding: 0.75rem; /* Adjusted padding */
+    padding: 0.75rem;
     overflow-x: hidden;
   }
 
@@ -701,18 +935,56 @@ body.dark-mode .login-message {
   }
 
   .article-image {
-    width: 85%; /* Further reduced for smaller screens */
+    width: 85%;
     margin-bottom: 1rem;
   }
 
   .article-content {
     font-size: 0.9rem;
-    padding: 0 0.5rem; /* Consistent padding */
+    padding: 0 0.5rem;
+  }
+
+  .interaction-section {
+    padding: 0.5rem 0;
+  }
+
+  .like-btn {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.8rem;
+  }
+
+  .login-prompt {
+    font-size: 0.75rem;
+  }
+
+  .share-section h3 {
+    font-size: 1em;
+  }
+
+  .share-buttons {
+    gap: 6px;
+  }
+
+  .share-btn {
+    padding: 5px 10px;
+    font-size: 0.8em;
+  }
+
+  .additional-images-section {
+    padding: 0.5rem;
+  }
+
+  .additional-images-section h3 {
+    font-size: 1.2rem;
+  }
+
+  .additional-image {
+    max-width: 200px;
   }
 
   .comments-section {
     margin-top: 1.5rem;
-    padding: 1rem 0.5rem; /* Equal padding on both sides */
+    padding: 1rem 0.5rem;
   }
 
   .comments-section h2 {
@@ -721,11 +993,11 @@ body.dark-mode .login-message {
 
   .comment-card {
     padding: 0.75rem;
-    margin: 0.5rem 0.25rem; /* Equal margins on left and right */
+    margin: 0.5rem 0.25rem;
   }
 
   .replies .comment-card {
-    margin: 0.5rem 0.25rem; /* Equal margins for replies */
+    margin: 0.5rem 0.25rem;
   }
 
   .comment-form {
@@ -737,90 +1009,3 @@ body.dark-mode .login-message {
   }
 }
 
-/* Share Section */
-.share-section {
-  margin: 20px 0;
-  padding: 15px 0;
-  border-top: 1px solid #ddd;
-  border-bottom: 1px solid #ddd;
-}
-
-.share-section h3 {
-  font-size: 1.2em;
-  margin-bottom: 10px;
-}
-
-.share-buttons {
-  display: flex;
-  gap: 10px;
-  flex-wrap: nowrap; /* Keeps buttons in a single line */
-  overflow-x: auto; /* Allows horizontal scrolling if buttons overflow */
-  white-space: nowrap; /* Prevents text wrapping */
-}
-
-.share-btn {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  color: white;
-  font-weight: bold;
-  font-size: 1em;
-  transition: opacity 0.2s;
-  flex-shrink: 0; /* Prevents buttons from shrinking */
-}
-
-.share-btn.whatsapp {
-  background-color: #25D366;
-}
-
-.share-btn.x {
-  background-color: #000000;
-}
-
-.share-btn.facebook {
-  background-color: #3B5998;
-}
-
-.share-btn.native {
-  background-color: #6c757d;
-}
-
-.share-btn:hover {
-  opacity: 0.9;
-}
-
-/* Mobile Responsiveness for Share Buttons */
-@media (max-width: 768px) {
-  .share-section {
-    padding: 10px 0;
-  }
-
-  .share-section h3 {
-    font-size: 1.1em;
-  }
-
-  .share-buttons {
-    gap: 8px; /* Slightly reduced gap for tighter spacing */
-  }
-
-  .share-btn {
-    padding: 6px 12px; /* Reduced padding for smaller screens */
-    font-size: 0.9em; /* Slightly smaller text */
-  }
-}
-
-@media (max-width: 480px) {
-  .share-section h3 {
-    font-size: 1em;
-  }
-
-  .share-buttons {
-    gap: 6px; /* Further reduced gap */
-  }
-
-  .share-btn {
-    padding: 5px 10px; /* Even smaller padding */
-    font-size: 0.8em; /* Smaller text for very small screens */
-  }
-}

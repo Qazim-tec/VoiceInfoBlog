@@ -1,12 +1,11 @@
-// src/hooks/useCategories.ts
 import { useState, useEffect, useRef } from "react";
 import { useUser } from "../context/UserContext";
+import { API_BASE_URL } from "../config/apiConfig";
 
 interface Category {
   id: number;
   name: string;
   createdAt: string;
-  // Note: isDeleted is not returned by CategoryResponseDto, so we won't include it here
 }
 
 export const useCategories = () => {
@@ -31,7 +30,7 @@ export const useCategories = () => {
           headers["Authorization"] = `Bearer ${user.token}`;
         }
 
-        const response = await fetch("https://voiceinfo.onrender.com/api/Category/all", {
+        const response = await fetch(`${API_BASE_URL}/api/Category/all`, {
           headers,
         });
 

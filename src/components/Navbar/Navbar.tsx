@@ -10,6 +10,7 @@ import {
 } from "react-icons/fa";
 import { useUser } from "../../context/UserContext";
 import { useCategories } from "../../hooks/useCategories";
+import { API_BASE_URL } from "../../config/apiConfig"; // Added import
 import "./Navbar.css";
 import Logo from "../../assets/INFOS_LOGO[1].png";
 
@@ -53,7 +54,7 @@ const Navbar: React.FC = () => {
         }
 
         const response = await fetch(
-          `https://voiceinfo.onrender.com/api/Search?query=${encodeURIComponent(searchQuery)}&page=1`,
+          `${API_BASE_URL}/api/Search?query=${encodeURIComponent(searchQuery)}&page=1`,
           { headers }
         );
         if (!response.ok) throw new Error("Failed to fetch search results");

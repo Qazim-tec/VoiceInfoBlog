@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useUser } from "../../context/UserContext";
+import { API_BASE_URL } from "../../config/apiConfig"; // Added import
 import "./MyPosts.css";
 
 interface Post {
@@ -37,7 +38,7 @@ const MyPosts: React.FC = () => {
 
       try {
         setLoading(true);
-        const response = await fetch(`https://voiceinfo.onrender.com/api/MyPosts?page=${currentPage}`, {
+        const response = await fetch(`${API_BASE_URL}/api/MyPosts?page=${currentPage}`, {
           headers: {
             Authorization: `Bearer ${user.token}`,
           },
@@ -65,7 +66,7 @@ const MyPosts: React.FC = () => {
     if (!window.confirm("Are you sure you want to delete this post?")) return;
 
     try {
-      const response = await fetch(`https://voiceinfo.onrender.com/api/Post/delete/${postId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/Post/delete/${postId}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${user?.token}`,

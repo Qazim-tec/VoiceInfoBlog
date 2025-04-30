@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useUser } from "../../context/UserContext";
 import { motion, useInView } from "framer-motion";
+import { API_BASE_URL } from "../../config/apiConfig"; // Added import
 import "./CategoriesSection.css";
 
 interface Post {
@@ -52,7 +53,7 @@ const CategoriesSection: React.FC = () => {
         headers["Authorization"] = `Bearer ${user.token}`;
       }
 
-      const response = await fetch("https://voiceinfo.onrender.com/api/Category/top-posts?postsPerCategory=3", { headers });
+      const response = await fetch(`${API_BASE_URL}/api/Category/top-posts?postsPerCategory=3`, { headers });
       if (!response.ok) {
         throw new Error("Failed to fetch categories with posts");
       }

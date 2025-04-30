@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import { API_BASE_URL } from "../../config/apiConfig"; // Added import
 import "./FeaturedPostsCarousel.css";
 
 interface Post {
@@ -40,7 +41,7 @@ const FeaturedPostsCarousel: React.FC = () => {
   const fetchFeaturedPosts = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`https://voiceinfo.onrender.com/api/FeaturedPosts?t=${Date.now()}`, {
+      const response = await fetch(`${API_BASE_URL}/api/FeaturedPosts?t=${Date.now()}`, {
         headers: {
           'Cache-Control': 'no-cache, no-store, must-revalidate',
           'Pragma': 'no-cache',

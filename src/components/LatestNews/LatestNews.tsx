@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useInView } from 'framer-motion';
+import { API_BASE_URL } from "../../config/apiConfig"; // Added import
 import './LatestNews.css';
 
 interface Post {
@@ -75,7 +76,7 @@ const LatestNews: React.FC = () => {
 
     try {
       setLoading(true);
-      const response = await fetch(`https://voiceinfo.onrender.com/api/LatestNews?page=${page}&t=${Date.now()}`, {
+      const response = await fetch(`${API_BASE_URL}/api/LatestNews?page=${page}&t=${Date.now()}`, {
         headers: {
           'Cache-Control': 'no-cache, no-store, must-revalidate',
           'Pragma': 'no-cache',

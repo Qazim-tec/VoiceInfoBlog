@@ -2,6 +2,7 @@ import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useUser } from "../../context/UserContext";
 import { Helmet } from "react-helmet-async";
+import { API_BASE_URL } from "../../config/apiConfig";
 import "./PostDetail.css";
 
 const postCache: { [slug: string]: { data: Post; timestamp: number } } = {};
@@ -23,8 +24,10 @@ interface Post {
   content: string;
   excerpt: string;
   featuredImageUrl: string;
+  additionalImageUrls: string[];
   views: number;
   isFeatured: boolean;
+  isLatestNews: boolean;
   createdAt: string;
   slug: string;
   authorId: string;
@@ -33,6 +36,9 @@ interface Post {
   categoryName: string;
   tags: string[];
   comments: Comment[];
+  commentsCount: number;
+  likesCount: number;
+  isLikedByUser: boolean;
 }
 
 const PostDetail: React.FC = () => {
@@ -46,6 +52,7 @@ const PostDetail: React.FC = () => {
   const [editedContent, setEditedContent] = useState("");
   const [replyingToCommentId, setReplyingToCommentId] = useState<number | null>(null);
   const [newReply, setNewReply] = useState("");
+  const [isLiking, setIsLiking] = useState(false);
 
   const { user } = useUser();
   const currentUserId = user?.userId || "";
@@ -55,7 +62,9 @@ const PostDetail: React.FC = () => {
   const location = useLocation();
   const updatedPost = location.state?.updatedPost as Post | undefined;
 
-  const BASE_URL = "https://voice-info-blog.vercel.app"; // Your Vercel domain
+  const BASE_URL = "https://voice-info-blog.vercel.app";
+  const BACKEND_URL = "http://13.60.116.82";
+  const defaultImageUrl = "/INFOS_LOGO%5B1%5D.png"; // Keep exact pattern
 
   useEffect(() => {
     const fetchPost = async () => {
@@ -76,7 +85,7 @@ const PostDetail: React.FC = () => {
           return;
         }
 
-        const response = await fetch(`https://voiceinfo.onrender.com/api/Post/slug/${slug}`, {
+        const response = await fetch(`${API_BASE_URL}/api/Post/slug/${slug}`, {
           headers: user?.token ? { Authorization: `Bearer ${user.token}` } : {},
         });
         if (!response.ok) throw new Error("Failed to fetch post details");
@@ -97,7 +106,7 @@ const PostDetail: React.FC = () => {
 
   const fetchComments = async (postId: number) => {
     try {
-      const response = await fetch(`https://voiceinfo.onrender.com/api/Comment/post/${postId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/Comment/post/${postId}`, {
         headers: user?.token ? { Authorization: `Bearer ${user.token}` } : {},
       });
       if (!response.ok) throw new Error("Failed to fetch comments");
@@ -108,10 +117,54 @@ const PostDetail: React.FC = () => {
     }
   };
 
+  const handleLikeToggle = async () => {
+    if (!isLoggedIn) {
+      setError("Please log in to interact with this post.");
+      setTimeout(() => setError(null), 3000);
+      return;
+    }
+    if (!post || isLiking) return;
+
+    setIsLiking(true);
+    const originalPost = { ...post };
+    const wasLiked = post.isLikedByUser;
+
+    setPost({
+      ...post,
+      likesCount: wasLiked ? post.likesCount - 1 : post.likesCount + 1,
+      isLikedByUser: !wasLiked,
+    });
+
+    try {
+      const endpoint = wasLiked ? "unlike" : "like";
+      const response = await fetch(`${API_BASE_URL}/api/Post/${endpoint}/${post.id}`, {
+        method: "POST",
+        headers: {
+          accept: "*/*",
+          Authorization: `Bearer ${user.token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to ${endpoint} post: ${errorText}`);
+      }
+
+      setError(null);
+    } catch (err) {
+      setError((err as Error).message);
+      setTimeout(() => setError(null), 3000);
+      setPost(originalPost);
+    } finally {
+      setIsLiking(false);
+    }
+  };
+
   const handleCommentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isLoggedIn) {
       setError("Please log in to post a comment.");
+      setTimeout(() => setError(null), 3000);
       return;
     }
     if (!post) return;
@@ -137,7 +190,7 @@ const PostDetail: React.FC = () => {
     setNewComment("");
 
     try {
-      const response = await fetch("https://voiceinfo.onrender.com/api/Comment/create", {
+      const response = await fetch(`${API_BASE_URL}/api/Comment/create`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -161,6 +214,7 @@ const PostDetail: React.FC = () => {
     } catch (err) {
       console.log("Post error:", err);
       setError((err as Error).message);
+      setTimeout(() => setError(null), 3000);
       setComments((prevComments) => prevComments.filter((c) => c.id !== optimisticComment.id));
     }
   };
@@ -169,6 +223,7 @@ const PostDetail: React.FC = () => {
     e.preventDefault();
     if (!isLoggedIn) {
       setError("Please log in to reply.");
+      setTimeout(() => setError(null), 3000);
       return;
     }
     if (!post) return;
@@ -204,7 +259,7 @@ const PostDetail: React.FC = () => {
     setReplyingToCommentId(null);
 
     try {
-      const response = await fetch("https://voiceinfo.onrender.com/api/Comment/create", {
+      const response = await fetch(`${API_BASE_URL}/api/Comment/create`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -237,6 +292,7 @@ const PostDetail: React.FC = () => {
     } catch (err) {
       console.log("Reply error:", err);
       setError((err as Error).message);
+      setTimeout(() => setError(null), 3000);
       setComments((prevComments) => {
         const removeReply = (comments: Comment[]): Comment[] =>
           comments.map((comment) =>
@@ -252,6 +308,7 @@ const PostDetail: React.FC = () => {
   const handleEditSave = async (commentId: number) => {
     if (!isLoggedIn) {
       setError("Please log in to edit a comment.");
+      setTimeout(() => setError(null), 3000);
       return;
     }
     if (!post) return;
@@ -272,7 +329,7 @@ const PostDetail: React.FC = () => {
     setEditingCommentId(null);
 
     try {
-      const response = await fetch(`https://voiceinfo.onrender.com/api/Comment/update/${commentId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/Comment/update/${commentId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -299,6 +356,7 @@ const PostDetail: React.FC = () => {
     } catch (err) {
       console.log("Edit error:", err);
       setError((err as Error).message);
+      setTimeout(() => setError(null), 3000);
       setComments(originalComments);
       setEditingCommentId(commentId);
       setEditedContent(editedContent);
@@ -308,6 +366,7 @@ const PostDetail: React.FC = () => {
   const handleDelete = async (commentId: number) => {
     if (!isLoggedIn) {
       setError("Please log in to delete a comment.");
+      setTimeout(() => setError(null), 3000);
       return;
     }
     if (!post) return;
@@ -321,7 +380,7 @@ const PostDetail: React.FC = () => {
     setComments(removeComment(comments));
 
     try {
-      const response = await fetch(`https://voiceinfo.onrender.com/api/Comment/delete/${commentId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/Comment/delete/${commentId}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${user.token}`,
@@ -336,6 +395,7 @@ const PostDetail: React.FC = () => {
     } catch (err) {
       console.log("Delete error:", err);
       setError((err as Error).message);
+      setTimeout(() => setError(null), 3000);
       setComments(originalComments);
       if (post) await fetchComments(post.id);
     }
@@ -480,21 +540,20 @@ const PostDetail: React.FC = () => {
     return undefined;
   };
 
-  // Share functionality
   const shareUrl = post ? `${BASE_URL}/post/${post.slug}` : "";
-  const shareText = post ? `${post.title} - Check out this post!` : "";
-  const imageUrl = post?.featuredImageUrl || "https://via.placeholder.com/600x400";
+  const shareText = post ? `${post.title}\n${post.excerpt.substring(0, 100)}...` : "";
+  const imageUrl = post?.featuredImageUrl || defaultImageUrl;
+  // Ensure image URL is absolute
+  const absoluteImageUrl = imageUrl.startsWith("http")
+    ? imageUrl
+    : imageUrl === defaultImageUrl
+    ? `${BASE_URL}${imageUrl}`
+    : `${BACKEND_URL}${imageUrl.startsWith("/") ? "" : "/"}${imageUrl}`;
 
   const handleWhatsAppShare = () => {
+    const text = `${shareText}\n${shareUrl}`;
     window.open(
-      `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + " " + shareUrl)}`,
-      "_blank"
-    );
-  };
-
-  const handleXShare = () => {
-    window.open(
-      `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`,
+      `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`,
       "_blank"
     );
   };
@@ -502,6 +561,20 @@ const PostDetail: React.FC = () => {
   const handleFacebookShare = () => {
     window.open(
       `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`,
+      "_blank"
+    );
+  };
+
+  const handleTwitterShare = () => {
+    window.open(
+      `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`,
+      "_blank"
+    );
+  };
+
+  const handleLinkedInShare = () => {
+    window.open(
+      `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(shareUrl)}&title=${encodeURIComponent(post?.title || "")}&summary=${encodeURIComponent(post?.excerpt.substring(0, 100) || "")}`,
       "_blank"
     );
   };
@@ -535,13 +608,13 @@ const PostDetail: React.FC = () => {
         <meta name="description" content={post.excerpt || post.content.substring(0, 160)} />
         <meta property="og:title" content={post.title} />
         <meta property="og:description" content={post.excerpt || post.content.substring(0, 160)} />
-        <meta property="og:image" content={imageUrl} />
+        <meta property="og:image" content={absoluteImageUrl} />
         <meta property="og:url" content={shareUrl} />
         <meta property="og:type" content="article" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={post.title} />
         <meta name="twitter:description" content={post.excerpt || post.content.substring(0, 160)} />
-        <meta name="twitter:image" content={imageUrl} />
+        <meta name="twitter:image" content={absoluteImageUrl} />
       </Helmet>
 
       <article className="article-page">
@@ -566,23 +639,62 @@ const PostDetail: React.FC = () => {
           <div dangerouslySetInnerHTML={{ __html: post.content }} />
         </section>
 
+        <section className="interaction-section">
+          <div className="like-section">
+            <button
+              onClick={handleLikeToggle}
+              disabled={isLiking || !isLoggedIn}
+              className={`like-btn ${post.isLikedByUser ? "liked" : ""}`}
+              aria-label={post.isLikedByUser ? "Unlike this post" : "Like this post"}
+              aria-pressed={post.isLikedByUser}
+            >
+              {isLiking ? (
+                <span className="like-spinner"></span>
+              ) : (
+                <>{post.isLikedByUser ? "Unlike" : "Like"}</>
+              )}
+            </button>
+            <span className="like-count">Likes: {post.likesCount}</span>
+            {!isLoggedIn && <span className="login-prompt">Log in to like this post</span>}
+          </div>
+        </section>
+
         <section className="share-section">
           <h3>Share this post:</h3>
           <div className="share-buttons">
             <button onClick={handleWhatsAppShare} className="share-btn whatsapp">
               WhatsApp
             </button>
-            <button onClick={handleXShare} className="share-btn x">
-              X
-            </button>
             <button onClick={handleFacebookShare} className="share-btn facebook">
               Facebook
+            </button>
+            <button onClick={handleTwitterShare} className="share-btn twitter">
+              Twitter
+            </button>
+            <button onClick={handleLinkedInShare} className="share-btn linkedin">
+              LinkedIn
             </button>
             <button onClick={handleNativeShare} className="share-btn native">
               Share More
             </button>
           </div>
         </section>
+
+        {post.additionalImageUrls && post.additionalImageUrls.length > 0 && (
+          <section className="additional-images-section">
+            <h3>Additional Images</h3>
+            <div className="additional-images">
+              {post.additionalImageUrls.map((url, index) => (
+                <img
+                  key={index}
+                  src={url}
+                  alt={`Additional image ${index + 1}`}
+                  className="additional-image"
+                />
+              ))}
+            </div>
+          </section>
+        )}
 
         <section className="comments-section">
           <h2>Comments ({flattenedComments.length})</h2>

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FaEnvelope, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
 import { useUser } from "../../context/UserContext";
+import { API_BASE_URL } from "../../config/apiConfig"; // Added import
 import "./Auth.css";
 
 const SignIn: React.FC = () => {
@@ -21,7 +22,7 @@ const SignIn: React.FC = () => {
     setLoading(true);
 
     try {
-      const response = await fetch("https://voiceinfo.onrender.com/api/User/login", {
+      const response = await fetch(`${API_BASE_URL}/api/User/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -97,6 +98,9 @@ const SignIn: React.FC = () => {
         </form>
         <p className="auth-switch signin-auth-switch">
           Not a member? <Link to="/signup">Sign Up</Link>
+        </p>
+        <p className="auth-switch signin-auth-switch">
+          <Link to="/forgot-password">Forgot Password?</Link>
         </p>
       </div>
     </div>

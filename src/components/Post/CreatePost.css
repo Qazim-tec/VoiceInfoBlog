@@ -1,4 +1,4 @@
-/* components/CreatePost/CreatePost.css */
+
 /* Custom Properties for Consistency */
 :root {
   --spacing-sm: 0.5rem;
@@ -122,6 +122,105 @@
   min-height: 100px;
 }
 
+/* File Input */
+.form-group input[type="file"] {
+  padding: 0.75rem 0;
+  border: none;
+}
+
+/* Additional Images Input */
+.additional-image-input {
+  margin-top: var(--spacing-sm);
+}
+
+.additional-image-input input[type="file"] {
+  padding: 0.75rem 0;
+  font-size: 1rem;
+  color: var(--text-primary-light);
+}
+
+/* File Preview */
+.file-preview {
+  margin-top: var(--spacing-sm);
+  color: #7f8c8d;
+  font-size: 0.9rem;
+}
+
+/* Image Preview */
+.image-preview {
+  margin-top: var(--spacing-sm);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+}
+
+.image-preview img {
+  max-width: 150px;
+  height: auto;
+  border-radius: var(--radius);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.remove-image {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--error-text-light);
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.remove-image:hover {
+  background: #b71c1c;
+}
+
+/* Tags Input */
+.tags-input-container {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: center;
+}
+
+.tags-input-container input {
+  flex: 1;
+}
+
+.tags-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-sm);
+}
+
+.tag {
+  display: flex;
+  align-items: center;
+  background: var(--btn-secondary-light);
+  color: var(--text-primary-light);
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.remove-tag {
+  background: none;
+  border: none;
+  color: var(--error-text-light);
+  font-size: 1rem;
+  margin-left: var(--spacing-sm);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.remove-tag:hover {
+  color: #b71c1c;
+}
+
 /* Quill Editor Styles */
 .form-group .quill-editor {
   background: var(--card-bg-light);
@@ -144,13 +243,7 @@
   font-family: 'Segoe UI', sans-serif;
   font-size: 1rem;
   color: var(--text-primary-light);
-  background: var(--card-bg-light); /* Ensure consistent background in light mode */
-}
-
-.file-preview {
-  margin-top: var(--spacing-sm);
-  color: #7f8c8d;
-  font-size: 0.9rem;
+  background: var(--card-bg-light);
 }
 
 .form-actions {
@@ -224,8 +317,24 @@ body.dark-mode .form-group select:focus {
   border-color: var(--input-focus-dark);
 }
 
+body.dark-mode .additional-image-input input[type="file"] {
+  color: var(--text-primary-dark);
+}
+
+body.dark-mode .image-preview img {
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode .remove-image {
+  background: #ff6b6b;
+}
+
+body.dark-mode .remove-image:hover {
+  background: #e74c3c;
+}
+
 body.dark-mode .form-group .quill-editor {
-  background: var(--input-bg-dark); /* Match other input fields */
+  background: var(--input-bg-dark);
 }
 
 body.dark-mode .form-group .quill-editor .ql-toolbar {
@@ -235,8 +344,8 @@ body.dark-mode .form-group .quill-editor .ql-toolbar {
 
 body.dark-mode .form-group .quill-editor .ql-container {
   border-color: var(--input-border-dark);
-  background: var(--input-bg-dark); /* Fix white background in dark mode */
-  color: var(--text-primary-dark); /* Fix white text to readable color */
+  background: var(--input-bg-dark);
+  color: var(--text-primary-dark);
 }
 
 body.dark-mode .form-group .quill-editor .ql-picker-label,
@@ -260,4 +369,76 @@ body.dark-mode .btn-primary {
 
 body.dark-mode .btn-primary:hover:not(:disabled) {
   background: var(--btn-primary-hover-dark);
+}
+
+body.dark-mode .error-message {
+  background: #4a2c2c;
+  color: #ff6b6b;
+}
+
+body.dark-mode .file-preview {
+  color: #bdc3c7;
+}
+
+body.dark-mode .tag {
+  background: var(--btn-secondary-dark);
+  color: var(--text-primary-dark);
+}
+
+body.dark-mode .remove-tag {
+  color: #ff6b6b;
+}
+
+body.dark-mode .remove-tag:hover {
+  color: #e74c3c;
+}
+
+/* Responsive Design */
+@media (max-width: 600px) {
+  .create-post-page {
+    padding: var(--spacing-lg) var(--spacing-sm);
+  }
+
+  .create-post-container {
+    padding: var(--spacing-lg);
+  }
+
+  .create-post-container h1 {
+    font-size: 1.75rem;
+  }
+
+  .form-group label {
+    font-size: 1rem;
+  }
+
+  .form-group input,
+  .form-group textarea,
+  .form-group select,
+  .additional-image-input input[type="file"] {
+    font-size: 0.95rem;
+  }
+
+  .image-preview img {
+    max-width: 100px;
+  }
+
+  .remove-image {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+  }
+
+  .tags-input-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .tags-input-container button {
+    align-self: flex-end;
+    padding: 0.6rem 1.5rem;
+  }
+
+  .btn {
+    padding: 0.6rem 1.5rem;
+    font-size: 0.95rem;
+  }
 }
