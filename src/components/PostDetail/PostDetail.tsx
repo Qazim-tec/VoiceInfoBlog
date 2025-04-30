@@ -64,7 +64,7 @@ const PostDetail: React.FC = () => {
 
   const BASE_URL = "https://voice-info-blog.vercel.app";
   const BACKEND_URL = "http://13.60.116.82";
-  const defaultImageUrl = "/INFOS_LOGO%5B1%5D.png"; // Keep exact pattern
+  const defaultImageUrl = "/INFOS_LOGO%5B1%5D.png"; // Exact pattern
 
   useEffect(() => {
     const fetchPost = async () => {
@@ -90,10 +90,27 @@ const PostDetail: React.FC = () => {
         });
         if (!response.ok) throw new Error("Failed to fetch post details");
         const postData: { data: Post } = await response.json();
+        console.log("API Response:", postData.data); // Debug backend data
 
-        setPost(postData.data);
+        // Sanitize post data
+        const isTestTitle = /^[a-z0-9]{6,}$/i.test(postData.data.title) || postData.data.title.trim() === "";
+        const isTestExcerpt = postData.data.excerpt.startsWith("string") || postData.data.excerpt.trim() === "";
+        const sanitizedPost = {
+          ...postData.data,
+          title: isTestTitle ? "Untitled Post" : postData.data.title,
+          excerpt: isTestExcerpt
+            ? postData.data.content && postData.data.content.trim() !== ""
+              ? postData.data.content.substring(0, 160)
+              : "No description available."
+            : postData.data.excerpt,
+          featuredImageUrl: postData.data.featuredImageUrl && postData.data.featuredImageUrl.trim() !== ""
+            ? postData.data.featuredImageUrl
+            : defaultImageUrl,
+        };
+
+        setPost(sanitizedPost);
         setComments(postData.data.comments);
-        postCache[slug!] = { data: postData.data, timestamp: Date.now() };
+        postCache[slug!] = { data: sanitizedPost, timestamp: Date.now() };
         setLoading(false);
       } catch (err) {
         setError((err as Error).message);
@@ -541,7 +558,9 @@ const PostDetail: React.FC = () => {
   };
 
   const shareUrl = post ? `${BASE_URL}/post/${post.slug}` : "";
-  const shareText = post ? `${post.title}\n${post.excerpt.substring(0, 100)}...` : "";
+  const shareText = post
+    ? `${post.title}\n${post.excerpt.substring(0, 100)}${post.excerpt.length > 100 ? "..." : ""}`
+    : "";
   const imageUrl = post?.featuredImageUrl || defaultImageUrl;
   // Ensure image URL is absolute
   const absoluteImageUrl = imageUrl.startsWith("http")
@@ -549,6 +568,11 @@ const PostDetail: React.FC = () => {
     : imageUrl === defaultImageUrl
     ? `${BASE_URL}${imageUrl}`
     : `${BACKEND_URL}${imageUrl.startsWith("/") ? "" : "/"}${imageUrl}`;
+
+  // Log for debugging
+  console.log("Post Data:", post);
+  console.log("Image URL:", imageUrl);
+  console.log("Absolute Image URL:", absoluteImageUrl);
 
   const handleWhatsAppShare = () => {
     const text = `${shareText}\n${shareUrl}`;
@@ -605,15 +629,15 @@ const PostDetail: React.FC = () => {
     <>
       <Helmet>
         <title>{post.title}</title>
-        <meta name="description" content={post.excerpt || post.content.substring(0, 160)} />
+        <meta name="description" content={post.excerpt} />
         <meta property="og:title" content={post.title} />
-        <meta property="og:description" content={post.excerpt || post.content.substring(0, 160)} />
+        <meta property="og:description" content={post.excerpt} />
         <meta property="og:image" content={absoluteImageUrl} />
         <meta property="og:url" content={shareUrl} />
         <meta property="og:type" content="article" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={post.title} />
-        <meta name="twitter:description" content={post.excerpt || post.content.substring(0, 160)} />
+        <meta name="twitter:description" content={post.excerpt} />
         <meta name="twitter:image" content={absoluteImageUrl} />
       </Helmet>
 
@@ -633,7 +657,7 @@ const PostDetail: React.FC = () => {
           </p>
         </header>
 
-        <img src={imageUrl} alt={post.title} className="article-image" />
+        <img src={absoluteImageUrl} alt={post.title} className="article-image" />
 
         <section className="article-content">
           <div dangerouslySetInnerHTML={{ __html: post.content }} />
