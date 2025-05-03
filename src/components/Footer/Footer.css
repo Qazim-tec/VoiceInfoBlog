@@ -59,17 +59,25 @@
 .footer-social {
   display: flex;
   gap: 10px; /* Tighter gap for icons */
+  align-items: center; /* Ensure vertical alignment */
 }
 
 .footer-social a {
   color: #34495e; /* Light mode icon */
   text-decoration: none;
-  font-size: 1.1rem; /* Slightly larger for icons */
+  font-size: 1.1rem; /* Slightly larger for text icons */
   transition: color 0.2s ease;
 }
 
 .footer-social a:hover {
   color: #007bff; /* Light mode hover */
+}
+
+.footer-social-icon {
+  width: 20px; /* Match size of text icons */
+  height: 20px;
+  object-fit: contain; /* Prevent stretching */
+  vertical-align: middle; /* Align with text icons */
 }
 
 .footer-bottom {
@@ -143,6 +151,8 @@ body.dark-mode .footer-bottom p {
   .footer-links {
     flex-direction: row; /* Keep horizontal on tablet */
     gap: 15px;
+    flex-wrap: wrap; /* Allow wrapping for more links */
+    justify-content: center; /* Center links */
   }
 
   .footer-social {
@@ -182,7 +192,12 @@ body.dark-mode .footer-bottom p {
   }
 
   .footer-social a {
-    font-size: 1rem; /* Slightly smaller icons */
+    font-size: 1rem; /* Slightly smaller text icons */
+  }
+
+  .footer-social-icon {
+    width: 18px; /* Slightly smaller for mobile */
+    height: 18px;
   }
 
   .footer-bottom {

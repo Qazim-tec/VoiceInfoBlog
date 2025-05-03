@@ -1,14 +1,15 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { API_BASE_URL } from "../../config/apiConfig"; // Added import
+import { API_BASE_URL } from "../../config/apiConfig";
 import "./FeaturedPostsCarousel.css";
 
 interface Post {
   id: number;
   title: string;
-  excerpt: string;
-  featuredImageUrl: string;
+  excerpt: string | null;
+  content: string;
+  featuredImageUrl: string | null;
   slug: string;
   isFeatured: boolean;
 }
@@ -37,6 +38,26 @@ const FeaturedPostsCarousel: React.FC = () => {
     return true;
   });
   const [error, setError] = useState<string | null>(null);
+
+  // Utility function to strip HTML tags and clean text
+  const stripHtml = (html: string): string => {
+    const tmp = document.createElement("div");
+    tmp.innerHTML = html;
+    return tmp.textContent || tmp.innerText || "";
+  };
+
+  // Utility function to get excerpt or fallback to content
+  const getExcerpt = (post: Post): string => {
+    if (post.excerpt) return post.excerpt;
+    const plainText = stripHtml(post.content);
+    const maxLength = 160;
+    if (plainText.length <= maxLength) return plainText;
+    const trimmed = plainText.substring(0, maxLength);
+    const lastSpace = trimmed.lastIndexOf(" ");
+    return lastSpace > 0 ? trimmed.substring(0, lastSpace) + "..." : trimmed + "...";
+  };
+
+  const defaultImageUrl = "/INFOS_LOGO%5B1%5D.png"; // Default image URL
 
   const fetchFeaturedPosts = async () => {
     try {
@@ -177,7 +198,7 @@ const FeaturedPostsCarousel: React.FC = () => {
             <div className="fpc-carousel-item" key={post.id}>
               <div className="fpc-image-wrapper">
                 <img
-                  src={post.featuredImageUrl}
+                  src={post.featuredImageUrl || defaultImageUrl}
                   alt={post.title}
                   className="fpc-carousel-image"
                 />
@@ -189,7 +210,7 @@ const FeaturedPostsCarousel: React.FC = () => {
                     {post.title}
                   </Link>
                 </h2>
-                <p>{post.excerpt}</p>
+                <p>{getExcerpt(post)}</p>
                 <Link to={`/post/${post.slug}`} className="fpc-read-more">
                   Read More
                 </Link>

@@ -40,6 +40,16 @@ const TrendingPosts: React.FC = () => {
   });
   const [error, setError] = useState<string | null>(null);
 
+  // Utility function to capitalize first letter of each name
+  const capitalizeName = (name: string): string => {
+    return name
+      .split(" ")
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+      .join(" ");
+  };
+
+  const defaultImageUrl = "/INFOS_LOGO%5B1%5D.png"; // Default image URL
+
   const fetchTrendingPosts = async () => {
     try {
       setLoading(true);
@@ -121,14 +131,14 @@ const TrendingPosts: React.FC = () => {
           >
             <div className="trending-card">
               <img
-                src={post.featuredImageUrl}
+                src={post.featuredImageUrl || defaultImageUrl}
                 alt={post.title}
                 className="trending-image"
               />
               <div className="trending-card-content">
                 <h3 className="trending-title">{post.title}</h3>
                 <p className="trending-meta">
-                  By {post.authorName} | {formatDate(post.createdAt)}
+                  By {capitalizeName(post.authorName)} | {formatDate(post.createdAt)}
                 </p>
               </div>
             </div>

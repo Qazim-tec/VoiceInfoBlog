@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { useUser } from "../../context/UserContext";
 import { motion } from "framer-motion";
-import { API_BASE_URL } from "../../config/apiConfig"; // Added import
+import { API_BASE_URL } from "../../config/apiConfig";
 import "./CategoryPage.css";
 
 interface Post {
@@ -43,6 +43,16 @@ const CategoryPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const { user } = useUser();
   const { categoryName } = useParams<{ categoryName: string }>();
+  const navigate = useNavigate();
+
+  // Utility function to capitalize first letter of each name
+  const capitalizeName = (name: string | null): string => {
+    if (!name) return "Unknown";
+    return name
+      .split(" ")
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+      .join(" ");
+  };
 
   const getCacheKey = (page: number) => `category_${categoryName?.toLowerCase()}_page_${page}`;
 
@@ -161,6 +171,15 @@ const CategoryPage: React.FC = () => {
     };
   }, [categoryName, currentPage]);
 
+  // Handle Create Post button click
+  const handleCreatePost = () => {
+    if (user) {
+      navigate("/create-post");
+    } else {
+      navigate("/SignIn");
+    }
+  };
+
   // Loading animation variants
   const loadingVariants = {
     initial: { opacity: 0 },
@@ -181,6 +200,8 @@ const CategoryPage: React.FC = () => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
+  const defaultImageUrl = "/INFOS_LOGO%5B1%5D.png"; // Default image URL
 
   if (loading) {
     return (
@@ -219,6 +240,12 @@ const CategoryPage: React.FC = () => {
   return (
     <div className="category-page">
       <h1>{categoryName} News</h1>
+      <button
+        className="category-create-post-btn"
+        onClick={handleCreatePost}
+      >
+        Create Post
+      </button>
       {posts.length === 0 ? (
         <p className="no-posts">No posts found in this category.</p>
       ) : (
@@ -227,22 +254,18 @@ const CategoryPage: React.FC = () => {
             {posts.map((post) => (
               <div key={post.id} className="post-item">
                 <div className="post-image-container">
-                  {post.featuredImageUrl ? (
-                    <img
-                      src={post.featuredImageUrl}
-                      alt={post.title}
-                      className="post-image"
-                    />
-                  ) : (
-                    <div className="no-image">No Image</div>
-                  )}
+                  <img
+                    src={post.featuredImageUrl || defaultImageUrl}
+                    alt={post.title}
+                    className="post-image"
+                  />
                 </div>
                 <div className="post-content">
                   <Link to={`/post/${post.slug}`} className="post-title-link">
                     <h2 className="post-title">{post.title}</h2>
                   </Link>
                   <p className="post-meta">
-                    By {post.authorName || "Unknown"} • {formatDate(post.createdAt)}
+                    By {capitalizeName(post.authorName)} • {formatDate(post.createdAt)}
                   </p>
                 </div>
               </div>

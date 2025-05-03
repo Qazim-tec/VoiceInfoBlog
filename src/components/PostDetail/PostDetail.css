@@ -85,14 +85,6 @@
   padding-left: 5px;
 }
 
-.article-footer {
-  margin-top: 2rem;
-  font-size: 0.9rem;
-  color: #666;
-  width: 100%;
-  max-width: 100%;
-}
-
 .article-loading,
 .article-error,
 .article-not-found {
@@ -104,9 +96,8 @@
 
 /* Interaction Section (Like Button) */
 .interaction-section {
-  margin: 1rem 0;
-  padding: 1rem 0;
-  border-top: 1px solid #ddd;
+  margin: 0.5rem 0;
+  padding: 0.5rem 0;
   width: 100%;
   max-width: 100%;
 }
@@ -152,7 +143,6 @@
   margin: 20px 0;
   padding: 15px 0;
   border-top: 1px solid #ddd;
-  border-bottom: 1px solid #ddd;
 }
 
 .share-section h3 {
@@ -235,17 +225,18 @@
 }
 
 .additional-image {
-  max-width: 300px;
   width: 100%;
+  max-width: 600px;
   height: auto;
-  object-fit: cover;
   border-radius: 8px;
+  margin: 0 auto;
+  display: block;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* Comments Section */
 .comments-section {
-  margin-top: 3rem;
+  margin-top: 2rem; /* Reduced from 3rem to compensate for removed footer */
   padding-top: 2rem;
   border-top: 2px solid #e0e0e0;
   width: 100%;
@@ -497,13 +488,11 @@ body.dark-mode .article-page {
 }
 
 body.dark-mode .article-header h1,
-body.dark-mode .article-content,
-body.dark-mode .article-footer {
+body.dark-mode .article-content {
   color: #f5f5f5;
 }
 
-body.dark-mode .article-meta,
-body.dark-mode .article-footer {
+body.dark-mode .article-meta {
   color: #ccc;
 }
 
@@ -786,13 +775,9 @@ body.dark-mode .login-message {
   }
 
   .additional-image {
-    max-width: 250px;
-  }
-
-  .article-footer {
-    font-size: 0.85rem;
-    margin-top: 1.5rem;
-    padding: 0 0.5rem;
+    max-width: 100%;
+    width: 90%;
+    margin: 0 auto 1.5rem;
   }
 
   .article-loading,
@@ -804,7 +789,7 @@ body.dark-mode .login-message {
 
   .comments-section,
   body.dark-mode .comments-section {
-    margin-top: 2rem;
+    margin-top: 1.5rem; /* Reduced from 2rem for mobile */
     padding: 1.5rem 0.5rem;
   }
 
@@ -979,11 +964,12 @@ body.dark-mode .login-message {
   }
 
   .additional-image {
-    max-width: 200px;
+    width: 85%;
+    margin-bottom: 1rem;
   }
 
   .comments-section {
-    margin-top: 1.5rem;
+    margin-top: 1rem; /* Reduced from 1.5rem for extra small screens */
     padding: 1rem 0.5rem;
   }
 
@@ -1008,4 +994,3 @@ body.dark-mode .login-message {
     min-height: 80px;
   }
 }
-

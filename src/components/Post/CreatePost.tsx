@@ -250,7 +250,7 @@ const CreatePost: React.FC = () => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="featuredImage">Featured Image (Optional)</label>
+            <label htmlFor="featuredImage">Featured Image</label>
             <input
               type="file"
               id="featuredImage"

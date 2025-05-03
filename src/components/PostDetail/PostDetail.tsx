@@ -41,11 +41,6 @@ interface Post {
   isLikedByUser: boolean;
 }
 
-// Simple function to strip HTML tags
-const stripHtml = (html: string): string => {
-  return html.replace(/<[^>]+>/g, "").trim();
-};
-
 const PostDetail: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const [post, setPost] = useState<Post | null>(null);
@@ -68,8 +63,14 @@ const PostDetail: React.FC = () => {
   const updatedPost = location.state?.updatedPost as Post | undefined;
 
   const BASE_URL = "https://voice-info-blog.vercel.app";
-  const BACKEND_URL = "http://13.60.116.82";
-  const defaultImageUrl = "/INFOS_LOGO%5B1%5D.png"; // Exact pattern
+
+  // Utility function to capitalize first letter of each name
+  const capitalizeName = (name: string): string => {
+    return name
+      .split(" ")
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+      .join(" ");
+  };
 
   useEffect(() => {
     const fetchPost = async () => {
@@ -95,29 +96,10 @@ const PostDetail: React.FC = () => {
         });
         if (!response.ok) throw new Error("Failed to fetch post details");
         const postData: { data: Post } = await response.json();
-        console.log("API Response:", postData.data); // Debug backend data
 
-        // Sanitize post data
-        const isTestTitle = /^[a-z0-9]{6,}$/i.test(postData.data.title) || postData.data.title.trim() === "";
-        const cleanExcerpt = stripHtml(postData.data.excerpt);
-        const cleanContent = stripHtml(postData.data.content);
-        const isTestExcerpt = cleanExcerpt.startsWith("string") || cleanExcerpt === "" || /^[a-z0-9\s]{10,}$/i.test(cleanExcerpt);
-        const sanitizedPost = {
-          ...postData.data,
-          title: isTestTitle ? "Untitled Post" : postData.data.title,
-          excerpt: isTestExcerpt
-            ? cleanContent && cleanContent !== ""
-              ? cleanContent.substring(0, 160)
-              : "No description available."
-            : cleanExcerpt,
-          featuredImageUrl: postData.data.featuredImageUrl && postData.data.featuredImageUrl.trim() !== ""
-            ? postData.data.featuredImageUrl
-            : defaultImageUrl,
-        };
-
-        setPost(sanitizedPost);
+        setPost(postData.data);
         setComments(postData.data.comments);
-        postCache[slug!] = { data: sanitizedPost, timestamp: Date.now() };
+        postCache[slug!] = { data: postData.data, timestamp: Date.now() };
         setLoading(false);
       } catch (err) {
         setError((err as Error).message);
@@ -320,7 +302,7 @@ const PostDetail: React.FC = () => {
       setComments((prevComments) => {
         const removeReply = (comments: Comment[]): Comment[] =>
           comments.map((comment) =>
-            comment.id === parentCommentId
+            comment.id == parentCommentId
               ? { ...comment, replies: comment.replies.filter((r) => r.id !== optimisticReply.id) }
               : { ...comment, replies: removeReply(comment.replies) }
           );
@@ -470,7 +452,7 @@ const PostDetail: React.FC = () => {
   const renderComment = (comment: Comment, isReply: boolean = false) => (
     <div key={comment.id} className={`comment-card ${isReply ? "reply" : ""}`}>
       <div className="comment-header">
-        <span className="comment-author">{comment.userName}</span>
+        <span className="comment-author">{capitalizeName(comment.userName)}</span>
         <span className="comment-timestamp">{new Date(comment.createdAt).toLocaleString()}</span>
       </div>
       {comment.parentCommentId && !isLevel1Reply(comment) && isReply && (
@@ -565,26 +547,20 @@ const PostDetail: React.FC = () => {
   };
 
   const shareUrl = post ? `${BASE_URL}/post/${post.slug}` : "";
-  const shareText = post
-    ? `${post.title}\n${post.excerpt.substring(0, 100)}${post.excerpt.length > 100 ? "..." : ""}`
-    : "";
+  const shareText = post ? `${post.title} - Check out this post!` : "";
+  const defaultImageUrl = "/INFOS_LOGO%5B1%5D.png"; // URL-encoded
   const imageUrl = post?.featuredImageUrl || defaultImageUrl;
-  // Ensure image URL is absolute
-  const absoluteImageUrl = imageUrl.startsWith("http")
-    ? imageUrl
-    : imageUrl === defaultImageUrl
-    ? `${BASE_URL}${imageUrl}`
-    : `${BACKEND_URL}${imageUrl.startsWith("/") ? "" : "/"}${imageUrl}`;
-
-  // Log for debugging
-  console.log("Post Data:", post);
-  console.log("Image URL:", imageUrl);
-  console.log("Absolute Image URL:", absoluteImageUrl);
 
   const handleWhatsAppShare = () => {
-    const text = `${shareText}\n${shareUrl}`;
     window.open(
-      `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`,
+      `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + " " + shareUrl)}`,
+      "_blank"
+    );
+  };
+
+  const handleXShare = () => {
+    window.open(
+      `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`,
       "_blank"
     );
   };
@@ -592,20 +568,6 @@ const PostDetail: React.FC = () => {
   const handleFacebookShare = () => {
     window.open(
       `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`,
-      "_blank"
-    );
-  };
-
-  const handleTwitterShare = () => {
-    window.open(
-      `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`,
-      "_blank"
-    );
-  };
-
-  const handleLinkedInShare = () => {
-    window.open(
-      `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(shareUrl)}&title=${encodeURIComponent(post?.title || "")}&summary=${encodeURIComponent(post?.excerpt.substring(0, 100) || "")}`,
       "_blank"
     );
   };
@@ -636,23 +598,23 @@ const PostDetail: React.FC = () => {
     <>
       <Helmet>
         <title>{post.title}</title>
-        <meta name="description" content={post.excerpt} />
+        <meta name="description" content={post.excerpt || post.content.substring(0, 160)} />
         <meta property="og:title" content={post.title} />
-        <meta property="og:description" content={post.excerpt} />
-        <meta property="og:image" content={absoluteImageUrl} />
+        <meta property="og:description" content={post.excerpt || post.content.substring(0, 160)} />
+        <meta property="og:image" content={imageUrl} />
         <meta property="og:url" content={shareUrl} />
         <meta property="og:type" content="article" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={post.title} />
-        <meta name="twitter:description" content={post.excerpt} />
-        <meta name="twitter:image" content={absoluteImageUrl} />
+        <meta name="twitter:description" content={post.excerpt || post.content.substring(0, 160)} />
+        <meta name="twitter:image" content={imageUrl} />
       </Helmet>
 
       <article className="article-page">
         <header className="article-header">
           <h1>{post.title}</h1>
           <p className="article-meta">
-            By {post.authorName} | {new Date(post.createdAt).toLocaleDateString()} |{" "}
+            By {capitalizeName(post.authorName)} | {new Date(post.createdAt).toLocaleDateString()} |{" "}
             <Link to={`/${post.categoryName}`} className="category-link">
               {post.categoryName}
             </Link>
@@ -664,11 +626,27 @@ const PostDetail: React.FC = () => {
           </p>
         </header>
 
-        <img src={absoluteImageUrl} alt={post.title} className="article-image" />
+        <img src={imageUrl} alt={post.title} className="article-image" />
 
         <section className="article-content">
           <div dangerouslySetInnerHTML={{ __html: post.content }} />
         </section>
+
+        {post.additionalImageUrls && post.additionalImageUrls.length > 0 && (
+          <section className="additional-images-section">
+            <h3>Additional Images</h3>
+            <div className="additional-images">
+              {post.additionalImageUrls.map((url, index) => (
+                <img
+                  key={index}
+                  src={url}
+                  alt={`Additional image ${index + 1}`}
+                  className="additional-image"
+                />
+              ))}
+            </div>
+          </section>
+        )}
 
         <section className="interaction-section">
           <div className="like-section">
@@ -696,36 +674,17 @@ const PostDetail: React.FC = () => {
             <button onClick={handleWhatsAppShare} className="share-btn whatsapp">
               WhatsApp
             </button>
+            <button onClick={handleXShare} className="share-btn x">
+              X
+            </button>
             <button onClick={handleFacebookShare} className="share-btn facebook">
               Facebook
-            </button>
-            <button onClick={handleTwitterShare} className="share-btn twitter">
-              Twitter
-            </button>
-            <button onClick={handleLinkedInShare} className="share-btn linkedin">
-              LinkedIn
             </button>
             <button onClick={handleNativeShare} className="share-btn native">
               Share More
             </button>
           </div>
         </section>
-
-        {post.additionalImageUrls && post.additionalImageUrls.length > 0 && (
-          <section className="additional-images-section">
-            <h3>Additional Images</h3>
-            <div className="additional-images">
-              {post.additionalImageUrls.map((url, index) => (
-                <img
-                  key={index}
-                  src={url}
-                  alt={`Additional image ${index + 1}`}
-                  className="additional-image"
-                />
-              ))}
-            </div>
-          </section>
-        )}
 
         <section className="comments-section">
           <h2>Comments ({flattenedComments.length})</h2>
@@ -752,15 +711,6 @@ const PostDetail: React.FC = () => {
             )}
           </form>
         </section>
-
-        <footer className="article-footer">
-          <p>
-            <strong>Tags:</strong> {post.tags.join(", ")}
-          </p>
-          <p>
-            <strong>Views:</strong> {post.views}
-          </p>
-        </footer>
       </article>
     </>
   );

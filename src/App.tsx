@@ -19,6 +19,10 @@ import Footer from "./components/Footer/Footer";
 import CategoriesSection from "./components/CategoriesSection/CategoriesSection";
 import MyPosts from "./components/MyPosts/MyPosts";
 import ProfilePage from "./components/ProfilePage/ProfilePage";
+import PrivacyPolicy from "./components/Pages/PrivacyPolicy";
+import ContactUs from "./components/Pages/ContactUs";
+import About from "./components/Pages/About";
+import Disclaimer from "./components/Pages/Disclaimer";
 import { UserProvider } from "./context/UserContext";
 
 import "./App.css";
@@ -237,6 +241,58 @@ const App: React.FC = () => {
                   exit="exit"
                 >
                   <FeaturePosts />
+                </motion.div>
+              }
+            />
+            <Route
+              path="/privacy-policy"
+              element={
+                <motion.div
+                  variants={pageVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                >
+                  <PrivacyPolicy />
+                </motion.div>
+              }
+            />
+            <Route
+              path="/contact-us"
+              element={
+                <motion.div
+                  variants={pageVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                >
+                  <ContactUs />
+                </motion.div>
+              }
+            />
+            <Route
+              path="/about"
+              element={
+                <motion.div
+                  variants={pageVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                >
+                  <About />
+                </motion.div>
+              }
+            />
+            <Route
+              path="/disclaimer"
+              element={
+                <motion.div
+                  variants={pageVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                >
+                  <Disclaimer />
                 </motion.div>
               }
             />

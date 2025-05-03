@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useInView } from 'framer-motion';
-import { API_BASE_URL } from "../../config/apiConfig"; // Added import
+import { API_BASE_URL } from "../../config/apiConfig";
 import './LatestNews.css';
 
 interface Post {
@@ -41,6 +41,16 @@ const LatestNews: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const topRef = useRef<HTMLDivElement>(null);
+
+  // Utility function to capitalize first letter of each name
+  const capitalizeName = (name: string): string => {
+    return name
+      .split(" ")
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+      .join(" ");
+  };
+
+  const defaultImageUrl = "/INFOS_LOGO%5B1%5D.png"; // Default image URL
 
   const getCacheKey = (page: number) => `latestNews_page_${page}`;
 
@@ -269,6 +279,16 @@ const NewsItem: React.FC<{
     amount: 0.1
   });
 
+  const defaultImageUrl = "/INFOS_LOGO%5B1%5D.png"; // Default image URL
+
+  // Utility function to capitalize first letter of each name
+  const capitalizeName = (name: string): string => {
+    return name
+      .split(" ")
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+      .join(" ");
+  };
+
   return (
     <motion.li
       ref={ref}
@@ -285,7 +305,11 @@ const NewsItem: React.FC<{
         whileHover={{ scale: 1.02 }}
         transition={{ duration: 0.15 }}
       >
-        <img src={post.featuredImageUrl} alt={post.title} className="latest-news-image" />
+        <img 
+          src={post.featuredImageUrl || defaultImageUrl} 
+          alt={post.title} 
+          className="latest-news-image" 
+        />
       </motion.div>
       
       <div className="latest-news-content">
@@ -307,7 +331,7 @@ const NewsItem: React.FC<{
             delay: 0.1
           }}
         >
-          By {post.authorName} | {formatDateTime(post.createdAt)}
+          By {capitalizeName(post.authorName)} | {formatDateTime(post.createdAt)}
         </motion.p>
       </div>
     </motion.li>
