@@ -43,14 +43,14 @@ const LatestNews: React.FC = () => {
   const topRef = useRef<HTMLDivElement>(null);
 
   // Utility function to capitalize first letter of each name
-  const capitalizeName = (name: string): string => {
-    return name
-      .split(" ")
-      .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
-      .join(" ");
-  };
+  // const capitalizeName = (name: string): string => {
+  //   return name
+  //     .split(" ")
+  //     .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+  //     .join(" ");
+  // };
 
-  const defaultImageUrl = "/INFOS_LOGO%5B1%5D.png"; // Default image URL
+  // const defaultImageUrl = "/INFOS_LOGO%5B1%5D.png"; // Default image URL
 
   const getCacheKey = (page: number) => `latestNews_page_${page}`;
 

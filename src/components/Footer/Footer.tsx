@@ -5,7 +5,7 @@ import "./Footer.css";
 const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
   // Placeholder URL for Instagram logo (replace with your asset path or CDN URL)
-  const instagramLogoUrl = "/assets/instagram-logo.png"; // Replace with actual path
+  // const instagramLogoUrl = "/assets/instagram-logo.png"; // Replace with actual path
 
   return (
     <footer className="footer">
