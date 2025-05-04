@@ -70,7 +70,8 @@ const PostDetail: React.FC = () => {
   const location = useLocation();
   const updatedPost = location.state?.updatedPost as Post | undefined;
 
-  const BASE_URL = "https://voice-info-blog.vercel.app";
+  const BASE_URL = "https://voiceinfos.com";
+  const DEFAULT_IMAGE_URL = "https://voiceinfos.com/INFOS_LOGO%5B1%5D.png"; // Absolute URL
 
   // Utility function to capitalize first letter of each name
   const capitalizeName = (name: string): string => {
@@ -91,6 +92,41 @@ const PostDetail: React.FC = () => {
   // Function to get share description (excerpt or truncated content)
   const getShareDescription = (post: Post): string => {
     return post.excerpt || post.content.substring(0, 160);
+  };
+
+  // Function to validate image URL
+  const isValidImageUrl = (url: string | null | undefined): boolean => {
+    if (!url || typeof url !== "string") {
+      console.warn("Invalid image URL: URL is null, undefined, or not a string", url);
+      return false;
+    }
+    const regex = /^https?:\/\/.*\.(?:jpg|jpeg|png|gif|webp)(?:\?.*)?(?:#.*)?$/i;
+    const isValid = regex.test(url);
+    if (!isValid) {
+      console.warn("Invalid image URL: Does not match expected format", url);
+    }
+    return isValid;
+  };
+
+  // Function to fix share links if they use the wrong domain
+  const fixShareLink = (link: string, correctUrl: string): string => {
+    if (link.includes("api.voiceinfos.com")) {
+      // Replace incorrect domain with correct frontend URL
+      const urlParams = new URLSearchParams(new URL(link).search);
+      const text = urlParams.get("text") || "";
+      const title = urlParams.get("title") || "";
+      const summary = urlParams.get("summary") || "";
+      if (link.includes("whatsapp")) {
+        return `https://api.whatsapp.com/send?text=${encodeURIComponent(text.replace(/http:\/\/api\.voiceinfos\.com\/blog\/[^ ]+/, correctUrl))}`;
+      } else if (link.includes("twitter.com")) {
+        return `https://twitter.com/intent/tweet?text=${encodeURIComponent(text.replace(/http:\/\/api\.voiceinfos\.com\/blog\/[^ ]+/, correctUrl))}&url=${encodeURIComponent(correctUrl)}`;
+      } else if (link.includes("facebook.com")) {
+        return `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(correctUrl)}`;
+      } else if (link.includes("linkedin.com")) {
+        return `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(correctUrl)}&title=${encodeURIComponent(title)}&summary=${encodeURIComponent(summary)}`;
+      }
+    }
+    return link;
   };
 
   useEffect(() => {
@@ -583,13 +619,12 @@ const PostDetail: React.FC = () => {
   };
 
   const shareUrl = post ? `${BASE_URL}/post/${post.slug}` : "";
-  const defaultImageUrl = "/INFOS_LOGO%5B1%5D.png"; // URL-encoded
-  const imageUrl = post?.featuredImageUrl || defaultImageUrl;
+  const imageUrl = post && isValidImageUrl(post.featuredImageUrl) ? post.featuredImageUrl : DEFAULT_IMAGE_URL;
   const shareDescription = post ? getShareDescription(post) : "";
 
   const handleWhatsAppShare = () => {
     if (shareLinks?.whatsApp) {
-      window.open(shareLinks.whatsApp, "_blank");
+      window.open(fixShareLink(shareLinks.whatsApp, shareUrl), "_blank");
     } else {
       window.open(
         `https://api.whatsapp.com/send?text=${encodeURIComponent(
@@ -602,7 +637,7 @@ const PostDetail: React.FC = () => {
 
   const handleXShare = () => {
     if (shareLinks?.twitter) {
-      window.open(shareLinks.twitter, "_blank");
+      window.open(fixShareLink(shareLinks.twitter, shareUrl), "_blank");
     } else {
       window.open(
         `https://twitter.com/intent/tweet?text=${encodeURIComponent(
@@ -615,7 +650,7 @@ const PostDetail: React.FC = () => {
 
   const handleFacebookShare = () => {
     if (shareLinks?.facebook) {
-      window.open(shareLinks.facebook, "_blank");
+      window.open(fixShareLink(shareLinks.facebook, shareUrl), "_blank");
     } else {
       window.open(
         `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`,
@@ -626,7 +661,7 @@ const PostDetail: React.FC = () => {
 
   const handleLinkedInShare = () => {
     if (shareLinks?.linkedIn) {
-      window.open(shareLinks.linkedIn, "_blank");
+      window.open(fixShareLink(shareLinks.linkedIn, shareUrl), "_blank");
     } else {
       window.open(
         `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(
