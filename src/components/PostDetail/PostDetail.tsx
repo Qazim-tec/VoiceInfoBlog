@@ -41,13 +41,6 @@ interface Post {
   isLikedByUser: boolean;
 }
 
-interface ShareLinks {
-  whatsApp: string;
-  facebook: string;
-  twitter: string;
-  linkedIn: string;
-}
-
 const PostDetail: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const [post, setPost] = useState<Post | null>(null);
@@ -60,7 +53,6 @@ const PostDetail: React.FC = () => {
   const [replyingToCommentId, setReplyingToCommentId] = useState<number | null>(null);
   const [newReply, setNewReply] = useState("");
   const [isLiking, setIsLiking] = useState(false);
-  const [shareLinks, setShareLinks] = useState<ShareLinks | null>(null);
 
   const { user } = useUser();
   const currentUserId = user?.userId || "";
@@ -101,14 +93,12 @@ const PostDetail: React.FC = () => {
       return false;
     }
 
-    // More permissive regex to allow URLs without extensions
     const regex = /^https?:\/\/.+(?:\/[^\/?#]+)?(?:\?.*)?(?:#.*)?$/i;
     if (!regex.test(url)) {
       console.warn("Invalid image URL: Does not match expected format", url);
       return false;
     }
 
-    // Check if the image is accessible
     try {
       const response = await fetch(url, { method: "HEAD" });
       const contentType = response.headers.get("content-type");
@@ -132,12 +122,10 @@ const PostDetail: React.FC = () => {
   const getValidImageUrl = async (post: Post | null): Promise<string> => {
     if (!post) return DEFAULT_IMAGE_URL;
 
-    // Try featuredImageUrl first
     if (await isValidImageUrl(post.featuredImageUrl)) {
       return post.featuredImageUrl;
     }
 
-    // Try additionalImageUrls as fallback
     if (post.additionalImageUrls && post.additionalImageUrls.length > 0) {
       for (const url of post.additionalImageUrls) {
         if (await isValidImageUrl(url)) {
@@ -149,26 +137,6 @@ const PostDetail: React.FC = () => {
 
     console.warn("No valid image found, using default:", DEFAULT_IMAGE_URL);
     return DEFAULT_IMAGE_URL;
-  };
-
-  // Function to fix share links if they use the wrong domain
-  const fixShareLink = (link: string, correctUrl: string): string => {
-    if (link.includes("api.voiceinfos.com")) {
-      const urlParams = new URLSearchParams(new URL(link).search);
-      const text = urlParams.get("text") || "";
-      const title = urlParams.get("title") || "";
-      const summary = urlParams.get("summary") || "";
-      if (link.includes("whatsapp")) {
-        return `https://api.whatsapp.com/send?text=${encodeURIComponent(text.replace(/http:\/\/api\.voiceinfos\.com\/blog\/[^ ]+/, correctUrl))}`;
-      } else if (link.includes("twitter.com")) {
-        return `https://twitter.com/intent/tweet?text=${encodeURIComponent(text.replace(/http:\/\/api\.voiceinfos\.com\/blog\/[^ ]+/, correctUrl))}&url=${encodeURIComponent(correctUrl)}`;
-      } else if (link.includes("facebook.com")) {
-        return `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(correctUrl)}`;
-      } else if (link.includes("linkedin.com")) {
-        return `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(correctUrl)}&title=${encodeURIComponent(title)}&summary=${encodeURIComponent(summary)}`;
-      }
-    }
-    return link;
   };
 
   useEffect(() => {
@@ -210,29 +178,6 @@ const PostDetail: React.FC = () => {
 
     fetchPost();
   }, [slug, user?.token, updatedPost]);
-
-  useEffect(() => {
-    const fetchShareLinks = async () => {
-      if (!post) return;
-      try {
-        const response = await fetch(`${API_BASE_URL}/api/Share/generate-share-links/${post.id}`, {
-          headers: {
-            accept: "*/*",
-            ...(user?.token ? { Authorization: `Bearer ${user.token}` } : {}),
-          },
-        });
-        if (!response.ok) throw new Error("Failed to fetch share links");
-        const shareData: { data: ShareLinks; message: string } = await response.json();
-        setShareLinks(shareData.data);
-      } catch (err) {
-        console.error("Share links error:", err);
-        setError((err as Error).message);
-        setTimeout(() => setError(null), 3000);
-      }
-    };
-
-    fetchShareLinks();
-  }, [post, user?.token]);
 
   const fetchComments = async (postId: number) => {
     try {
@@ -677,55 +622,39 @@ const PostDetail: React.FC = () => {
   }, [post]);
 
   const handleWhatsAppShare = () => {
-    if (shareLinks?.whatsApp) {
-      window.open(fixShareLink(shareLinks.whatsApp, shareUrl), "_blank");
-    } else {
-      window.open(
-        `https://api.whatsapp.com/send?text=${encodeURIComponent(
-          `${post?.title}\n${shareDescription}\n${shareUrl}`
-        )}`,
-        "_blank"
-      );
-    }
+    window.open(
+      `https://api.whatsapp.com/send?text=${encodeURIComponent(
+        `${post?.title}\n${shareDescription}\n${shareUrl}`
+      )}`,
+      "_blank"
+    );
   };
 
   const handleXShare = () => {
-    if (shareLinks?.twitter) {
-      window.open(fixShareLink(shareLinks.twitter, shareUrl), "_blank");
-    } else {
-      window.open(
-        `https://twitter.com/intent/tweet?text=${encodeURIComponent(
-          `${post?.title}\n${shareDescription}`
-        )}&url=${encodeURIComponent(shareUrl)}`,
-        "_blank"
-      );
-    }
+    window.open(
+      `https://twitter.com/intent/tweet?text=${encodeURIComponent(
+        `${post?.title}\n${shareDescription}`
+      )}&url=${encodeURIComponent(shareUrl)}`,
+      "_blank"
+    );
   };
 
   const handleFacebookShare = () => {
-    if (shareLinks?.facebook) {
-      window.open(fixShareLink(shareLinks.facebook, shareUrl), "_blank");
-    } else {
-      window.open(
-        `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`,
-        "_blank"
-      );
-    }
+    window.open(
+      `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`,
+      "_blank"
+    );
   };
 
   const handleLinkedInShare = () => {
-    if (shareLinks?.linkedIn) {
-      window.open(fixShareLink(shareLinks.linkedIn, shareUrl), "_blank");
-    } else {
-      window.open(
-        `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(
-          shareUrl
-        )}&title=${encodeURIComponent(post?.title || "")}&summary=${encodeURIComponent(
-          shareDescription
-        )}`,
-        "_blank"
-      );
-    }
+    window.open(
+      `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(
+        shareUrl
+      )}&title=${encodeURIComponent(post?.title || "")}&summary=${encodeURIComponent(
+        shareDescription
+      )}`,
+      "_blank"
+    );
   };
 
   const handleNativeShare = async () => {
