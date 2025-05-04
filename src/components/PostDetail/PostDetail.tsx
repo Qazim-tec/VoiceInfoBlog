@@ -165,6 +165,7 @@ const PostDetail: React.FC = () => {
         if (!response.ok) throw new Error("Failed to fetch post details");
         const postData: { data: Post } = await response.json();
 
+        console.log("Post fetched:", postData.data);
         console.log("Post featuredImageUrl:", postData.data.featuredImageUrl);
         console.log("Post additionalImageUrls:", postData.data.additionalImageUrls);
         setPost(postData.data);
@@ -326,7 +327,7 @@ const PostDetail: React.FC = () => {
         comments.map((comment) =>
           comment.id === parentCommentId
             ? { ...comment, replies: [...comment.replies, optimisticReply] }
-            : { ...comment, replies: updateCommentsWithReply(comments) }
+            : { ...comment, replies: updateCommentsWithReply(comment.replies) }
         );
       return updateCommentsWithReply(prevComments);
     });
@@ -617,26 +618,23 @@ const PostDetail: React.FC = () => {
       if (post) {
         const validImageUrl = await getValidImageUrl(post);
         console.log("Setting imageUrl for OG tags:", validImageUrl);
+        console.log("OG tags for this post:", {
+          title: post.title,
+          description: shareDescription,
+          image: validImageUrl,
+          url: shareUrl,
+        });
         setImageUrl(validImageUrl);
       }
     };
     updateImageUrl();
-  }, [post]);
+  }, [post, shareDescription, shareUrl]);
 
   const handleWhatsAppShare = () => {
     if (!post) return;
-
-    // Format the share text with title, description, and URL
     const shareText = `${post.title}\n\n${shareDescription}\n\nRead more: ${shareUrl}`;
-    
-    // Encode the share text for the WhatsApp URL
     const encodedShareText = encodeURIComponent(shareText);
-
-    // Open WhatsApp with the formatted share text
-    window.open(
-      `https://api.whatsapp.com/send?text=${encodedShareText}`,
-      "_blank"
-    );
+    window.open(`https://api.whatsapp.com/send?text=${encodedShareText}`, "_blank");
   };
 
   const handleXShare = () => {
@@ -691,7 +689,6 @@ const PostDetail: React.FC = () => {
   return (
     <>
       <Helmet>
-        {/* Open Graph tags for social media and WhatsApp link previews */}
         <title>{post.title}</title>
         <meta name="description" content={shareDescription} />
         <meta property="og:title" content={post.title} />
@@ -699,7 +696,6 @@ const PostDetail: React.FC = () => {
         <meta property="og:image" content={imageUrl} />
         <meta property="og:url" content={shareUrl} />
         <meta property="og:type" content="article" />
-        {/* Twitter Card tags for Twitter/X and fallback for other platforms */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={post.title} />
         <meta name="twitter:description" content={shareDescription} />
