@@ -71,7 +71,7 @@ const PostDetail: React.FC = () => {
   const updatedPost = location.state?.updatedPost as Post | undefined;
 
   const BASE_URL = "https://www.voiceinfos.com";
-  const DEFAULT_IMAGE_URL = "https://www.voiceinfos.com/INFOS_LOGO%5B1%5D.png"; // Absolute URL
+  const DEFAULT_IMAGE_URL = "https://www.voiceinfos.com/INFOS_LOGO%5B1%5D.png";
 
   // Utility function to capitalize first letter of each name
   const capitalizeName = (name: string): string => {
@@ -129,15 +129,31 @@ const PostDetail: React.FC = () => {
   };
 
   // Function to get valid image URL
-  const getValidImageUrl = async (featuredImageUrl: string | null | undefined): Promise<string> => {
-    const isValid = await isValidImageUrl(featuredImageUrl);
-    return isValid ? featuredImageUrl! : DEFAULT_IMAGE_URL;
+  const getValidImageUrl = async (post: Post | null): Promise<string> => {
+    if (!post) return DEFAULT_IMAGE_URL;
+
+    // Try featuredImageUrl first
+    if (await isValidImageUrl(post.featuredImageUrl)) {
+      return post.featuredImageUrl;
+    }
+
+    // Try additionalImageUrls as fallback
+    if (post.additionalImageUrls && post.additionalImageUrls.length > 0) {
+      for (const url of post.additionalImageUrls) {
+        if (await isValidImageUrl(url)) {
+          console.log("Using additionalImageUrl as fallback:", url);
+          return url;
+        }
+      }
+    }
+
+    console.warn("No valid image found, using default:", DEFAULT_IMAGE_URL);
+    return DEFAULT_IMAGE_URL;
   };
 
   // Function to fix share links if they use the wrong domain
   const fixShareLink = (link: string, correctUrl: string): string => {
     if (link.includes("api.voiceinfos.com")) {
-      // Replace incorrect domain with correct frontend URL
       const urlParams = new URLSearchParams(new URL(link).search);
       const text = urlParams.get("text") || "";
       const title = urlParams.get("title") || "";
@@ -180,7 +196,8 @@ const PostDetail: React.FC = () => {
         if (!response.ok) throw new Error("Failed to fetch post details");
         const postData: { data: Post } = await response.json();
 
-        console.log("Post featuredImageUrl:", postData.data.featuredImageUrl); // Debug log
+        console.log("Post featuredImageUrl:", postData.data.featuredImageUrl);
+        console.log("Post additionalImageUrls:", postData.data.additionalImageUrls);
         setPost(postData.data);
         setComments(postData.data.comments);
         postCache[slug!] = { data: postData.data, timestamp: Date.now() };
@@ -652,7 +669,7 @@ const PostDetail: React.FC = () => {
   useEffect(() => {
     const updateImageUrl = async () => {
       if (post) {
-        const validImageUrl = await getValidImageUrl(post.featuredImageUrl);
+        const validImageUrl = await getValidImageUrl(post);
         setImageUrl(validImageUrl);
       }
     };
