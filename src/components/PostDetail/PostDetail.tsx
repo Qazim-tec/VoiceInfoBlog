@@ -326,7 +326,13 @@ const PostDetail: React.FC = () => {
         comments.map((comment) =>
           comment.id === parentCommentId
             ? { ...comment, replies: [...comment.replies, optimisticReply] }
-            : { ...comment, replies: updateCommentsWithReply(comments) }
+            : {
+                ...comment,
+                replies:
+                  comment.replies.length > 0
+                    ? updateCommentsWithReply(comment.replies)
+                    : comment.replies,
+              }
         );
       return updateCommentsWithReply(prevComments);
     });
