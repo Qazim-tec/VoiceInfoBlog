@@ -123,6 +123,7 @@ const PostDetail: React.FC = () => {
     if (!post) return DEFAULT_IMAGE_URL;
 
     if (await isValidImageUrl(post.featuredImageUrl)) {
+      console.log("Using featuredImageUrl:", post.featuredImageUrl);
       return post.featuredImageUrl;
     }
 
@@ -325,7 +326,7 @@ const PostDetail: React.FC = () => {
         comments.map((comment) =>
           comment.id === parentCommentId
             ? { ...comment, replies: [...comment.replies, optimisticReply] }
-            : { ...comment, replies: updateCommentsWithReply(comment.replies) }
+            : { ...comment, replies: updateCommentsWithReply(comments) }
         );
       return updateCommentsWithReply(prevComments);
     });
@@ -607,7 +608,7 @@ const PostDetail: React.FC = () => {
     return undefined;
   };
 
-  const shareUrl = post ? `${BASE_URL}/post/${post.slug}` : "";
+  const shareUrl = post ? `${BASE_URL}/post/${post.slug}?cb=${Date.now()}` : "";
   const [imageUrl, setImageUrl] = useState(DEFAULT_IMAGE_URL);
   const shareDescription = post ? getShareDescription(post) : "";
 
@@ -615,6 +616,7 @@ const PostDetail: React.FC = () => {
     const updateImageUrl = async () => {
       if (post) {
         const validImageUrl = await getValidImageUrl(post);
+        console.log("Setting imageUrl for OG tags:", validImageUrl);
         setImageUrl(validImageUrl);
       }
     };
@@ -689,6 +691,7 @@ const PostDetail: React.FC = () => {
   return (
     <>
       <Helmet>
+        {/* Open Graph tags for social media and WhatsApp link previews */}
         <title>{post.title}</title>
         <meta name="description" content={shareDescription} />
         <meta property="og:title" content={post.title} />
@@ -696,6 +699,7 @@ const PostDetail: React.FC = () => {
         <meta property="og:image" content={imageUrl} />
         <meta property="og:url" content={shareUrl} />
         <meta property="og:type" content="article" />
+        {/* Twitter Card tags for Twitter/X and fallback for other platforms */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={post.title} />
         <meta name="twitter:description" content={shareDescription} />
