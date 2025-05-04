@@ -41,6 +41,13 @@ interface Post {
   isLikedByUser: boolean;
 }
 
+interface ShareLinks {
+  whatsApp: string;
+  facebook: string;
+  twitter: string;
+  linkedIn: string;
+}
+
 const PostDetail: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const [post, setPost] = useState<Post | null>(null);
@@ -53,6 +60,7 @@ const PostDetail: React.FC = () => {
   const [replyingToCommentId, setReplyingToCommentId] = useState<number | null>(null);
   const [newReply, setNewReply] = useState("");
   const [isLiking, setIsLiking] = useState(false);
+  const [shareLinks, setShareLinks] = useState<ShareLinks | null>(null);
 
   const { user } = useUser();
   const currentUserId = user?.userId || "";
@@ -70,6 +78,19 @@ const PostDetail: React.FC = () => {
       .split(" ")
       .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
       .join(" ");
+  };
+
+  // Function to process content and embed YouTube videos
+  const processContent = (content: string): string => {
+    const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/g;
+    return content.replace(youtubeRegex, (_, videoId) => {
+      return `<div class="youtube-embed"><iframe loading="lazy" src="https://www.youtube.com/embed/${videoId}" title="YouTube video player" frameborder="0" allowfullscreen></iframe></div>`;
+    });
+  };
+
+  // Function to get share description (excerpt or truncated content)
+  const getShareDescription = (post: Post): string => {
+    return post.excerpt || post.content.substring(0, 160);
   };
 
   useEffect(() => {
@@ -109,6 +130,29 @@ const PostDetail: React.FC = () => {
 
     fetchPost();
   }, [slug, user?.token, updatedPost]);
+
+  useEffect(() => {
+    const fetchShareLinks = async () => {
+      if (!post) return;
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/Share/generate-share-links/${post.id}`, {
+          headers: {
+            accept: "*/*",
+            ...(user?.token ? { Authorization: `Bearer ${user.token}` } : {}),
+          },
+        });
+        if (!response.ok) throw new Error("Failed to fetch share links");
+        const shareData: { data: ShareLinks; message: string } = await response.json();
+        setShareLinks(shareData.data);
+      } catch (err) {
+        console.error("Share links error:", err);
+        setError((err as Error).message);
+        setTimeout(() => setError(null), 3000);
+      }
+    };
+
+    fetchShareLinks();
+  }, [post, user?.token]);
 
   const fetchComments = async (postId: number) => {
     try {
@@ -302,7 +346,7 @@ const PostDetail: React.FC = () => {
       setComments((prevComments) => {
         const removeReply = (comments: Comment[]): Comment[] =>
           comments.map((comment) =>
-            comment.id == parentCommentId
+            comment.id === parentCommentId
               ? { ...comment, replies: comment.replies.filter((r) => r.id !== optimisticReply.id) }
               : { ...comment, replies: removeReply(comment.replies) }
           );
@@ -349,14 +393,6 @@ const PostDetail: React.FC = () => {
         throw new Error(`Failed to edit comment: ${errorText}`);
       }
 
-      const responseData: { data: Comment; message: string } = await response.json();
-      const syncComments = (comments: Comment[]): Comment[] =>
-        comments.map((comment) =>
-          comment.id === commentId
-            ? { ...responseData.data, replies: comment.replies }
-            : { ...comment, replies: syncComments(comment.replies) }
-        );
-      setComments(syncComments(comments));
       setEditedContent("");
       setError(null);
     } catch (err) {
@@ -547,29 +583,60 @@ const PostDetail: React.FC = () => {
   };
 
   const shareUrl = post ? `${BASE_URL}/post/${post.slug}` : "";
-  const shareText = post ? `${post.title} - Check out this post!` : "";
   const defaultImageUrl = "/INFOS_LOGO%5B1%5D.png"; // URL-encoded
   const imageUrl = post?.featuredImageUrl || defaultImageUrl;
+  const shareDescription = post ? getShareDescription(post) : "";
 
   const handleWhatsAppShare = () => {
-    window.open(
-      `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + " " + shareUrl)}`,
-      "_blank"
-    );
+    if (shareLinks?.whatsApp) {
+      window.open(shareLinks.whatsApp, "_blank");
+    } else {
+      window.open(
+        `https://api.whatsapp.com/send?text=${encodeURIComponent(
+          `${post?.title}\n${shareDescription}\n${shareUrl}`
+        )}`,
+        "_blank"
+      );
+    }
   };
 
   const handleXShare = () => {
-    window.open(
-      `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`,
-      "_blank"
-    );
+    if (shareLinks?.twitter) {
+      window.open(shareLinks.twitter, "_blank");
+    } else {
+      window.open(
+        `https://twitter.com/intent/tweet?text=${encodeURIComponent(
+          `${post?.title}\n${shareDescription}`
+        )}&url=${encodeURIComponent(shareUrl)}`,
+        "_blank"
+      );
+    }
   };
 
   const handleFacebookShare = () => {
-    window.open(
-      `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`,
-      "_blank"
-    );
+    if (shareLinks?.facebook) {
+      window.open(shareLinks.facebook, "_blank");
+    } else {
+      window.open(
+        `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`,
+        "_blank"
+      );
+    }
+  };
+
+  const handleLinkedInShare = () => {
+    if (shareLinks?.linkedIn) {
+      window.open(shareLinks.linkedIn, "_blank");
+    } else {
+      window.open(
+        `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(
+          shareUrl
+        )}&title=${encodeURIComponent(post?.title || "")}&summary=${encodeURIComponent(
+          shareDescription
+        )}`,
+        "_blank"
+      );
+    }
   };
 
   const handleNativeShare = async () => {
@@ -577,7 +644,7 @@ const PostDetail: React.FC = () => {
       try {
         await navigator.share({
           title: post?.title,
-          text: shareText,
+          text: `${post?.title}\n${shareDescription}`,
           url: shareUrl,
         });
       } catch (err) {
@@ -598,15 +665,15 @@ const PostDetail: React.FC = () => {
     <>
       <Helmet>
         <title>{post.title}</title>
-        <meta name="description" content={post.excerpt || post.content.substring(0, 160)} />
+        <meta name="description" content={shareDescription} />
         <meta property="og:title" content={post.title} />
-        <meta property="og:description" content={post.excerpt || post.content.substring(0, 160)} />
+        <meta property="og:description" content={shareDescription} />
         <meta property="og:image" content={imageUrl} />
         <meta property="og:url" content={shareUrl} />
         <meta property="og:type" content="article" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={post.title} />
-        <meta name="twitter:description" content={post.excerpt || post.content.substring(0, 160)} />
+        <meta name="twitter:description" content={shareDescription} />
         <meta name="twitter:image" content={imageUrl} />
       </Helmet>
 
@@ -629,7 +696,7 @@ const PostDetail: React.FC = () => {
         <img src={imageUrl} alt={post.title} className="article-image" />
 
         <section className="article-content">
-          <div dangerouslySetInnerHTML={{ __html: post.content }} />
+          <div dangerouslySetInnerHTML={{ __html: processContent(post.content) }} />
         </section>
 
         {post.additionalImageUrls && post.additionalImageUrls.length > 0 && (
@@ -679,6 +746,9 @@ const PostDetail: React.FC = () => {
             </button>
             <button onClick={handleFacebookShare} className="share-btn facebook">
               Facebook
+            </button>
+            <button onClick={handleLinkedInShare} className="share-btn linkedin">
+              LinkedIn
             </button>
             <button onClick={handleNativeShare} className="share-btn native">
               Share More
