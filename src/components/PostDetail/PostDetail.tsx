@@ -70,8 +70,8 @@ const PostDetail: React.FC = () => {
   const location = useLocation();
   const updatedPost = location.state?.updatedPost as Post | undefined;
 
-  const BASE_URL = "https://voiceinfos.com";
-  const DEFAULT_IMAGE_URL = "https://voiceinfos.com/INFOS_LOGO%5B1%5D.png"; // Absolute URL
+  const BASE_URL = "https://www.voiceinfos.com";
+  const DEFAULT_IMAGE_URL = "https://www.voiceinfos.com/INFOS_LOGO%5B1%5D.png"; // Absolute URL
 
   // Utility function to capitalize first letter of each name
   const capitalizeName = (name: string): string => {
@@ -154,6 +154,7 @@ const PostDetail: React.FC = () => {
         if (!response.ok) throw new Error("Failed to fetch post details");
         const postData: { data: Post } = await response.json();
 
+        console.log("Post featuredImageUrl:", postData.data.featuredImageUrl); // Debug log
         setPost(postData.data);
         setComments(postData.data.comments);
         postCache[slug!] = { data: postData.data, timestamp: Date.now() };
