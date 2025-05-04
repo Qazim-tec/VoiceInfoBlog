@@ -7,7 +7,6 @@ import "./PostDetail.css";
 
 const postCache: { [slug: string]: { data: Post; timestamp: number } } = {};
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-const imageValidationCache: { [url: string]: boolean } = {};
 
 interface Comment {
   id: number;
@@ -87,92 +86,56 @@ const PostDetail: React.FC = () => {
     return post.excerpt || post.content.substring(0, 160);
   };
 
-  // Function to validate image URL
+  // Function to validate image URL and check accessibility
   const isValidImageUrl = async (url: string | null | undefined): Promise<boolean> => {
     if (!url || typeof url !== "string") {
-      console.warn("Invalid image URL: URL is null, undefined, or not a string", { url });
+      console.warn("Invalid image URL: URL is null, undefined, or not a string", url);
       return false;
     }
 
     const regex = /^https?:\/\/.+(?:\/[^\/?#]+)?(?:\?.*)?(?:#.*)?$/i;
     if (!regex.test(url)) {
-      console.warn("Invalid image URL: Does not match expected format", { url });
+      console.warn("Invalid image URL: Does not match expected format", url);
       return false;
     }
 
-    // Trust Cloudinary URLs without network checks
-    if (url.includes("res.cloudinary.com")) {
-      console.log("Trusted Cloudinary URL, accepting without validation:", { url });
-      imageValidationCache[url] = true;
-      return true;
-    }
-
-    // Check cache
-    if (url in imageValidationCache) {
-      console.log("Using cached validation result:", { url, valid: imageValidationCache[url] });
-      return imageValidationCache[url];
-    }
-
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5-second timeout
-      const response = await fetch(url, {
-        method: "HEAD",
-        signal: controller.signal,
-        headers: {
-          'Accept': 'image/*',
-        },
-      });
-      clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        console.warn("Image URL inaccessible", { url, status: response.status, statusText: response.statusText });
-        imageValidationCache[url] = false;
-        return false;
-      }
-
+      const response = await fetch(url, { method: "HEAD" });
       const contentType = response.headers.get("content-type");
-      const isImage = contentType?.startsWith("image/") || contentType?.includes("octet-stream");
-      if (!isImage) {
-        console.warn("Image URL does not point to an image", { url, contentType });
-        imageValidationCache[url] = false;
+      if (!response.ok) {
+        console.warn("Image URL inaccessible: HTTP status", response.status, url);
         return false;
       }
-
-      console.log("Valid and accessible image URL:", { url, contentType });
-      imageValidationCache[url] = true;
+      if (!contentType?.startsWith("image/")) {
+        console.warn("Image URL does not point to an image: Content-Type", contentType, url);
+        return false;
+      }
+      console.log("Valid and accessible image URL:", url);
       return true;
-    } catch (err: any) {
-      console.warn("Error checking image URL accessibility, accepting as fallback:", { url, error: err.message });
-      imageValidationCache[url] = true; // Fallback to accept URL to avoid default logo
-      return true;
+    } catch (err) {
+      console.warn("Error checking image URL accessibility:", err, url);
+      return false;
     }
   };
 
   // Function to get valid image URL
   const getValidImageUrl = async (post: Post | null): Promise<string> => {
-    if (!post) {
-      console.warn("No post provided, using default image", { default: DEFAULT_IMAGE_URL });
-      return DEFAULT_IMAGE_URL;
-    }
+    if (!post) return DEFAULT_IMAGE_URL;
 
-    console.log("Checking featuredImageUrl:", { url: post.featuredImageUrl });
     if (await isValidImageUrl(post.featuredImageUrl)) {
-      console.log("Using featuredImageUrl:", { url: post.featuredImageUrl });
       return post.featuredImageUrl;
     }
 
-    console.log("Checking additionalImageUrls:", { urls: post.additionalImageUrls });
     if (post.additionalImageUrls && post.additionalImageUrls.length > 0) {
       for (const url of post.additionalImageUrls) {
         if (await isValidImageUrl(url)) {
-          console.log("Using additionalImageUrl as fallback:", { url });
+          console.log("Using additionalImageUrl as fallback:", url);
           return url;
         }
       }
     }
 
-    console.warn("No valid image found, using default:", { default: DEFAULT_IMAGE_URL });
+    console.warn("No valid image found, using default:", DEFAULT_IMAGE_URL);
     return DEFAULT_IMAGE_URL;
   };
 
@@ -198,19 +161,16 @@ const PostDetail: React.FC = () => {
         const response = await fetch(`${API_BASE_URL}/api/Post/slug/${slug}`, {
           headers: user?.token ? { Authorization: `Bearer ${user.token}` } : {},
         });
-        if (!response.ok) throw new Error(`Failed to fetch post details: ${response.statusText}`);
+        if (!response.ok) throw new Error("Failed to fetch post details");
         const postData: { data: Post } = await response.json();
 
-        console.log("Post fetched:", { 
-          featuredImageUrl: postData.data.featuredImageUrl,
-          additionalImageUrls: postData.data.additionalImageUrls 
-        });
+        console.log("Post featuredImageUrl:", postData.data.featuredImageUrl);
+        console.log("Post additionalImageUrls:", postData.data.additionalImageUrls);
         setPost(postData.data);
         setComments(postData.data.comments);
         postCache[slug!] = { data: postData.data, timestamp: Date.now() };
         setLoading(false);
       } catch (err) {
-        console.error("Fetch post error:", err);
         setError((err as Error).message);
         setLoading(false);
       }
@@ -228,7 +188,6 @@ const PostDetail: React.FC = () => {
       const data: { data: Comment[] } = await response.json();
       setComments(data.data);
     } catch (err) {
-      console.error("Fetch comments error:", err);
       setError((err as Error).message);
     }
   };
@@ -268,7 +227,6 @@ const PostDetail: React.FC = () => {
 
       setError(null);
     } catch (err) {
-      console.error("Like toggle error:", err);
       setError((err as Error).message);
       setTimeout(() => setError(null), 3000);
       setPost(originalPost);
@@ -329,7 +287,7 @@ const PostDetail: React.FC = () => {
       );
       setError(null);
     } catch (err) {
-      console.error("Comment submit error:", err);
+      console.log("Post error:", err);
       setError((err as Error).message);
       setTimeout(() => setError(null), 3000);
       setComments((prevComments) => prevComments.filter((c) => c.id !== optimisticComment.id));
@@ -407,7 +365,7 @@ const PostDetail: React.FC = () => {
       });
       setError(null);
     } catch (err) {
-      console.error("Reply submit error:", err);
+      console.log("Reply error:", err);
       setError((err as Error).message);
       setTimeout(() => setError(null), 3000);
       setComments((prevComments) => {
@@ -463,7 +421,7 @@ const PostDetail: React.FC = () => {
       setEditedContent("");
       setError(null);
     } catch (err) {
-      console.error("Edit save error:", err);
+      console.log("Edit error:", err);
       setError((err as Error).message);
       setTimeout(() => setError(null), 3000);
       setComments(originalComments);
@@ -502,7 +460,7 @@ const PostDetail: React.FC = () => {
       }
       setError(null);
     } catch (err) {
-      console.error("Delete comment error:", err);
+      console.log("Delete error:", err);
       setError((err as Error).message);
       setTimeout(() => setError(null), 3000);
       setComments(originalComments);
@@ -622,7 +580,6 @@ const PostDetail: React.FC = () => {
                 <button
                   onClick={() => setReplyingToCommentId(null)}
                   className="cancel-btn"
-                  type="button"
                 >
                   Cancel
                 </button>
@@ -658,7 +615,6 @@ const PostDetail: React.FC = () => {
     const updateImageUrl = async () => {
       if (post) {
         const validImageUrl = await getValidImageUrl(post);
-        console.log("Selected image URL for display and OG tags:", { imageUrl: validImageUrl });
         setImageUrl(validImageUrl);
       }
     };
@@ -666,10 +622,17 @@ const PostDetail: React.FC = () => {
   }, [post]);
 
   const handleWhatsAppShare = () => {
+    if (!post) return;
+
+    // Format the share text with title, description, and URL
+    const shareText = `${post.title}\n\n${shareDescription}\n\nRead more: ${shareUrl}`;
+    
+    // Encode the share text for the WhatsApp URL
+    const encodedShareText = encodeURIComponent(shareText);
+
+    // Open WhatsApp with the formatted share text
     window.open(
-      `https://api.whatsapp.com/send?text=${encodeURIComponent(
-        `${post?.title}\n${shareDescription}\n${shareUrl}`
-      )}`,
+      `https://api.whatsapp.com/send?text=${encodedShareText}`,
       "_blank"
     );
   };
@@ -710,7 +673,7 @@ const PostDetail: React.FC = () => {
           url: shareUrl,
         });
       } catch (err) {
-        console.error("Native share error:", err);
+        console.log("Share error:", err);
       }
     } else {
       alert("Web Share API is not supported in your browser.");
