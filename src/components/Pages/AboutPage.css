@@ -1,0 +1,173 @@
+/* About page specific styles */
+.about-page {
+    /* Reuse auth CSS variables */
+    --background-light: linear-gradient(135deg, #ffffff 0%, #d1d5db 100%);
+    --background-dark: linear-gradient(135deg, #2b5876 0%, #4e4376 100%);
+    --form-bg-light: rgba(255, 255, 255, 0.2);
+    --form-bg-dark: rgba(0, 0, 0, 0.1);
+    --text-light: #000000;
+    --text-dark: #e0e0e0;
+    --input-bg-light: rgba(255, 255, 255, 0.3);
+    --input-bg-dark: rgba(255, 255, 255, 0.05);
+    --button-gradient: linear-gradient(45deg, #4facfe, #00f2fe);
+    --shadow-light: rgba(0, 0, 0, 0.2);
+    --shadow-dark: rgba(0, 0, 0, 0.37);
+    --border-light: rgba(0, 0, 0, 0.4);
+    --border-dark: rgba(255, 255, 255, 0.4);
+    --border-focus-light: #000000;
+    --border-focus-dark: #ffffff;
+
+    --background: var(--background-light);
+    --form-bg: var(--form-bg-light);
+    --text: var(--text-light);
+    --input-bg: var(--input-bg-light);
+    --shadow: var(--shadow-light);
+    --border: var(--border-light);
+    --border-focus: var(--border-focus-light);
+}
+
+body.dark-mode .about-page {
+    --background: var(--background-dark);
+    --form-bg: var(--form-bg-dark);
+    --text: var(--text-dark);
+    --input-bg: var(--input-bg-dark);
+    --shadow: var(--shadow-dark);
+    --border: var(--border-dark);
+    --border-focus: var(--border-focus-dark);
+}
+
+/* Page container */
+.about-page .about-page-container {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding-top: 5rem;
+    background: var(--background);
+    position: relative;
+    overflow: hidden;
+}
+
+.about-page .about-page-container::before {
+    content: '';
+    position: absolute;
+    width: 200%;
+    height: 200%;
+    top: -50%;
+    left: -50%;
+    background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><circle cx="50" cy="50" r="30" fill="rgba(0,0,0,0.1)"/></svg>') repeat;
+    animation: page-backgroundMove 20s linear infinite;
+    opacity: 0.2;
+}
+
+/* Page card/content area */
+.about-page .about-page-card {
+    background: var(--form-bg);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    padding: 2rem;
+    width: 100%;
+    max-width: 600px;
+    box-shadow: 0 8px 32px var(--shadow);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    position: relative;
+    z-index: 1;
+    margin: 1rem;
+}
+
+/* Heading */
+.about-page .about-page-title {
+    color: var(--text);
+    text-align: center;
+    margin-bottom: 2rem;
+    font-size: 1.8rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Content */
+.about-page .about-page-content {
+    color: var(--text);
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+.about-page .about-page-content p {
+    margin-bottom: 1rem;
+}
+
+.about-page .about-page-content h3 {
+    color: var(--text);
+    font-size: 1.4rem;
+    margin: 1.5rem 0 1rem;
+}
+
+.about-page .about-page-content ul {
+    list-style-type: disc;
+    padding-left: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.about-page .about-page-content li {
+    margin-bottom: 0.5rem;
+}
+
+.about-page .about-page-content a {
+    color: var(--button-gradient);
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.about-page .about-page-content a:hover {
+    color: #00f2fe;
+}
+
+/* Animations */
+@keyframes page-backgroundMove {
+    0% { transform: translate(0, 0); }
+    100% { transform: translate(-50%, -50%); }
+}
+
+/* Responsive design - mobile */
+@media (max-width: 480px) {
+    .about-page .about-page-container {
+        padding-top: 3rem;
+    }
+
+    .about-page .about-page-card {
+        padding: 1.5rem;
+        margin: 0.5rem;
+    }
+
+    .about-page .about-page-title {
+        font-size: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .about-page .about-page-content {
+        font-size: 0.9rem;
+    }
+
+    .about-page .about-page-content h3 {
+        font-size: 1.2rem;
+    }
+}
+
+/* Desktop-specific adjustments */
+@media (min-width: 769px) {
+    .about-page .about-page-container {
+        padding-top: 4rem;
+    }
+
+    .about-page .about-page-card {
+        max-width: 800px;
+        padding: 2.5rem;
+    }
+
+    .about-page .about-page-title {
+        font-size: 2rem;
+    }
+
+    .about-page .about-page-content h3 {
+        font-size: 1.6rem;
+    }
+}
