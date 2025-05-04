@@ -94,18 +94,44 @@ const PostDetail: React.FC = () => {
     return post.excerpt || post.content.substring(0, 160);
   };
 
-  // Function to validate image URL
-  const isValidImageUrl = (url: string | null | undefined): boolean => {
+  // Function to validate image URL and check accessibility
+  const isValidImageUrl = async (url: string | null | undefined): Promise<boolean> => {
     if (!url || typeof url !== "string") {
       console.warn("Invalid image URL: URL is null, undefined, or not a string", url);
       return false;
     }
-    const regex = /^https?:\/\/.*\.(?:jpg|jpeg|png|gif|webp)(?:\?.*)?(?:#.*)?$/i;
-    const isValid = regex.test(url);
-    if (!isValid) {
+
+    // More permissive regex to allow URLs without extensions
+    const regex = /^https?:\/\/.+(?:\/[^\/?#]+)?(?:\?.*)?(?:#.*)?$/i;
+    if (!regex.test(url)) {
       console.warn("Invalid image URL: Does not match expected format", url);
+      return false;
     }
-    return isValid;
+
+    // Check if the image is accessible
+    try {
+      const response = await fetch(url, { method: "HEAD" });
+      const contentType = response.headers.get("content-type");
+      if (!response.ok) {
+        console.warn("Image URL inaccessible: HTTP status", response.status, url);
+        return false;
+      }
+      if (!contentType?.startsWith("image/")) {
+        console.warn("Image URL does not point to an image: Content-Type", contentType, url);
+        return false;
+      }
+      console.log("Valid and accessible image URL:", url);
+      return true;
+    } catch (err) {
+      console.warn("Error checking image URL accessibility:", err, url);
+      return false;
+    }
+  };
+
+  // Function to get valid image URL
+  const getValidImageUrl = async (featuredImageUrl: string | null | undefined): Promise<string> => {
+    const isValid = await isValidImageUrl(featuredImageUrl);
+    return isValid ? featuredImageUrl! : DEFAULT_IMAGE_URL;
   };
 
   // Function to fix share links if they use the wrong domain
@@ -620,8 +646,18 @@ const PostDetail: React.FC = () => {
   };
 
   const shareUrl = post ? `${BASE_URL}/post/${post.slug}` : "";
-  const imageUrl = post && isValidImageUrl(post.featuredImageUrl) ? post.featuredImageUrl : DEFAULT_IMAGE_URL;
+  const [imageUrl, setImageUrl] = useState(DEFAULT_IMAGE_URL);
   const shareDescription = post ? getShareDescription(post) : "";
+
+  useEffect(() => {
+    const updateImageUrl = async () => {
+      if (post) {
+        const validImageUrl = await getValidImageUrl(post.featuredImageUrl);
+        setImageUrl(validImageUrl);
+      }
+    };
+    updateImageUrl();
+  }, [post]);
 
   const handleWhatsAppShare = () => {
     if (shareLinks?.whatsApp) {
