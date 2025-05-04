@@ -62,10 +62,9 @@ const PostDetail: React.FC = () => {
   const location = useLocation();
   const updatedPost = location.state?.updatedPost as Post | undefined;
 
-  const BASE_URL = "https://www.voiceinfos.com";
-  const DEFAULT_IMAGE_URL = "https://www.voiceinfos.com/INFOS_LOGO%5B1%5D.png";
+  const BASE_URL = "https://www.voiceinfos.com"; // Frontend base URL
+  const DEFAULT_IMAGE_URL = "https://www.voiceinfos.com/INFOS_LOGO.png";
 
-  // Utility function to capitalize first letter of each name
   const capitalizeName = (name: string): string => {
     return name
       .split(" ")
@@ -73,7 +72,6 @@ const PostDetail: React.FC = () => {
       .join(" ");
   };
 
-  // Function to process content and embed YouTube videos
   const processContent = (content: string): string => {
     const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/g;
     return content.replace(youtubeRegex, (_, videoId) => {
@@ -81,63 +79,8 @@ const PostDetail: React.FC = () => {
     });
   };
 
-  // Function to get share description (excerpt or truncated content)
   const getShareDescription = (post: Post): string => {
-    return post.excerpt || post.content.substring(0, 160);
-  };
-
-  // Function to validate image URL and check accessibility
-  const isValidImageUrl = async (url: string | null | undefined): Promise<boolean> => {
-    if (!url || typeof url !== "string") {
-      console.warn("Invalid image URL: URL is null, undefined, or not a string", url);
-      return false;
-    }
-
-    const regex = /^https?:\/\/.+(?:\/[^\/?#]+)?(?:\?.*)?(?:#.*)?$/i;
-    if (!regex.test(url)) {
-      console.warn("Invalid image URL: Does not match expected format", url);
-      return false;
-    }
-
-    try {
-      const response = await fetch(url, { method: "HEAD" });
-      const contentType = response.headers.get("content-type");
-      if (!response.ok) {
-        console.warn("Image URL inaccessible: HTTP status", response.status, url);
-        return false;
-      }
-      if (!contentType?.startsWith("image/")) {
-        console.warn("Image URL does not point to an image: Content-Type", contentType, url);
-        return false;
-      }
-      console.log("Valid and accessible image URL:", url);
-      return true;
-    } catch (err) {
-      console.warn("Error checking image URL accessibility:", err, url);
-      return false;
-    }
-  };
-
-  // Function to get valid image URL
-  const getValidImageUrl = async (post: Post | null): Promise<string> => {
-    if (!post) return DEFAULT_IMAGE_URL;
-
-    if (await isValidImageUrl(post.featuredImageUrl)) {
-      console.log("Using featuredImageUrl:", post.featuredImageUrl);
-      return post.featuredImageUrl;
-    }
-
-    if (post.additionalImageUrls && post.additionalImageUrls.length > 0) {
-      for (const url of post.additionalImageUrls) {
-        if (await isValidImageUrl(url)) {
-          console.log("Using additionalImageUrl as fallback:", url);
-          return url;
-        }
-      }
-    }
-
-    console.warn("No valid image found, using default:", DEFAULT_IMAGE_URL);
-    return DEFAULT_IMAGE_URL;
+    return post.excerpt || (post.content.length > 160 ? post.content.substring(0, 160) + "..." : post.content);
   };
 
   useEffect(() => {
@@ -165,8 +108,8 @@ const PostDetail: React.FC = () => {
         if (!response.ok) throw new Error("Failed to fetch post details");
         const postData: { data: Post } = await response.json();
 
-        console.log("Post featuredImageUrl:", postData.data.featuredImageUrl);
-        console.log("Post additionalImageUrls:", postData.data.additionalImageUrls);
+        console.log("Post fetched:", postData.data);
+        console.log("Featured image URL:", postData.data.featuredImageUrl);
         setPost(postData.data);
         setComments(postData.data.comments);
         postCache[slug!] = { data: postData.data, timestamp: Date.now() };
@@ -614,72 +557,69 @@ const PostDetail: React.FC = () => {
     return undefined;
   };
 
-  const shareUrl = post ? `${BASE_URL}/post/${post.slug}?cb=${Date.now()}` : "";
-  const [imageUrl, setImageUrl] = useState(DEFAULT_IMAGE_URL);
+  // Share metadata
+  const shareUrl = post ? `${BASE_URL}/post/${encodeURIComponent(post.slug)}` : "";
   const shareDescription = post ? getShareDescription(post) : "";
+  const imageUrl = post?.featuredImageUrl || DEFAULT_IMAGE_URL;
 
+  // Log for debugging
   useEffect(() => {
-    const updateImageUrl = async () => {
-      if (post) {
-        const validImageUrl = await getValidImageUrl(post);
-        console.log("Setting imageUrl for OG tags:", validImageUrl);
-        setImageUrl(validImageUrl);
-      }
-    };
-    updateImageUrl();
-  }, [post]);
+    if (post) {
+      console.log("Share URL:", shareUrl);
+      console.log("Share Description:", shareDescription);
+      console.log("Image URL for sharing:", imageUrl);
+    }
+  }, [post, shareDescription, imageUrl, shareUrl]);
+
+  const getShareText = (post: Post): string => {
+    return `${post.title}\n\n${getShareDescription(post)}\n\n${imageUrl}\n\nRead more: ${shareUrl}`;
+  };
 
   const handleWhatsAppShare = () => {
     if (!post) return;
-
-    // Format the share text with title, description, and URL
-    const shareText = `${post.title}\n\n${shareDescription}\n\nRead more: ${shareUrl}`;
-    
-    // Encode the share text for the WhatsApp URL
+    const shareText = getShareText(post);
     const encodedShareText = encodeURIComponent(shareText);
-
-    // Open WhatsApp with the formatted share text
-    window.open(
-      `https://api.whatsapp.com/send?text=${encodedShareText}`,
-      "_blank"
-    );
+    const whatsappUrl = `https://api.whatsapp.com/send?text=${encodedShareText}`;
+    console.log("WhatsApp Share URL:", whatsappUrl);
+    window.open(whatsappUrl, "_blank");
   };
 
   const handleXShare = () => {
-    window.open(
-      `https://twitter.com/intent/tweet?text=${encodeURIComponent(
-        `${post?.title}\n${shareDescription}`
-      )}&url=${encodeURIComponent(shareUrl)}`,
-      "_blank"
-    );
+    if (!post) return;
+    const shareText = getShareText(post);
+    const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`;
+    console.log("X Share URL:", tweetUrl);
+    window.open(tweetUrl, "_blank");
   };
 
   const handleFacebookShare = () => {
-    window.open(
-      `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`,
-      "_blank"
-    );
+    if (!post) return;
+    const shareText = getShareText(post);
+    const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(shareText)}`;
+    console.log("Facebook Share URL:", fbUrl);
+    window.open(fbUrl, "_blank");
   };
 
   const handleLinkedInShare = () => {
-    window.open(
-      `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(
-        shareUrl
-      )}&title=${encodeURIComponent(post?.title || "")}&summary=${encodeURIComponent(
-        shareDescription
-      )}`,
-      "_blank"
-    );
+    if (!post) return;
+    const shareText = getShareText(post);
+    const liUrl = `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(
+      shareUrl
+    )}&title=${encodeURIComponent(post.title)}&summary=${encodeURIComponent(shareText)}`;
+    console.log("LinkedIn Share URL:", liUrl);
+    window.open(liUrl, "_blank");
   };
 
   const handleNativeShare = async () => {
+    if (!post) return;
     if (navigator.share) {
       try {
         await navigator.share({
-          title: post?.title,
-          text: `${post?.title}\n${shareDescription}`,
+          title: post.title,
+          text: getShareText(post),
           url: shareUrl,
         });
+        console.log("Native Share triggered:", shareUrl);
       } catch (err) {
         console.log("Share error:", err);
       }
@@ -697,19 +637,8 @@ const PostDetail: React.FC = () => {
   return (
     <>
       <Helmet>
-        {/* Open Graph tags for social media and WhatsApp link previews */}
         <title>{post.title}</title>
         <meta name="description" content={shareDescription} />
-        <meta property="og:title" content={post.title} />
-        <meta property="og:description" content={shareDescription} />
-        <meta property="og:image" content={imageUrl} />
-        <meta property="og:url" content={shareUrl} />
-        <meta property="og:type" content="article" />
-        {/* Twitter Card tags for Twitter/X and fallback for other platforms */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={post.title} />
-        <meta name="twitter:description" content={shareDescription} />
-        <meta name="twitter:image" content={imageUrl} />
       </Helmet>
 
       <article className="article-page">
