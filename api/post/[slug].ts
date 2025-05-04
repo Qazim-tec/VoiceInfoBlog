@@ -43,7 +43,7 @@ const escapeHtml = (unsafe: string): string => {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
+    .replace(/'/g, '&#39;');
 };
 
 const getShareDescription = (post: Post): string => {
@@ -51,33 +51,47 @@ const getShareDescription = (post: Post): string => {
 };
 
 const isValidImageUrl = async (url: string | null | undefined): Promise<boolean> => {
-  if (!url || typeof url !== 'string') return false;
+  if (!url || typeof url !== 'string') {
+    console.log('Invalid image URL: URL is null, undefined, or not a string', url);
+    return false;
+  }
 
   const regex = /^https?:\/\/.+(?:\/[^\/?#]+)?(?:\?.*)?(?:#.*)?$/i;
-  if (!regex.test(url)) return false;
+  if (!regex.test(url)) {
+    console.log('Invalid image URL: Does not match expected format', url);
+    return false;
+  }
 
   try {
     const response = await axios.head(url, { timeout: 2000 });
     const contentType = response.headers['content-type'];
-    return response.status === 200 && contentType && contentType.startsWith('image/');
-  } catch {
+    const isValid = response.status === 200 && contentType && contentType.startsWith('image/');
+    console.log(`Image URL validation: ${url}, Status: ${response.status}, Content-Type: ${contentType}, Valid: ${isValid}`);
+    return isValid;
+  } catch (error) {
+    console.error('Error validating image URL:', url, error.message);
     return false;
   }
 };
 
 const getValidImageUrl = async (post: Post): Promise<string> => {
+  console.log('Checking featuredImageUrl:', post.featuredImageUrl);
   if (await isValidImageUrl(post.featuredImageUrl)) {
+    console.log('Using featuredImageUrl:', post.featuredImageUrl);
     return post.featuredImageUrl;
   }
 
+  console.log('Checking additionalImageUrls:', post.additionalImageUrls);
   if (post.additionalImageUrls && post.additionalImageUrls.length > 0) {
     for (const url of post.additionalImageUrls) {
       if (await isValidImageUrl(url)) {
+        console.log('Using additionalImageUrl:', url);
         return url;
       }
     }
   }
 
+  console.log('Falling back to default image:', DEFAULT_IMAGE_URL);
   return DEFAULT_IMAGE_URL;
 };
 
@@ -85,15 +99,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const { slug } = req.query;
   const userAgent = req.headers['user-agent'];
 
+  console.log('Function invoked with slug:', slug, 'User-Agent:', userAgent);
+
   if (typeof slug !== 'string') {
+    console.error('Invalid slug:', slug);
     return res.status(400).json({ error: 'Invalid slug' });
   }
 
   if (isSocialMediaCrawler(userAgent)) {
     try {
-      // Check cache
+      console.log('Detected social media crawler, processing OG tags...');
+      console.log('Checking cache for slug:', slug);
       const cached = cache[slug];
       if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+        console.log('Cache hit for slug:', slug);
         const post: Post = cached.data;
         const shareUrl = `${BASE_URL}/post/${post.slug}`;
         const shareDescription = getShareDescription(post);
@@ -126,21 +145,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           </html>
         `;
 
+        console.log('Returning cached OG HTML for slug:', slug);
         res.setHeader('Content-Type', 'text/html');
         return res.status(200).send(html);
       }
 
-      // Fetch from API
+      console.log('Cache miss, fetching from API:', `${API_BASE_URL}/api/Post/slug/${slug}`);
       const response = await axios.get(`${API_BASE_URL}/api/Post/slug/${slug}`, {
         timeout: 3000,
       });
+      console.log('API response status:', response.status);
       const post: Post = response.data.data;
 
       if (!post) {
+        console.error('Post not found for slug:', slug);
         return res.status(404).send('Post not found');
       }
 
-      // Cache the response
+      console.log('Post fetched:', post);
       cache[slug] = { data: post, timestamp: Date.now() };
 
       const shareUrl = `${BASE_URL}/post/${post.slug}`;
@@ -174,15 +196,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         </html>
       `;
 
+      console.log('Returning fresh OG HTML for slug:', slug);
       res.setHeader('Content-Type', 'text/html');
       return res.status(200).send(html);
-    } catch (err) {
-      console.error('Error fetching post:', err.message);
+    } catch (error) {
+      console.error('Error in serverless function:', {
+        message: error.message,
+        stack: error.stack,
+        slug,
+        apiUrl: `${API_BASE_URL}/api/Post/slug/${slug}`,
+      });
       return res.status(500).send('Internal server error');
     }
   }
 
-  // Serve SPA for regular users
+  console.log('Not a crawler, serving SPA');
   res.setHeader('Content-Type', 'text/html');
   return res.status(200).send(`
     <!DOCTYPE html>
