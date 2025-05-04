@@ -39,11 +39,11 @@ const isSocialMediaCrawler = (userAgent: string | undefined): boolean => {
 
 const escapeHtml = (unsafe: string): string => {
   return unsafe
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
+  .replace(/&/g, '&amp;')
+  .replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;')
+  .replace(/'/g, '&#39;');
 };
 
 const getShareDescription = (post: Post): string => {
