@@ -8,18 +8,27 @@
         {
           "type": "header",
           "key": "user-agent",
-          "value": "(?i)(WhatsApp|facebookexternalhit|Twitterbot|LinkedInBot|Slackbot|Googlebot)"
+          "value": "(WhatsApp|facebookexternalhit|Twitterbot|LinkedInBot|Slackbot|Googlebot)"
         }
       ],
-      "destination": "/api/post/:slug"
-    },
-    {
-      "source": "/post/:slug",
-      "destination": "/index.html"
+      "destination": "/api/post/[slug]"
     },
     {
       "source": "/:path*",
       "destination": "/index.html"
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "https://www.voiceinfos.com",
+      "permanent": false,
+      "has": [
+        {
+          "type": "host",
+          "value": "voice-info-blog.vercel.app"
+        }
+      ]
     }
   ]
 }

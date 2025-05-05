@@ -16,7 +16,7 @@ const SOCIAL_MEDIA_CRAWLERS = [
   'Twitterbot',
   'LinkedInBot',
   'Slackbot',
-  'Googlebot'
+  'Googlebot',
 ];
 
 const isSocialMediaCrawler = (userAgent: string | null): boolean => {
@@ -26,7 +26,7 @@ const isSocialMediaCrawler = (userAgent: string | null): boolean => {
 
 const isValidImageUrl = async (url: string | null | undefined): Promise<boolean> => {
   if (!url || typeof url !== 'string') return false;
-  const regex = /^https?:\/\/.+(?:\/[^\/?#]+)?(?:\?.*)?(?:#.*)?$/i;
+  const regex = /^https?:\/\/.+\/[^/?#]+(?:\?.*)?(?:#.*)?$/i;
   if (!regex.test(url)) return false;
   try {
     const response = await fetch(url, { method: 'HEAD' });
@@ -59,9 +59,9 @@ export default async function handler(request: Request): Promise<Response> {
   const slug = url.pathname.split('/').pop() || '';
   const userAgent = request.headers.get('user-agent');
 
-  // If not a social media crawler, serve the client-side app
+  // If not a social media crawler, return early (let Vercel handle the request)
   if (!isSocialMediaCrawler(userAgent)) {
-    return fetch(request); // Pass through to the static React app
+    return new Response(null, { status: 204 }); // No content, let Vercel serve index.html
   }
 
   try {
@@ -76,13 +76,13 @@ export default async function handler(request: Request): Promise<Response> {
     const shareUrl = `https://www.voiceinfos.com/post/${post.slug}`;
 
     const sanitize = (str: string) => str.replace(/[<>"'&]/g, (char) => ({
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&apos;',
-        '&': '&amp;'
-      }[char] || char));
-  
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&apos;',
+      '&': '&amp;'
+    }[char] || char));
+
     // Generate minimal HTML with meta tags
     const html = `
       <!DOCTYPE html>
@@ -119,7 +119,37 @@ export default async function handler(request: Request): Promise<Response> {
     });
   } catch (err) {
     console.error('Edge function error:', err);
-    // Fallback to client-side app if post fetch fails
-    return fetch(request);
+    // Fallback to minimal HTML with default OG tags
+    const fallbackHtml = `
+      <!DOCTYPE html>
+      <html lang="en">
+        <head>
+          <meta charset="UTF-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          <title>VoiceInfo</title>
+          <meta name="description" content="Welcome to VoiceInfo" />
+          <meta property="og:title" content="VoiceInfo" />
+          <meta property="og:description" content="Welcome to VoiceInfo" />
+          <meta property="og:image" content="https://www.voiceinfos.com/INFOS_LOGO%5B1%5D.png" />
+          <meta property="og:image:width" content="1200" />
+          <meta property="og:image:height" content="630" />
+          <meta property="og:url" content="https://www.voiceinfos.com" />
+          <meta property="og:type" content="website" />
+          <meta property="og:site_name" content="VoiceInfo" />
+          <meta name="twitter:card" content="summary_large_image" />
+          <meta name="twitter:title" content="VoiceInfo" />
+          <meta name="twitter:description" content="Welcome to VoiceInfo" />
+          <meta name="twitter:image" content="https://www.voiceinfos.com/INFOS_LOGO%5B1%5D.png" />
+        </head>
+        <body>
+          <div id="root"></div>
+          <script type="module" src="/src/main.tsx"></script>
+        </body>
+      </html>
+    `;
+    return new Response(fallbackHtml, {
+      status: 200,
+      headers: { 'Content-Type': 'text/html' },
+    });
   }
 }
