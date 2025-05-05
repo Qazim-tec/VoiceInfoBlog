@@ -4,24 +4,18 @@
   "rewrites": [
     {
       "source": "/post/:slug",
-      "destination": "/api/post/[slug]"
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(WhatsApp|facebookexternalhit|Twitterbot|LinkedInBot|Slackbot|Googlebot)"
+        }
+      ],
+      "destination": "/api/post/:slug"
     },
     {
       "source": "/:path*",
       "destination": "/index.html"
-    }
-  ],
-  "redirects": [
-    {
-      "source": "/",
-      "destination": "https://www.example.com",
-      "permanent": false,
-      "has": [
-        {
-          "type": "host",
-          "value": "voice-info-blog.vercel.app"
-        }
-      ]
     }
   ]
 }
