@@ -37,7 +37,7 @@ const isValidImageUrl = async (url: string | null | undefined): Promise<boolean>
 };
 
 const getValidImageUrl = async (post: Post | null): Promise<string> => {
-  const DEFAULT_IMAGE_URL = 'https://www.voiceinfos.com/INFOS_LOGO%5B1%5D.png';
+  const DEFAULT_IMAGE_URL = 'https://www.voiceinfos.com/INFOS_LOGO[1].png';
   if (!post) return DEFAULT_IMAGE_URL;
   if (await isValidImageUrl(post.featuredImageUrl)) return post.featuredImageUrl;
   for (const url of post.additionalImageUrls || []) {
@@ -58,16 +58,17 @@ export default async function handler(request: Request): Promise<Response> {
   const url = new URL(request.url);
   const slug = url.pathname.split('/').pop() || '';
   const userAgent = request.headers.get('user-agent');
+  console.log(`Request: ${url.pathname}, User-Agent: ${userAgent}`);
 
-  // If not a social media crawler, return early (let Vercel handle the request)
   if (!isSocialMediaCrawler(userAgent)) {
-    return new Response(null, { status: 204 }); // No content, let Vercel serve index.html
+    console.log('Non-crawler request, returning 204');
+    return new Response(null, { status: 204 });
   }
 
   try {
-    // Fetch post data
+    console.log(`Fetching post for slug: ${slug}`);
     const response = await fetch(`${API_BASE_URL}/api/Post/slug/${slug}`);
-    if (!response.ok) throw new Error('Failed to fetch post');
+    if (!response.ok) throw new Error(`Failed to fetch post: ${response.status}`);
     const { data: post }: { data: Post } = await response.json();
 
     const imageUrl = await getValidImageUrl(post);
@@ -76,14 +77,13 @@ export default async function handler(request: Request): Promise<Response> {
     const shareUrl = `https://www.voiceinfos.com/post/${post.slug}`;
 
     const sanitize = (str: string) => str.replace(/[<>"'&]/g, (char) => ({
-      '<': '&lt;',
-      '>': '&gt;',
-      '"': '&quot;',
-      "'": '&apos;',
-      '&': '&amp;'
-    }[char] || char));
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&apos;',
+        '&': '&amp;'
+      }[char] || char));
 
-    // Generate minimal HTML with meta tags
     const html = `
       <!DOCTYPE html>
       <html lang="en">
@@ -119,7 +119,6 @@ export default async function handler(request: Request): Promise<Response> {
     });
   } catch (err) {
     console.error('Edge function error:', err);
-    // Fallback to minimal HTML with default OG tags
     const fallbackHtml = `
       <!DOCTYPE html>
       <html lang="en">
@@ -130,7 +129,7 @@ export default async function handler(request: Request): Promise<Response> {
           <meta name="description" content="Welcome to VoiceInfo" />
           <meta property="og:title" content="VoiceInfo" />
           <meta property="og:description" content="Welcome to VoiceInfo" />
-          <meta property="og:image" content="https://www.voiceinfos.com/INFOS_LOGO%5B1%5D.png" />
+          <meta property="og:image" content="https://www.voiceinfos.com/INFOS_LOGO[1].png" />
           <meta property="og:image:width" content="1200" />
           <meta property="og:image:height" content="630" />
           <meta property="og:url" content="https://www.voiceinfos.com" />
@@ -139,7 +138,7 @@ export default async function handler(request: Request): Promise<Response> {
           <meta name="twitter:card" content="summary_large_image" />
           <meta name="twitter:title" content="VoiceInfo" />
           <meta name="twitter:description" content="Welcome to VoiceInfo" />
-          <meta name="twitter:image" content="https://www.voiceinfos.com/INFOS_LOGO%5B1%5D.png" />
+          <meta name="twitter:image" content="https://www.voiceinfos.com/INFOS_LOGO[1].png" />
         </head>
         <body>
           <div id="root"></div>
