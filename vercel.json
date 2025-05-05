@@ -3,8 +3,15 @@
   "trailingSlash": false,
   "rewrites": [
     {
-      "source": "/api/post/:slug",
-      "destination": "/api/post/[slug]"
+      "source": "/post/:slug",
+      "destination": "/api/post/[slug]",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(WhatsApp|facebookexternalhit|Twitterbot|LinkedInBot|Slackbot|Googlebot)"
+        }
+      ]
     },
     {
       "source": "/(.*)",
