@@ -1,41 +1,25 @@
 {
+  "cleanUrls": true,
+  "trailingSlash": false,
   "rewrites": [
     {
       "source": "/post/:slug",
-      "destination": "/api/post/[slug]",
-      "has": [
-        {
-          "type": "header",
-          "key": "user-agent",
-          "value": "(WhatsApp|facebookexternalhit|Twitterbot|LinkedInBot|Slackbot|Googlebot)"
-        }
-      ]
+      "destination": "/api/post/[slug]"
     },
     {
-      "source": "/(.*)",
+      "source": "/:path*",
       "destination": "/index.html"
     }
   ],
   "redirects": [
     {
-      "source": "/(.*)",
-      "destination": "https://www.voiceinfos.com/$1",
+      "source": "/",
+      "destination": "https://www.example.com",
       "permanent": false,
       "has": [
         {
           "type": "host",
           "value": "voice-info-blog.vercel.app"
-        }
-      ]
-    },
-    {
-      "source": "/(.*)",
-      "destination": "https://www.voiceinfos.com/$1",
-      "permanent": false,
-      "has": [
-        {
-          "type": "host",
-          "value": "voice-info-blog-fwpt8jvbr-daudu-qazims-projects.vercel.app"
         }
       ]
     }
