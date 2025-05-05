@@ -34,6 +34,7 @@
     "@types/react-dom": "^19.0.4",
     "@types/react-helmet-async": "^1.0.1",
     "@types/swiper": "^5.4.3",
+    "@vercel/edge": "^1.2.1",
     "@vitejs/plugin-react": "^4.4.1",
     "eslint": "^9.21.0",
     "eslint-plugin-react-hooks": "^5.1.0",
