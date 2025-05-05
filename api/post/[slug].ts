@@ -50,76 +50,88 @@ const getShareDescription = (post: Post): string => {
   return post.excerpt || post.content.substring(0, 160);
 };
 
+const sanitize = (str: string): string => str.replace(/[<>"'&]/g, (char) => ({
+  '<': '&lt;',
+  '>': '&gt;',
+  '"': '&quot;',
+  "'": '&apos;',
+  '&': '&amp;'
+}[char] || char));
+
 export const config = {
   runtime: 'edge',
+  regions: ['iad1'], // Virginia region for better performance
 };
+
+// HTML template for the SPA fallback
+const SPATemplate = (content?: string) => `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/INFOS_LOGO[1].png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>VoiceInfo</title>
+    ${content || ''}
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>`;
 
 export default async function handler(request: Request): Promise<Response> {
   const url = new URL(request.url);
-  const slug = url.pathname.split('/').pop() || '';
+  const path = url.pathname;
   const userAgent = request.headers.get('user-agent');
 
-  // If not a social media crawler, serve the client-side app
-  if (!isSocialMediaCrawler(userAgent)) {
-    return fetch(request); // Pass through to the static React app
-  }
-
-  try {
-    // Fetch post data
-    const response = await fetch(`${API_BASE_URL}/api/Post/slug/${slug}`);
-    if (!response.ok) throw new Error('Failed to fetch post');
-    const { data: post }: { data: Post } = await response.json();
-
-    const imageUrl = await getValidImageUrl(post);
-    const shareTitle = post.title;
-    const shareDescription = getShareDescription(post);
-    const shareUrl = `https://www.voiceinfos.com/post/${post.slug}`;
-
-    const sanitize = (str: string) => str.replace(/[<>"'&]/g, (char) => ({
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&apos;',
-        '&': '&amp;'
-      }[char] || char));
-  
-    // Generate minimal HTML with meta tags
-    const html = `
-      <!DOCTYPE html>
-      <html lang="en">
-        <head>
-          <meta charset="UTF-8" />
-          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-          <title>${sanitize(shareTitle)}</title>
-          <meta name="description" content="${sanitize(shareDescription)}" />
-          <meta property="og:title" content="${sanitize(shareTitle)}" />
-          <meta property="og:description" content="${sanitize(shareDescription)}" />
-          <meta property="og:image" content="${sanitize(imageUrl)}" />
-          <meta property="og:image:width" content="1200" />
-          <meta property="og:image:height" content="630" />
-          <meta property="og:url" content="${sanitize(shareUrl)}" />
-          <meta property="og:type" content="article" />
-          <meta property="og:site_name" content="VoiceInfo" />
-          <meta name="twitter:card" content="summary_large_image" />
-          <meta name="twitter:title" content="${sanitize(shareTitle)}" />
-          <meta name="twitter:description" content="${sanitize(shareDescription)}" />
-          <meta name="twitter:image" content="${sanitize(imageUrl)}" />
-          <meta name="twitter:image:alt" content="Image for ${sanitize(shareTitle)}" />
-        </head>
-        <body>
-          <div id="root"></div>
-          <script type="module" src="/src/main.tsx"></script>
-        </body>
-      </html>
-    `;
-
-    return new Response(html, {
-      status: 200,
-      headers: { 'Content-Type': 'text/html' },
-    });
-  } catch (err) {
-    console.error('Edge function error:', err);
-    // Fallback to client-side app if post fetch fails
+  // 1. Handle static assets and API routes first
+  if (path.startsWith('/_next/') || path.startsWith('/assets/') || path.startsWith('/api/')) {
     return fetch(request);
   }
+
+  // 2. Handle social media crawlers for post routes
+  if (path.startsWith('/post/') && isSocialMediaCrawler(userAgent)) {
+    try {
+      const slug = path.split('/').pop() || '';
+      const response = await fetch(`${API_BASE_URL}/api/Post/slug/${slug}`);
+      
+      if (!response.ok) throw new Error('Failed to fetch post');
+      
+      const { data: post }: { data: Post } = await response.json();
+      const imageUrl = await getValidImageUrl(post);
+      const shareUrl = `https://${url.hostname}/post/${post.slug}`;
+
+      const metaTags = `
+        <meta name="description" content="${sanitize(getShareDescription(post))}" />
+        <!-- Open Graph / Facebook -->
+        <meta property="og:type" content="article" />
+        <meta property="og:url" content="${sanitize(shareUrl)}" />
+        <meta property="og:title" content="${sanitize(post.title)}" />
+        <meta property="og:description" content="${sanitize(getShareDescription(post))}" />
+        <meta property="og:image" content="${sanitize(imageUrl)}" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <!-- Twitter -->
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:url" content="${sanitize(shareUrl)}" />
+        <meta name="twitter:title" content="${sanitize(post.title)}" />
+        <meta name="twitter:description" content="${sanitize(getShareDescription(post))}" />
+        <meta name="twitter:image" content="${sanitize(imageUrl)}" />
+      `;
+
+      return new Response(SPATemplate(metaTags), {
+        status: 200,
+        headers: { 'Content-Type': 'text/html' },
+      });
+    } catch (err) {
+      console.error('Edge function error:', err);
+      // Fall through to default SPA behavior
+    }
+  }
+
+  // 3. Default behavior: serve the SPA
+  return new Response(SPATemplate(), {
+    status: 200,
+    headers: { 'Content-Type': 'text/html' },
+  });
 }
