@@ -1,39 +1,54 @@
 {
-  "version": 2,
-  "builds": [
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "rewrites": [
     {
-      "src": "dist/index.html",
-      "use": "@vercel/static"
+      "source": "/post/:slug",
+      "destination": "/api/post/[slug]",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(WhatsApp|facebookexternalhit|Twitterbot|LinkedInBot|Slackbot|Googlebot)"
+        }
+      ]
     },
     {
-      "src": "api/post/[slug].ts",
-      "use": "@vercel/node"
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ],
-  "routes": [
+  "redirects": [
     {
-      "src": "/api/post/(?<slug>[^/]+)",
-      "dest": "/api/post/[slug]"
+      "source": "/(.*)",
+      "destination": "https://www.voiceinfos.com/$1",
+      "permanent": false,
+      "has": [
+        {
+          "type": "host",
+          "value": "voice-info-blog.vercel.app"
+        }
+      ]
+    }
+  ],
+  "headers": [
+    {
+      "source": "/static/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
     },
     {
-      "src": "/post/(?<slug>[^/]+)",
-      "headers": {
-        "Cache-Control": "no-cache"
-      },
-      "continue": true
-    },
-    {
-      "src": "/assets/(.*)",
-      "headers": {
-        "Cache-Control": "public, max-age=31536000, immutable"
-      }
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html",
-      "headers": {
-        "Cache-Control": "no-cache, no-store, must-revalidate"
-      }
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        }
+      ]
     }
   ]
 }
