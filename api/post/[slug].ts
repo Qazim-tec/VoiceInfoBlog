@@ -11,13 +11,14 @@ interface Post {
 }
 
 const SOCIAL_MEDIA_CRAWLERS =
-  /WhatsApp|facebookexternalhit|Twitterbot|LinkedInBot|Slackbot|Googlebot|bingbot|Pinterest|Discordbot|TelegramBot|Redditbot/i;
+  /WhatsApp|facebookexternalhit|Twitterbot|LinkedInBot|Slackbot|Googlebot|bingbot|Pinterest|Discordbot|TelegramBot|Redditbot|Facebot|facebookcatalog/i;
 
 const DEFAULT_IMAGE_URL = 'https://www.voiceinfos.com/INFOS_LOGO%5B1%5D.png';
 const BASE_URL = 'https://www.voiceinfos.com';
 
 const isSocialMediaCrawler = (userAgent: string | null): boolean => {
   if (!userAgent) return false;
+  console.log(`Checking user-agent: ${userAgent}`);
   return SOCIAL_MEDIA_CRAWLERS.test(userAgent);
 };
 
@@ -27,8 +28,11 @@ const isValidImageUrl = async (url: string | null | undefined): Promise<boolean>
   if (!regex.test(url)) return false;
   try {
     const response = await fetch(url, { method: 'HEAD' });
-    return response.ok && response.headers.get('content-type')?.startsWith('image/') || false;
-  } catch {
+    const isValid = response.ok && response.headers.get('content-type')?.startsWith('image/') || false;
+    console.log(`Image URL ${url} valid: ${isValid}`);
+    return isValid;
+  } catch (err) {
+    console.error(`Error validating image URL ${url}:`, err);
     return false;
   }
 };
@@ -54,7 +58,7 @@ const sanitize = (str: string | undefined): string => {
     '>': '>',
     '&': '&',
     '"': '"',
-    "'": '' // Fixed: Replace single quote with empty string
+    "'": ''
   }[char] || char));
 };
 
@@ -129,6 +133,9 @@ export default async function handler(request: Request): Promise<Response> {
   console.log(`Serving OG tags for slug: ${slug}`);
   return new Response(html, {
     status: 200,
-    headers: { 'Content-Type': 'text/html; charset=utf-8' },
+    headers: {
+      'Content-Type': 'text/html; charset=utf-8',
+      'Content-Length': Buffer.byteLength(html).toString()
+    }
   });
 }
