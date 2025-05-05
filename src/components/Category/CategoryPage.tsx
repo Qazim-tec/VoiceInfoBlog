@@ -22,7 +22,7 @@ interface Post {
   tags: string[];
   commentsCount: number;
 }
-
+//
 interface PaginatedResponse {
   items: Post[];
   currentPage: number;
