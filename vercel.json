@@ -4,24 +4,17 @@
   "rewrites": [
     {
       "source": "/post/:slug",
-      "has": [
-        {
-          "type": "header",
-          "key": "user-agent",
-          "value": "(WhatsApp|facebookexternalhit|Twitterbot|LinkedInBot|Slackbot|Googlebot)"
-        }
-      ],
       "destination": "/api/post/[slug]"
     },
     {
-      "source": "/(.*)",
+      "source": "/:path*",
       "destination": "/index.html"
     }
   ],
   "redirects": [
     {
-      "source": "/:path*",
-      "destination": "https://www.voiceinfos.com/:path*",
+      "source": "/",
+      "destination": "https://www.example.com",
       "permanent": false,
       "has": [
         {

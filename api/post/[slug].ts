@@ -16,7 +16,7 @@ const SOCIAL_MEDIA_CRAWLERS = [
   'Twitterbot',
   'LinkedInBot',
   'Slackbot',
-  'Googlebot',
+  'Googlebot'
 ];
 
 const isSocialMediaCrawler = (userAgent: string | null): boolean => {
@@ -26,7 +26,7 @@ const isSocialMediaCrawler = (userAgent: string | null): boolean => {
 
 const isValidImageUrl = async (url: string | null | undefined): Promise<boolean> => {
   if (!url || typeof url !== 'string') return false;
-  const regex = /^https?:\/\/.+\/[^/?#]+(?:\?.*)?(?:#.*)?$/i;
+  const regex = /^https?:\/\/.+(?:\/[^\/?#]+)?(?:\?.*)?(?:#.*)?$/i;
   if (!regex.test(url)) return false;
   try {
     const response = await fetch(url, { method: 'HEAD' });
@@ -37,7 +37,7 @@ const isValidImageUrl = async (url: string | null | undefined): Promise<boolean>
 };
 
 const getValidImageUrl = async (post: Post | null): Promise<string> => {
-  const DEFAULT_IMAGE_URL = 'https://www.voiceinfos.com/INFOS_LOGO[1].png';
+  const DEFAULT_IMAGE_URL = 'https://www.voiceinfos.com/INFOS_LOGO%5B1%5D.png';
   if (!post) return DEFAULT_IMAGE_URL;
   if (await isValidImageUrl(post.featuredImageUrl)) return post.featuredImageUrl;
   for (const url of post.additionalImageUrls || []) {
@@ -58,17 +58,16 @@ export default async function handler(request: Request): Promise<Response> {
   const url = new URL(request.url);
   const slug = url.pathname.split('/').pop() || '';
   const userAgent = request.headers.get('user-agent');
-  console.log(`Request: ${url.pathname}, User-Agent: ${userAgent}`);
 
+  // If not a social media crawler, serve the client-side app
   if (!isSocialMediaCrawler(userAgent)) {
-    console.log('Non-crawler request, returning 204');
-    return new Response(null, { status: 204 });
+    return fetch(request); // Pass through to the static React app
   }
 
   try {
-    console.log(`Fetching post for slug: ${slug}`);
+    // Fetch post data
     const response = await fetch(`${API_BASE_URL}/api/Post/slug/${slug}`);
-    if (!response.ok) throw new Error(`Failed to fetch post: ${response.status}`);
+    if (!response.ok) throw new Error('Failed to fetch post');
     const { data: post }: { data: Post } = await response.json();
 
     const imageUrl = await getValidImageUrl(post);
@@ -83,7 +82,8 @@ export default async function handler(request: Request): Promise<Response> {
         "'": '&apos;',
         '&': '&amp;'
       }[char] || char));
-
+  
+    // Generate minimal HTML with meta tags
     const html = `
       <!DOCTYPE html>
       <html lang="en">
@@ -119,36 +119,7 @@ export default async function handler(request: Request): Promise<Response> {
     });
   } catch (err) {
     console.error('Edge function error:', err);
-    const fallbackHtml = `
-      <!DOCTYPE html>
-      <html lang="en">
-        <head>
-          <meta charset="UTF-8" />
-          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-          <title>VoiceInfo</title>
-          <meta name="description" content="Welcome to VoiceInfo" />
-          <meta property="og:title" content="VoiceInfo" />
-          <meta property="og:description" content="Welcome to VoiceInfo" />
-          <meta property="og:image" content="https://www.voiceinfos.com/INFOS_LOGO[1].png" />
-          <meta property="og:image:width" content="1200" />
-          <meta property="og:image:height" content="630" />
-          <meta property="og:url" content="https://www.voiceinfos.com" />
-          <meta property="og:type" content="website" />
-          <meta property="og:site_name" content="VoiceInfo" />
-          <meta name="twitter:card" content="summary_large_image" />
-          <meta name="twitter:title" content="VoiceInfo" />
-          <meta name="twitter:description" content="Welcome to VoiceInfo" />
-          <meta name="twitter:image" content="https://www.voiceinfos.com/INFOS_LOGO[1].png" />
-        </head>
-        <body>
-          <div id="root"></div>
-          <script type="module" src="/src/main.tsx"></script>
-        </body>
-      </html>
-    `;
-    return new Response(fallbackHtml, {
-      status: 200,
-      headers: { 'Content-Type': 'text/html' },
-    });
+    // Fallback to client-side app if post fetch fails
+    return fetch(request);
   }
 }
