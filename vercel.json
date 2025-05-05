@@ -8,10 +8,14 @@
         {
           "type": "header",
           "key": "user-agent",
-          "value": "(WhatsApp|facebookexternalhit|Twitterbot|LinkedInBot|Slackbot|Googlebot)"
+          "value": "(?i)(WhatsApp|facebookexternalhit|Twitterbot|LinkedInBot|Slackbot|Googlebot)"
         }
       ],
       "destination": "/api/post/:slug"
+    },
+    {
+      "source": "/post/:slug",
+      "destination": "/index.html"
     },
     {
       "source": "/:path*",
