@@ -7,7 +7,7 @@
       "destination": "/api/post/[slug]"
     },
     {
-      "source": "/:path*",
+      "source": "/(.*)",
       "destination": "/index.html"
     }
   ],
