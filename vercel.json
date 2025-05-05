@@ -1,34 +1,23 @@
 {
-  "cleanUrls": true,
-  "trailingSlash": false,
-  "rewrites": [
-    {
-      "source": "/post/:slug",
-      "destination": "/api/post/[slug]",
-      "has": [
-        {
-          "type": "header",
-          "key": "user-agent",
-          "value": "(WhatsApp|facebookexternalhit|Twitterbot|LinkedInBot|Slackbot|Googlebot)"
-        }
-      ]
-    },
-    {
-      "source": "/:path*",
-      "destination": "/index.html"
-    }
-  ],
-  "redirects": [
-    {
-      "source": "/",
-      "destination": "https://www.voiceinfos.com",
-      "permanent": false,
-      "has": [
-        {
-          "type": "host",
-          "value": "voice-info-blog.vercel.app"
-        }
-      ]
-    }
-  ]
-}
+    "rewrites": [
+      {
+        "source": "/(.*)",
+        "destination": "/index.html"
+      }
+    ],
+  
+  
+    "redirects": [
+      {
+        "source": "/",
+        "destination": "https://example.com",
+        "permanent": false,
+        "has": [
+          {
+            "type": "host",
+            "value": "voice-info-blog.vercel.app"
+          }
+        ]
+      }
+    ]
+  }
