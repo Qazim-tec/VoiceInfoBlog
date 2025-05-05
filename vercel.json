@@ -3,8 +3,12 @@
   "trailingSlash": false,
   "rewrites": [
     {
+      "source": "/api/post/:slug",
+      "destination": "/api/post/[slug]"
+    },
+    {
       "source": "/(.*)",
-      "destination": "/api/router"
+      "destination": "/index.html"
     }
   ],
   "headers": [
