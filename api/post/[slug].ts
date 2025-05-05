@@ -119,7 +119,7 @@ export default async function handler(request: Request): Promise<Response> {
     });
   } catch (err) {
     console.error('Edge function error:', err);
-    // Fallback to client-side app if post fetch fails
+    //  Fallback to client-side app if post fetch fails
     return fetch(request);
   }
 }
