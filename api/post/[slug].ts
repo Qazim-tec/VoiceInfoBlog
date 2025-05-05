@@ -1,4 +1,4 @@
-import { API_BASE_URL } from './src/config/apiConfig';
+import { API_BASE_URL } from '../../src/config/apiConfig';
 
 interface Post {
   id: number;
@@ -75,16 +75,14 @@ export default async function handler(request: Request): Promise<Response> {
     const shareDescription = getShareDescription(post);
     const shareUrl = `https://www.voiceinfos.com/post/${post.slug}`;
 
-    // Sanitize strings to prevent XSS
     const sanitize = (str: string) => str.replace(/[<>"'&]/g, (char) => ({
-      '<': '&lt;',
-      '>': '&gt;',
-      '"': '&quot;',
-      "'": '&apos;',
-      '&': '&amp;'
-    }[char] || char));
-
-
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&apos;',
+        '&': '&amp;'
+      }[char] || char));
+  
     // Generate minimal HTML with meta tags
     const html = `
       <!DOCTYPE html>

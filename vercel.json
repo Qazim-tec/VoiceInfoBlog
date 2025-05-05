@@ -14,7 +14,7 @@
   "redirects": [
     {
       "source": "/",
-      "destination": "https://www.voiceinfos.com",
+      "destination": "https://www.example.com",
       "permanent": false,
       "has": [
         {
