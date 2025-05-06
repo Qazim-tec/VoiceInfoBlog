@@ -89,7 +89,7 @@ const PostDetail: React.FC = () => {
 
   const processContent = (content: string): string => {
     const youtubeRegex = /(https?:\/\/(?:www\.|m\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})(?:[?&][^\s>]*)?)/gi;
-    return content.replace(youtubeRegex, (match, prefix, videoId) => {
+    return content.replace(youtubeRegex, (match, videoId) => {
       const fullUrl = match; // Use the entire matched string for the link
       return `<div class="youtube-embed"><iframe loading="lazy" src="https://www.youtube.com/embed/${videoId}" title="YouTube video player" frameborder="0" allowfullscreen></iframe><a href="${fullUrl}" target="_blank" class="youtube-link" rel="noopener noreferrer">${fullUrl}</a></div>`;
     });
