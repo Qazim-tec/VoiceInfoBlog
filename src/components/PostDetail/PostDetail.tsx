@@ -72,7 +72,7 @@ const PostDetail: React.FC = () => {
   const location = useLocation();
   const updatedPost = location.state?.updatedPost as Post | undefined;
 
-  const BASE_URL = "https://www.voiceinfos.com";
+  
   const DEFAULT_IMAGE_URL = "https://www.voiceinfos.com/INFOS_LOGO%5B1%5D.png";
 
   const capitalizeName = (name: string): string => {
