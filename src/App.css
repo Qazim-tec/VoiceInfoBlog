@@ -29,7 +29,7 @@ main {
 
 main, .App > div > div {
 
-  min-height: 70vh; /* Accounts for navbar (~50px) and footer (~50px) */
+  min-height: calc(100vh - 100px); /* Accounts for navbar (~50px) and footer (~50px) */
   
 }
 
