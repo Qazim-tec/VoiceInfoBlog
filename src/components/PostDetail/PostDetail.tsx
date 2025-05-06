@@ -88,12 +88,35 @@ const PostDetail: React.FC = () => {
   };
 
   const processContent = (content: string): string => {
-    const youtubeRegex = /(https?:\/\/(?:www\.|m\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})(?:[?&][^\s>]*)?)/gi;
-    return content.replace(youtubeRegex, (match, videoId) => {
-      const fullUrl = match; // Use the entire matched string for the link
-      return `<div class="youtube-embed"><iframe loading="lazy" src="https://www.youtube.com/embed/${videoId}" title="YouTube video player" frameborder="0" allowfullscreen></iframe><a href="${fullUrl}" target="_blank" class="youtube-link" rel="noopener noreferrer">${fullUrl}</a></div>`;
-    });
-  };
+  // Updated regex to handle various YouTube URL formats
+  const youtubeRegex = /(?:https?:\/\/(?:www\.|m\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/|youtu\.be\/)|youtu\.be\/))([a-zA-Z0-9_-]{11})(?:[?&][^\s>]*)?/gi;
+
+  return content.replace(youtubeRegex, (_match, videoId) => {
+    // Validate videoId (must be 11 characters, alphanumeric with possible hyphens/underscores)
+    if (!videoId || videoId.length !== 11 || !/^[a-zA-Z0-9_-]{11}$/.test(videoId)) {
+      return `<div class="youtube-error">Invalid YouTube video ID: ${videoId}</div>`;
+    }
+
+    // Construct clean embed URL
+    const embedUrl = `https://www.youtube.com/embed/${videoId}?rel=0&showinfo=0`;
+    // Use a clean link for the anchor tag
+    const linkUrl = `https://www.youtube.com/watch?v=${videoId}`;
+
+    return `
+      <div class="youtube-embed">
+        <iframe 
+          loading="lazy" 
+          src="${embedUrl}" 
+          title="YouTube video player" 
+          frameborder="0" 
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+          allowfullscreen
+        ></iframe>
+        <a href="${linkUrl}" target="_blank" class="youtube-link" rel="noopener noreferrer">Watch on YouTube</a>
+      </div>
+    `;
+  });
+};
 
   const getShareDescription = (post: Post): string => {
     return post.excerpt || post.content.substring(0, 160);

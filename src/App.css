@@ -27,6 +27,12 @@ main {
   padding: 1rem;
 }
 
+main, .App > div > div {
+
+  min-height: 70vh; /* Accounts for navbar (~50px) and footer (~50px) */
+  
+}
+
 main h1 {
   font-size: 2rem;
   margin-bottom: 1rem;

@@ -45,7 +45,6 @@ body:not(.dark-mode) {
 .auth-container.otp-auth-container,
 .auth-container.forgot-auth-container,
 .auth-container.reset-auth-container {
-  min-height: 100vh;
   display: flex;
   justify-content: center;
   align-items: flex-start;
@@ -53,6 +52,7 @@ body:not(.dark-mode) {
   background: var(--background);
   position: relative;
   overflow: hidden;
+  flex-grow: 1; /* Allows container to grow with content */
 }
 
 .auth-container.signin-auth-container::before,
