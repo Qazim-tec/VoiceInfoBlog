@@ -41,6 +41,14 @@ interface Post {
   isLikedByUser: boolean;
 }
 
+interface ShareData {
+  title: string;
+  description: string;
+  image: string;
+  imageAlt: string;
+  url: string;
+}
+
 const PostDetail: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const [post, setPost] = useState<Post | null>(null);
@@ -54,6 +62,7 @@ const PostDetail: React.FC = () => {
   const [newReply, setNewReply] = useState("");
   const [isLiking, setIsLiking] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [shareData, setShareData] = useState<ShareData | null>(null);
 
   const { user } = useUser();
   const currentUserId = user?.userId || "";
@@ -181,6 +190,58 @@ const PostDetail: React.FC = () => {
 
     fetchPost();
   }, [slug, user?.token, updatedPost]);
+
+  useEffect(() => {
+    const fetchShareData = async () => {
+      if (!slug) return;
+      try {
+        // Mimic a crawler User-Agent to get HTML response
+        const response = await fetch(`${API_BASE_URL}/api/Share/${slug}`, {
+          headers: {
+            accept: "text/html",
+            "User-Agent": "facebookexternalhit/1.1",
+          },
+        });
+        if (!response.ok) throw new Error("Failed to fetch share data");
+
+        // Parse HTML to extract OG tags
+        const html = await response.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, "text/html");
+        const metaTags = doc.querySelectorAll("meta[property^='og:'], meta[name^='twitter:']");
+
+        const ogData: { [key: string]: string } = {};
+        metaTags.forEach((tag) => {
+          const property = tag.getAttribute("property") || tag.getAttribute("name");
+          const content = tag.getAttribute("content");
+          if (property && content) {
+            ogData[property] = content;
+          }
+        });
+
+        setShareData({
+          title: ogData["og:title"] || "VoiceInfo",
+          description: ogData["og:description"] || "Discover the latest insights on VoiceInfo",
+          image: ogData["og:image"] || DEFAULT_IMAGE_URL,
+          imageAlt: ogData["og:image:alt"] || "Image for VoiceInfo",
+          url: ogData["og:url"] || `${API_BASE_URL}/api/Share/${encodeURIComponent(slug)}`,
+        });
+      } catch (err) {
+        console.warn("Error fetching share data:", err);
+        if (post) {
+          setShareData({
+            title: post.title,
+            description: getShareDescription(post),
+            image: imageUrl || DEFAULT_IMAGE_URL,
+            imageAlt: `Image for ${post.title}`,
+            url: `${API_BASE_URL}/api/Share/${encodeURIComponent(slug)}`,
+          });
+        }
+      }
+    };
+
+    fetchShareData();
+  }, [slug, post, imageUrl]);
 
   const fetchComments = async (postId: number) => {
     try {
@@ -616,15 +677,10 @@ const PostDetail: React.FC = () => {
     return undefined;
   };
 
-  const shareUrl = post ? `${BASE_URL}/share/${encodeURIComponent(post.slug)}?cb=${Date.now()}` : "";
-  const shareDescription = post ? getShareDescription(post) : "";
-  const shareTitle = post ? post.title : "VoiceInfo";
-  const shareImage = imageUrl || DEFAULT_IMAGE_URL;
-
   const handleWhatsAppShare = () => {
-    if (!post) return;
+    if (!shareData) return;
 
-    const shareText = `*${post.title}*\n${shareDescription}\nRead more: ${shareUrl}`;
+    const shareText = `*${shareData.title}*\n${shareData.description}\nRead more: ${shareData.url}`;
     const encodedShareText = encodeURIComponent(shareText);
     window.open(
       `https://api.whatsapp.com/send?text=${encodedShareText}`,
@@ -633,46 +689,47 @@ const PostDetail: React.FC = () => {
   };
 
   const handleXShare = () => {
-    if (!post) return;
+    if (!shareData) return;
 
-    const shareText = `${post.title}\n${shareDescription}\n${shareUrl}`;
+    const shareText = `${shareData.title}\n${shareData.description}\n${shareData.url}`;
+    const encodedShareText = encodeURIComponent(shareText);
     window.open(
-      `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`,
+      `https://twitter.com/intent/tweet?text=${encodedShareText}`,
       "_blank"
     );
   };
 
   const handleFacebookShare = () => {
-    if (!post) return;
+    if (!shareData) return;
 
     window.open(
-      `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`,
+      `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareData.url)}`,
       "_blank"
     );
   };
 
   const handleLinkedInShare = () => {
-    if (!post) return;
+    if (!shareData) return;
 
     window.open(
       `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(
-        shareUrl
-      )}&title=${encodeURIComponent(post.title)}&summary=${encodeURIComponent(
-        shareDescription
+        shareData.url
+      )}&title=${encodeURIComponent(shareData.title)}&summary=${encodeURIComponent(
+        shareData.description
       )}`,
       "_blank"
     );
   };
 
   const handleNativeShare = async () => {
-    if (!post) return;
+    if (!shareData) return;
 
     if (navigator.share) {
       try {
         await navigator.share({
-          title: post.title,
-          text: `${post.title}\n${shareDescription}`,
-          url: shareUrl,
+          title: shareData.title,
+          text: `${shareData.title}\n${shareData.description}`,
+          url: shareData.url,
         });
       } catch (err) {
         console.log("Share error:", err);
@@ -691,22 +748,22 @@ const PostDetail: React.FC = () => {
   return (
     <>
       <Helmet>
-        <title>{shareTitle}</title>
-        <meta name="description" content={shareDescription || "Discover the latest insights on VoiceInfo"} />
-        <meta property="og:title" content={shareTitle} />
-        <meta property="og:description" content={shareDescription || "Discover the latest insights on VoiceInfo"} />
-        <meta property="og:image" content={shareImage} />
+        <title>{shareData?.title || post.title}</title>
+        <meta name="description" content={shareData?.description || getShareDescription(post)} />
+        <meta property="og:title" content={shareData?.title || post.title} />
+        <meta property="og:description" content={shareData?.description || getShareDescription(post)} />
+        <meta property="og:image" content={shareData?.image || imageUrl || DEFAULT_IMAGE_URL} />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
-        <meta property="og:image:alt" content={`Image for ${shareTitle}`} />
-        <meta property="og:url" content={shareUrl || BASE_URL} />
+        <meta property="og:image:alt" content={shareData?.imageAlt || `Image for ${shareData?.title || post.title}`} />
+        <meta property="og:url" content={shareData?.url || `${API_BASE_URL}/api/Share/${encodeURIComponent(slug!)}`} />
         <meta property="og:type" content="article" />
         <meta property="og:site_name" content="VoiceInfo" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={shareTitle} />
-        <meta name="twitter:description" content={shareDescription || "Discover the latest insights on VoiceInfo"} />
-        <meta name="twitter:image" content={shareImage} />
-        <meta name="twitter:image:alt" content={`Image for ${shareTitle}`} />
+        <meta name="twitter:title" content={shareData?.title || post.title} />
+        <meta name="twitter:description" content={shareData?.description || getShareDescription(post)} />
+        <meta name="twitter:image" content={shareData?.image || imageUrl || DEFAULT_IMAGE_URL} />
+        <meta name="twitter:image:alt" content={shareData?.imageAlt || `Image for ${shareData?.title || post.title}`} />
       </Helmet>
 
       <article className="article-page">
@@ -725,7 +782,7 @@ const PostDetail: React.FC = () => {
           </p>
         </header>
 
-        <img src={shareImage} alt={post.title} className="article-image" />
+        <img src={imageUrl || DEFAULT_IMAGE_URL} alt={post.title} className="article-image" />
 
         <section className="article-content">
           <div dangerouslySetInnerHTML={{ __html: processContent(post.content) }} />

@@ -1,43 +1,23 @@
 {
-  "rewrites": [
-    {
-      "source": "/share/:slug",
-      "destination": "https://api.voiceinfos.com/api/Share/:slug",
-      "has": [
-        {
-          "type": "header",
-          "key": "user-agent",
-          "value": "(WhatsApp|facebookexternalhit|Twitterbot|LinkedInBot|Slackbot|Googlebot|bingbot|Pinterest|Discordbot|TelegramBot|Redditbot|Facebot|facebookcatalog)"
-        }
-      ]
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
-  ],
-  "redirects": [
-    {
-      "source": "/(.*)",
-      "destination": "https://www.voiceinfos.com/$1",
-      "permanent": false,
-      "has": [
-        {
-          "type": "host",
-          "value": "voice-info-blog.vercel.app"
-        }
-      ]
-    },
-    {
-      "source": "/(.*)",
-      "destination": "https://www.voiceinfos.com/$1",
-      "permanent": false,
-      "has": [
-        {
-          "type": "host",
-          "value": "voice-info-blog-fwpt8jvbr-daudu-qazims-projects.vercel.app"
-        }
-      ]
-    }
-  ]
-}
+    "rewrites": [
+      {
+        "source": "/(.*)",
+        "destination": "/index.html"
+      }
+    ],
+  
+  
+    "redirects": [
+      {
+        "source": "/",
+        "destination": "https://example.com",
+        "permanent": false,
+        "has": [
+          {
+            "type": "host",
+            "value": "voice-info-blog.vercel.app"
+          }
+        ]
+      }
+    ]
+  }
