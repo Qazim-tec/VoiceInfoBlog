@@ -29,7 +29,7 @@ main {
 
 main, .App > div > div {
 
-  min-height: calc(100vh - 300px); /* Accounts for navbar (~50px) and footer (~50px) */
+  min-height: calc(100vh - 200px); /* Accounts for navbar (~50px) and footer (~50px) */
   
 }
 
@@ -64,4 +64,6 @@ Footer {
   main h1 {
     font-size: 1.2rem; /* Smaller size on mobile */
   }
+ 
+  
 }
