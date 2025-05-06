@@ -74,6 +74,10 @@
   display: block;
 }
 
+.article-image.default-image {
+  max-width: 200px;
+}
+
 .article-content {
   font-size: 1.1rem;
   line-height: 1.6;
@@ -208,6 +212,10 @@
   background-color: #3B5998;
 }
 
+.share-btn.telegram {
+  background-color: #0088cc;
+}
+
 .share-btn.native {
   background-color: #6c757d;
 }
@@ -291,6 +299,43 @@
 .comments-list {
   margin-bottom: 2rem;
   text-align: left;
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.pagination-btn {
+  padding: 0.5rem 1rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: #fff;
+  color: #333;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background: #007bff;
+  color: white;
+}
+
+.pagination-btn.active {
+  background: #007bff;
+  color: white;
+  font-weight: bold;
+}
+
+.pagination-btn:disabled {
+  background: #f5f5f5;
+  color: #999;
+  cursor: not-allowed;
 }
 
 /* Root Comment Styling */
@@ -605,6 +650,25 @@ body.dark-mode .comments-section h2::after {
   background: #1e90ff;
 }
 
+body.dark-mode .pagination-btn {
+  background: #404040;
+  color: #f5f5f5;
+  border-color: #666;
+}
+
+body.dark-mode .pagination-btn:hover:not(:disabled) {
+  background: #1e90ff;
+}
+
+body.dark-mode .pagination-btn.active {
+  background: #1e90ff;
+}
+
+body.dark-mode .pagination-btn:disabled {
+  background: #333;
+  color: #666;
+}
+
 body.dark-mode .comment-card {
   background: #505050;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
@@ -751,6 +815,10 @@ body.dark-mode .login-message {
     margin: 0 auto 1.5rem;
   }
 
+  .article-image.default-image {
+    max-width: 150px;
+  }
+
   .youtube-embed {
     max-width: 90%; /* Scales to container width on mobile */
     margin: 0.5rem 0;
@@ -850,6 +918,15 @@ body.dark-mode .login-message {
     margin-bottom: 1.5rem;
   }
 
+  .pagination {
+    gap: 0.3rem;
+  }
+
+  .pagination-btn {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+  }
+
   .comment-card,
   body.dark-mode .comment-card {
     padding: 1rem;
@@ -860,9 +937,10 @@ body.dark-mode .login-message {
   }
 
   .comment-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.25rem;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
   }
 
   .comment-author {
@@ -871,6 +949,7 @@ body.dark-mode .login-message {
 
   .comment-timestamp {
     font-size: 0.8rem;
+    text-align: right;
   }
 
   .parent-comment-reference {
@@ -968,10 +1047,14 @@ body.dark-mode .login-message {
     margin-bottom: 1rem;
   }
 
+  .article-image.default-image {
+    max-width: 120px;
+  }
+
   .youtube-embed {
     max-width: 280px; /* Unchanged, as mobile size is okay */
     margin: 0.5rem 0;
-    padding-bottom: 50.25% 
+    padding-bottom: 50.25%
     /* Left-aligned */
   }
 

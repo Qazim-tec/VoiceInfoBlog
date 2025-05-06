@@ -49,6 +49,10 @@ interface ShareData {
   url: string;
 }
 
+interface ApiResponse<T> {
+  data: T;
+}
+
 const PostDetail: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const [post, setPost] = useState<Post | null>(null);
@@ -63,6 +67,8 @@ const PostDetail: React.FC = () => {
   const [isLiking, setIsLiking] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [shareData, setShareData] = useState<ShareData | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const commentsPerPage = 25;
 
   const { user } = useUser();
   const currentUserId = user?.userId || "";
@@ -71,7 +77,6 @@ const PostDetail: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const updatedPost = location.state?.updatedPost as Post | undefined;
-
 
   const DEFAULT_IMAGE_URL = "https://www.voiceinfos.com/INFOS_LOGO%5B1%5D.png";
 
@@ -83,9 +88,10 @@ const PostDetail: React.FC = () => {
   };
 
   const processContent = (content: string): string => {
-    const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/g;
-    return content.replace(youtubeRegex, (_, videoId) => {
-      return `<div class="youtube-embed"><iframe loading="lazy" src="https://www.youtube.com/embed/${videoId}" title="YouTube video player" frameborder="0" allowfullscreen></iframe></div>`;
+    const youtubeRegex = /(https?:\/\/(?:www\.|m\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})(?:[?&][^\s>]*)?)/gi;
+    return content.replace(youtubeRegex, (match, prefix, videoId) => {
+      const fullUrl = match; // Use the entire matched string for the link
+      return `<div class="youtube-embed"><iframe loading="lazy" src="https://www.youtube.com/embed/${videoId}" title="YouTube video player" frameborder="0" allowfullscreen></iframe><a href="${fullUrl}" target="_blank" class="youtube-link" rel="noopener noreferrer">${fullUrl}</a></div>`;
     });
   };
 
@@ -172,7 +178,7 @@ const PostDetail: React.FC = () => {
           headers: user?.token ? { Authorization: `Bearer ${user.token}` } : {},
         });
         if (!response.ok) throw new Error("Failed to fetch post details");
-        const postData: { data: Post } = await response.json();
+        const postData: ApiResponse<Post> = await response.json();
 
         console.log("Post featuredImageUrl:", postData.data.featuredImageUrl);
         console.log("Post additionalImageUrls:", postData.data.additionalImageUrls);
@@ -195,7 +201,6 @@ const PostDetail: React.FC = () => {
     const fetchShareData = async () => {
       if (!slug) return;
       try {
-        // Mimic a crawler User-Agent to get HTML response
         const response = await fetch(`${API_BASE_URL}/api/Share/${slug}`, {
           headers: {
             accept: "text/html",
@@ -204,7 +209,6 @@ const PostDetail: React.FC = () => {
         });
         if (!response.ok) throw new Error("Failed to fetch share data");
 
-        // Parse HTML to extract OG tags
         const html = await response.text();
         const parser = new DOMParser();
         const doc = parser.parseFromString(html, "text/html");
@@ -249,8 +253,8 @@ const PostDetail: React.FC = () => {
         headers: user?.token ? { Authorization: `Bearer ${user.token}` } : {},
       });
       if (!response.ok) throw new Error("Failed to fetch comments");
-      const data: { data: Comment[] } = await response.json();
-      setComments(data.data);
+      const commentData: ApiResponse<Comment[]> = await response.json();
+      setComments(commentData.data);
     } catch (err) {
       setError((err as Error).message);
     }
@@ -343,7 +347,7 @@ const PostDetail: React.FC = () => {
         throw new Error(`Failed to post comment: ${errorText}`);
       }
 
-      const responseData: { data: Comment } = await response.json();
+      const responseData: ApiResponse<Comment> = await response.json();
       setComments((prevComments) =>
         prevComments.map((c) =>
           c.id === optimisticComment.id ? { ...responseData.data, replies: [] } : c
@@ -418,7 +422,7 @@ const PostDetail: React.FC = () => {
         throw new Error(`Failed to post reply: ${errorText}`);
       }
 
-      const responseData: { data: Comment } = await response.json();
+      const responseData: ApiResponse<Comment> = await response.json();
       setComments((prevComments) => {
         const syncReply = (comments: Comment[]): Comment[] =>
           comments.map((comment) =>
@@ -574,6 +578,20 @@ const PostDetail: React.FC = () => {
     return flattened;
   };
 
+  const countAllComments = (comments: Comment[]): number => {
+    let count = 0;
+    const countComments = (comments: Comment[]) => {
+      comments.forEach((comment) => {
+        count++;
+        if (comment.replies.length > 0) {
+          countComments(comment.replies);
+        }
+      });
+    };
+    countComments(comments);
+    return count;
+  };
+
   const isLevel1Reply = (comment: Comment): boolean => {
     if (!comment.parentCommentId) return false;
     const parent = comments.find((c) => c.id === comment.parentCommentId);
@@ -708,15 +726,13 @@ const PostDetail: React.FC = () => {
     );
   };
 
-  const handleLinkedInShare = () => {
+  const handleTelegramShare = () => {
     if (!shareData) return;
 
+    const shareText = `${shareData.title}\n${shareData.description}\n${shareData.url}`;
+    const encodedShareText = encodeURIComponent(shareText);
     window.open(
-      `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(
-        shareData.url
-      )}&title=${encodeURIComponent(shareData.title)}&summary=${encodeURIComponent(
-        shareData.description
-      )}`,
+      `https://t.me/share/url?url=${encodeURIComponent(shareData.url)}&text=${encodedShareText}`,
       "_blank"
     );
   };
@@ -744,6 +760,21 @@ const PostDetail: React.FC = () => {
   if (!post) return <div className="article-not-found">Post not found</div>;
 
   const flattenedComments = flattenRepliesBeyondLevel1(comments);
+  const totalComments = countAllComments(comments);
+  const indexOfLastComment = currentPage * commentsPerPage;
+  const indexOfFirstComment = indexOfLastComment - commentsPerPage;
+  const currentComments = flattenedComments.slice(indexOfFirstComment, indexOfLastComment);
+  const totalPages = Math.ceil(totalComments / commentsPerPage);
+
+  const paginate = (pageNumber: number) => {
+    if (pageNumber >= 1 && pageNumber <= totalPages) {
+      setCurrentPage(pageNumber);
+      const commentsSection = document.querySelector('.comments-section');
+      if (commentsSection) {
+        window.scrollTo({ top: commentsSection.getBoundingClientRect().top + window.scrollY, behavior: 'smooth' });
+      }
+    }
+  };
 
   return (
     <>
@@ -782,7 +813,11 @@ const PostDetail: React.FC = () => {
           </p>
         </header>
 
-        <img src={imageUrl || DEFAULT_IMAGE_URL} alt={post.title} className="article-image" />
+        <img
+          src={imageUrl || DEFAULT_IMAGE_URL}
+          alt={post.title}
+          className={`article-image ${!imageUrl ? "default-image" : ""}`}
+        />
 
         <section className="article-content">
           <div dangerouslySetInnerHTML={{ __html: processContent(post.content) }} />
@@ -836,21 +871,48 @@ const PostDetail: React.FC = () => {
             <button onClick={handleFacebookShare} className="share-btn facebook">
               Facebook
             </button>
-            <button onClick={handleLinkedInShare} className="share-btn linkedin">
-              LinkedIn
+            <button onClick={handleTelegramShare} className="share-btn telegram">
+              Telegram
             </button>
             <button onClick={handleNativeShare} className="share-btn native">
-              Share More
+              Share
             </button>
           </div>
         </section>
 
         <section className="comments-section">
-          <h2>Comments ({flattenedComments.length})</h2>
+          <h2>Comments ({totalComments})</h2>
           {error && <div className="error-message">{error}</div>}
-          <div className="comments-list">
-            {flattenedComments.map((comment) => renderComment(comment, comment.parentCommentId !== null))}
-          </div>
+          {totalComments === 0 ? (
+            <p className="no-comments">No comments yet. Be the first to comment!</p>
+          ) : (
+            <>
+              <div className="comments-list">
+                {currentComments.map((comment) => renderComment(comment, comment.parentCommentId !== null))}
+              </div>
+              {totalPages > 1 && (
+                <div className="pagination">
+                  <button
+                    onClick={() => paginate(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="pagination-btn"
+                  >
+                    Previous
+                  </button>
+                  <span className="pagination-info">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                  <button
+                    onClick={() => paginate(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="pagination-btn"
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
+            </>
+          )}
           <form onSubmit={handleCommentSubmit} className="comment-form">
             <h3>Leave a Comment</h3>
             {isLoggedIn ? (
