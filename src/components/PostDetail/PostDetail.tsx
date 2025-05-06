@@ -72,7 +72,7 @@ const PostDetail: React.FC = () => {
   const location = useLocation();
   const updatedPost = location.state?.updatedPost as Post | undefined;
 
-  const FRONTEND_BASE_URL = "https://www.voiceinfos.com";
+
   const DEFAULT_IMAGE_URL = "https://www.voiceinfos.com/INFOS_LOGO%5B1%5D.png";
 
   const capitalizeName = (name: string): string => {
@@ -224,7 +224,7 @@ const PostDetail: React.FC = () => {
           description: ogData["og:description"] || "Discover the latest insights on VoiceInfo",
           image: ogData["og:image"] || DEFAULT_IMAGE_URL,
           imageAlt: ogData["og:image:alt"] || "Image for VoiceInfo",
-          url: `${FRONTEND_BASE_URL}/post/${encodeURIComponent(slug)}`,
+          url: ogData["og:url"] || `${API_BASE_URL}/api/Share/${encodeURIComponent(slug)}`,
         });
       } catch (err) {
         console.warn("Error fetching share data:", err);
@@ -234,7 +234,7 @@ const PostDetail: React.FC = () => {
             description: getShareDescription(post),
             image: imageUrl || DEFAULT_IMAGE_URL,
             imageAlt: `Image for ${post.title}`,
-            url: `${FRONTEND_BASE_URL}/post/${encodeURIComponent(slug)}`,
+            url: `${API_BASE_URL}/api/Share/${encodeURIComponent(slug)}`,
           });
         }
       }
@@ -756,7 +756,7 @@ const PostDetail: React.FC = () => {
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
         <meta property="og:image:alt" content={shareData?.imageAlt || `Image for ${shareData?.title || post.title}`} />
-        <meta property="og:url" content={shareData?.url || `${FRONTEND_BASE_URL}/post/${encodeURIComponent(slug!)}`} />
+        <meta property="og:url" content={shareData?.url || `${API_BASE_URL}/api/Share/${encodeURIComponent(slug!)}`} />
         <meta property="og:type" content="article" />
         <meta property="og:site_name" content="VoiceInfo" />
         <meta name="twitter:card" content="summary_large_image" />
