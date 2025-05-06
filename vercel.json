@@ -1,8 +1,8 @@
 {
   "rewrites": [
     {
-      "source": "/post/:slug",
-      "destination": "/api/post/[slug]",
+      "source": "/share/:slug",
+      "destination": "https://api.voiceinfos.com/api/Share/:slug",
       "has": [
         {
           "type": "header",

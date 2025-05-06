@@ -53,7 +53,7 @@ const PostDetail: React.FC = () => {
   const [replyingToCommentId, setReplyingToCommentId] = useState<number | null>(null);
   const [newReply, setNewReply] = useState("");
   const [isLiking, setIsLiking] = useState(false);
-  const [imageUrl, setImageUrl] = useState<string | null>(null); // Initialize as null
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
 
   const { user } = useUser();
   const currentUserId = user?.userId || "";
@@ -66,7 +66,6 @@ const PostDetail: React.FC = () => {
   const BASE_URL = "https://www.voiceinfos.com";
   const DEFAULT_IMAGE_URL = "https://www.voiceinfos.com/INFOS_LOGO%5B1%5D.png";
 
-  // Utility function to capitalize first letter of each name
   const capitalizeName = (name: string): string => {
     return name
       .split(" ")
@@ -74,7 +73,6 @@ const PostDetail: React.FC = () => {
       .join(" ");
   };
 
-  // Function to process content and embed YouTube videos
   const processContent = (content: string): string => {
     const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/g;
     return content.replace(youtubeRegex, (_, videoId) => {
@@ -82,12 +80,10 @@ const PostDetail: React.FC = () => {
     });
   };
 
-  // Function to get share description (excerpt or truncated content)
   const getShareDescription = (post: Post): string => {
     return post.excerpt || post.content.substring(0, 160);
   };
 
-  // Function to validate image URL and check accessibility
   const isValidImageUrl = async (url: string | null | undefined): Promise<boolean> => {
     if (!url || typeof url !== "string") {
       console.warn("Invalid image URL: URL is null, undefined, or not a string", url);
@@ -119,7 +115,6 @@ const PostDetail: React.FC = () => {
     }
   };
 
-  // Function to get valid image URL
   const getValidImageUrl = async (post: Post | null): Promise<string> => {
     if (!post) return DEFAULT_IMAGE_URL;
 
@@ -621,7 +616,7 @@ const PostDetail: React.FC = () => {
     return undefined;
   };
 
-  const shareUrl = post ? `${BASE_URL}/post/${post.slug}?cb=${Date.now()}` : "";
+  const shareUrl = post ? `${BASE_URL}/share/${encodeURIComponent(post.slug)}?cb=${Date.now()}` : "";
   const shareDescription = post ? getShareDescription(post) : "";
   const shareTitle = post ? post.title : "VoiceInfo";
   const shareImage = imageUrl || DEFAULT_IMAGE_URL;
@@ -629,13 +624,8 @@ const PostDetail: React.FC = () => {
   const handleWhatsAppShare = () => {
     if (!post) return;
 
-    // Format the share text: bold title using Markdown (*), normal description
     const shareText = `*${post.title}*\n${shareDescription}\nRead more: ${shareUrl}`;
-    
-    // Encode the share text for WhatsApp URL
     const encodedShareText = encodeURIComponent(shareText);
-
-    // Open WhatsApp with the formatted share text
     window.open(
       `https://api.whatsapp.com/send?text=${encodedShareText}`,
       "_blank"
@@ -645,9 +635,7 @@ const PostDetail: React.FC = () => {
   const handleXShare = () => {
     if (!post) return;
 
-    // For X, rely on OG tags for preview; text is plain
     const shareText = `${post.title}\n${shareDescription}\n${shareUrl}`;
-    
     window.open(
       `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`,
       "_blank"
@@ -657,7 +645,6 @@ const PostDetail: React.FC = () => {
   const handleFacebookShare = () => {
     if (!post) return;
 
-    // Facebook uses OG tags for preview
     window.open(
       `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`,
       "_blank"
@@ -667,7 +654,6 @@ const PostDetail: React.FC = () => {
   const handleLinkedInShare = () => {
     if (!post) return;
 
-    // LinkedIn uses OG tags but allows summary
     window.open(
       `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(
         shareUrl
@@ -705,7 +691,6 @@ const PostDetail: React.FC = () => {
   return (
     <>
       <Helmet>
-        {/* Enhanced Open Graph tags for social media previews */}
         <title>{shareTitle}</title>
         <meta name="description" content={shareDescription || "Discover the latest insights on VoiceInfo"} />
         <meta property="og:title" content={shareTitle} />
@@ -713,10 +698,10 @@ const PostDetail: React.FC = () => {
         <meta property="og:image" content={shareImage} />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
+        <meta property="og:image:alt" content={`Image for ${shareTitle}`} />
         <meta property="og:url" content={shareUrl || BASE_URL} />
         <meta property="og:type" content="article" />
         <meta property="og:site_name" content="VoiceInfo" />
-        {/* Enhanced Twitter Card tags */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={shareTitle} />
         <meta name="twitter:description" content={shareDescription || "Discover the latest insights on VoiceInfo"} />
