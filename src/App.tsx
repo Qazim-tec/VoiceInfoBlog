@@ -26,6 +26,7 @@ import Disclaimer from "./components/Pages/Disclaimer";
 import { UserProvider } from "./context/UserContext";
 
 import "./App.css";
+import LaunchPage from "./components/LaunchPage/LaunchPage";
 
 const App: React.FC = () => {
   const location = useLocation();
@@ -54,6 +55,15 @@ const App: React.FC = () => {
     initial: { opacity: 0, y: 20 }, // Start below and invisible
     animate: { opacity: 1, y: 0, transition: { duration: 0.5 } }, // Flow in
   };
+
+  const accessGranted = localStorage.getItem("siteAccess") === "granted";
+  const now = new Date();
+  const launchDate = new Date("2025-06-10T00:00:00");
+  const hasLaunched = now >= launchDate;
+
+  if (!accessGranted && !hasLaunched) {
+    return <LaunchPage />;
+  }
 
   return (
     <div className="App">

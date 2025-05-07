@@ -239,7 +239,7 @@ const CategoryPage: React.FC = () => {
 
   return (
     <div className="category-page">
-      <h1>{categoryName} News</h1>
+      <h1>{categoryName}</h1>
       <button
         className="category-create-post-btn"
         onClick={handleCreatePost}
