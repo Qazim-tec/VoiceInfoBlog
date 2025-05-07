@@ -1,4 +1,4 @@
-.launch-container {
+.launch-page {
   background: linear-gradient(120deg, #0f2027, #203a43, #2c5364);
   color: #fff;
   height: 100vh;
@@ -16,7 +16,7 @@
   width: 100%;
 }
 
-.logo {
+.voiceinfos-logo {
   font-size: 3rem;
   font-weight: 800;
   background: linear-gradient(to right, #ff8c00, #ffc107);
@@ -30,40 +30,34 @@
   50% { transform: scale(1.05); }
 }
 
-.tagline {
-  font-size: 1.3rem;
-  margin-bottom: 1.5rem;
-}
-
 .launch-date {
-  font-size: 1.6rem;
-  font-weight: bold;
-  margin: 1rem 0;
+  font-size: 1.5rem;
+  margin-top: 1rem;
   color: #ffc107;
 }
 
 .exciting-text {
   font-size: 1.1rem;
-  margin-top: 1rem;
+  margin-top: 1.2rem;
   line-height: 1.6;
   color: #eee;
 }
 
-.token-form-hidden {
+.admin-access {
   position: absolute;
   bottom: 20px;
   right: 20px;
+  opacity: 0.05;
   display: flex;
   gap: 0.5rem;
-  opacity: 0.05;
   transition: opacity 0.3s ease;
 }
 
-.token-form-hidden:hover {
+.admin-access:hover {
   opacity: 1;
 }
 
-.token-form-hidden input {
+.admin-access input {
   padding: 0.5rem;
   border-radius: 6px;
   border: none;
@@ -72,7 +66,7 @@
   color: #fff;
 }
 
-.token-form-hidden button {
+.admin-access button {
   padding: 0.5rem;
   border-radius: 6px;
   border: none;
@@ -82,8 +76,8 @@
   font-size: 0.85rem;
 }
 
-.error {
+.error-text {
+  font-size: 0.8rem;
   color: #ff4d4d;
-  margin-top: 1rem;
-  font-size: 0.9rem;
+  margin-top: 0.5rem;
 }
