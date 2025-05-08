@@ -25,7 +25,7 @@ const LaunchPage = () => {
       >
         <h1 className="voiceinfos-logo">Voiceinfos.com</h1>
         <p className="launch-date">
-          🚀 We're launching on <strong>Friday, May 10, 2025</strong>
+          🚀 We're launching on <strong>Friday, May 9, 2025</strong>
         </p>
         <p className="exciting-text">
           Get ready to experience a world of insightful stories, trending topics,<br />
