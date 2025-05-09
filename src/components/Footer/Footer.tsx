@@ -21,8 +21,12 @@ const Footer: React.FC = () => {
           <Link to="/disclaimer">Disclaimer</Link>
         </div>
         <div className="footer-social">
-          <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" aria-label="Twitter">𝕏</a>
-          <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook">f</a>
+          <a href="https://x.com/The_Voiceinfos" target="_blank" aria-label="Twitter">𝕏</a>
+          <a href="https://www.facebook.com/profile.php?id=61575719507357" target="_blank" aria-label="Facebook">f</a>
+          <a href="https://chat.whatsapp.com/IXYNSdo9pSuC8RSTWyhDk4" target="_blank" aria-label="WhatsApp">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp Logo" className="social-icon" style={{ width: '24px', height: '24px' }} />
+          </a>
+          
         </div>
       </div>
       <div className="footer-bottom">
