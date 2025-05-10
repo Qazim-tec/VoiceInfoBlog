@@ -221,54 +221,52 @@ const PostDetail: React.FC = () => {
   }, [slug, user?.token, updatedPost]);
 
   useEffect(() => {
-    const fetchShareData = async () => {
-      if (!slug) return;
-      try {
-        const response = await fetch(`${API_BASE_URL}/api/Share/${slug}`, {
-          headers: {
-            accept: "text/html",
-            "User-Agent": "facebookexternalhit/1.1",
-          },
-        });
-        if (!response.ok) throw new Error("Failed to fetch share data");
+  const fetchShareData = async () => {
+    if (!slug || !post) return;
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/Share/${slug}`, {
+        headers: {
+          accept: "text/html",
+          "User-Agent": "facebookexternalhit/1.1",
+        },
+      });
+      if (!response.ok) throw new Error("Failed to fetch share data");
 
-        const html = await response.text();
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, "text/html");
-        const metaTags = doc.querySelectorAll("meta[property^='og:'], meta[name^='twitter:']");
+      const html = await response.text();
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, "text/html");
+      const metaTags = doc.querySelectorAll("meta[property^='og:'], meta[name^='twitter:']");
 
-        const ogData: { [key: string]: string } = {};
-        metaTags.forEach((tag) => {
-          const property = tag.getAttribute("property") || tag.getAttribute("name");
-          const content = tag.getAttribute("content");
-          if (property && content) {
-            ogData[property] = content;
-          }
-        });
-
-        setShareData({
-          title: ogData["og:title"] || "VoiceInfo",
-          description: ogData["og:description"] || "Discover the latest insights on VoiceInfo",
-          image: ogData["og:image"] || DEFAULT_IMAGE_URL,
-          imageAlt: ogData["og:image:alt"] || "Image for VoiceInfo",
-          url: ogData["og:url"] || `${API_BASE_URL}/api/Share/${encodeURIComponent(slug)}`,
-        });
-      } catch (err) {
-        console.warn("Error fetching share data:", err);
-        if (post) {
-          setShareData({
-            title: post.title,
-            description: getShareDescription(post),
-            image: imageUrl || DEFAULT_IMAGE_URL,
-            imageAlt: `Image for ${post.title}`,
-            url: `${API_BASE_URL}/api/Share/${encodeURIComponent(slug)}`,
-          });
+      const ogData: { [key: string]: string } = {};
+      metaTags.forEach((tag) => {
+        const property = tag.getAttribute("property") || tag.getAttribute("name");
+        const content = tag.getAttribute("content");
+        if (property && content) {
+          ogData[property] = content;
         }
-      }
-    };
+      });
 
-    fetchShareData();
-  }, [slug, post, imageUrl]);
+      setShareData({
+        title: ogData["og:title"] || post.title,
+        description: ogData["og:description"] || getShareDescription(post),
+        image: ogData["og:image"] || imageUrl || DEFAULT_IMAGE_URL,
+        imageAlt: ogData["og:image:alt"] || `Image for ${post.title}`,
+        url: ogData["og:url"] || `${API_BASE_URL}/api/Share/${encodeURIComponent(slug)}`,
+      });
+    } catch (err) {
+      console.warn("Error fetching share data:", err);
+      setShareData({
+        title: post.title,
+        description: getShareDescription(post),
+        image: imageUrl || DEFAULT_IMAGE_URL,
+        imageAlt: `Image for ${post.title}`,
+        url: `${API_BASE_URL}/api/Share/${encodeURIComponent(slug)}`,
+      });
+    }
+  };
+
+  fetchShareData();
+}, [slug, post, imageUrl]);
 
   const fetchComments = async (postId: number) => {
     try {
