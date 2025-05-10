@@ -119,7 +119,11 @@ const PostDetail: React.FC = () => {
 };
 
   const getShareDescription = (post: Post): string => {
-    return post.excerpt || post.content.substring(0, 160);
+    if (post.excerpt) return post.excerpt;
+    const div = document.createElement("div");
+    div.innerHTML = post.content;
+    const plainText = div.textContent || div.innerText || "";
+    return plainText.substring(0, 220) + "..........";
   };
 
   const isValidImageUrl = async (url: string | null | undefined): Promise<boolean> => {
@@ -716,65 +720,67 @@ const PostDetail: React.FC = () => {
     return undefined;
   };
 
-  const handleWhatsAppShare = () => {
-    if (!shareData) return;
+ const handleWhatsAppShare = () => {
+  if (!shareData) return;
 
-    const shareText = `*${shareData.title}*\n${shareData.description}\nRead more: ${shareData.url}`;
-    const encodedShareText = encodeURIComponent(shareText);
-    window.open(
-      `https://api.whatsapp.com/send?text=${encodedShareText}`,
-      "_blank"
-    );
-  };
+  const shareText = `*${shareData.title}*\n\n${shareData.description}\n\nRead more: ${shareData.url}`;
+  const encodedShareText = encodeURIComponent(shareText);
+  window.open(
+    `https://api.whatsapp.com/send?text=${encodedShareText}`,
+    "_blank"
+  );
+};
 
-  const handleXShare = () => {
-    if (!shareData) return;
+const handleXShare = () => {
+  if (!shareData) return;
 
-    const shareText = `${shareData.title}\n${shareData.description}\n${shareData.url}`;
-    const encodedShareText = encodeURIComponent(shareText);
-    window.open(
-      `https://twitter.com/intent/tweet?text=${encodedShareText}`,
-      "_blank"
-    );
-  };
+  const shareText = `${shareData.title}\n\n${shareData.description}\n\n${shareData.url}`;
+  const encodedShareText = encodeURIComponent(shareText);
+  window.open(
+    `https://twitter.com/intent/tweet?text=${encodedShareText}`,
+    "_blank"
+  );
+};
 
-  const handleFacebookShare = () => {
-    if (!shareData) return;
+const handleFacebookShare = () => {
+  if (!shareData) return;
 
-    window.open(
-      `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareData.url)}`,
-      "_blank"
-    );
-  };
+  const shareText = `${shareData.title}\n\n${shareData.description}\n\nRead more: ${shareData.url}`;
+  const encodedShareText = encodeURIComponent(shareText);
+  window.open(
+    `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareData.url)}&quote=${encodedShareText}`,
+    "_blank"
+  );
+};
 
-  const handleTelegramShare = () => {
-    if (!shareData) return;
+const handleTelegramShare = () => {
+  if (!shareData) return;
 
-    const shareText = `${shareData.title}\n${shareData.description}\n${shareData.url}`;
-    const encodedShareText = encodeURIComponent(shareText);
-    window.open(
-      `https://t.me/share/url?url=${encodeURIComponent(shareData.url)}&text=${encodedShareText}`,
-      "_blank"
-    );
-  };
+  const shareText = `${shareData.title}\n\n${shareData.description}\n\n${shareData.url}`;
+  const encodedShareText = encodeURIComponent(shareText);
+  window.open(
+    `https://t.me/share/url?url=${encodeURIComponent(shareData.url)}&text=${encodedShareText}`,
+    "_blank"
+  );
+};
 
-  const handleNativeShare = async () => {
-    if (!shareData) return;
+const handleNativeShare = async () => {
+  if (!shareData) return;
 
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: shareData.title,
-          text: `${shareData.title}\n${shareData.description}`,
-          url: shareData.url,
-        });
-      } catch (err) {
-        console.log("Share error:", err);
-      }
-    } else {
-      alert("Web Share API is not supported in your browser.");
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: shareData.title,
+        text: `${shareData.title}\n\n${shareData.description}\n\n${shareData.url}`,
+        url: shareData.url,
+      });
+    } catch (err) {
+      console.log("Share error:", err);
     }
-  };
+  } else {
+    alert("Web Share API is not supported in your browser.");
+  }
+};
 
   if (loading) return <div className="article-loading">Loading...</div>;
   if (error) return <div className="article-error">Error: {error}</div>;
