@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useUser } from "../../context/UserContext";
 import { motion, useInView } from "framer-motion";
-import { API_BASE_URL } from "../../config/apiConfig"; // Added import
+import { API_BASE_URL } from "../../config/apiConfig";
 import "./CategoriesSection.css";
 
 interface Post {
@@ -59,6 +59,7 @@ const CategoriesSection: React.FC = () => {
       }
 
       const data: CategoryWithPosts[] = await response.json();
+      console.log("API Response - Categories:", data.map(c => c.name)); // Debug API data
       setCategoriesWithPosts(data);
       localStorage.setItem(CACHE_KEY, JSON.stringify({ data, timestamp: Date.now() }));
     } catch (err) {
@@ -94,7 +95,6 @@ const CategoriesSection: React.FC = () => {
     return () => window.removeEventListener("pageshow", handlePageShow);
   }, [user?.token]);
 
-  // Loading animation variants for container
   const loadingVariants = {
     initial: { opacity: 0 },
     animate: { opacity: 1, transition: { duration: 0.3 } },
@@ -154,6 +154,9 @@ const CategoriesSection: React.FC = () => {
               amount: 0.08
             });
 
+            const categoryUrl = `/${category.name.toLowerCase()}`;
+            console.log(`Category: ${category.name}, URL: ${categoryUrl}`);
+
             return (
               <motion.div
                 ref={ref}
@@ -189,7 +192,7 @@ const CategoriesSection: React.FC = () => {
                   transition={{ duration: 0.2 }}
                 >
                   <Link
-                    to={`/${category.name.toLowerCase().replace(/\s+/g, "-")}`}
+                    to={categoryUrl}
                     className="see-more"
                   >
                     See More
